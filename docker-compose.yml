@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: wms_mysql_db
+    restart: always
+    environment:
+      MYSQL_DATABASE: wms_db
+      MYSQL_ROOT_PASSWORD: root_password_segura
+    ports:
+      - "3306:3306"
+    volumes:
+      # Montamos el script SQL para que se ejecute al iniciar por primera vez
+      - ./mysql-init:/docker-entrypoint-initdb.d
+      - db_data:/var/lib/mysql
+
+  backend:
+    build: .
+    container_name: wms_api_backend
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      DB_HOST: db
+      DB_USER: root
+      DB_PASSWORD: root_password_segura
+      DB_NAME: wms_db
+      JWT_SECRET: tu_clave_secreta_para_jwt
+    depends_on:
+      - db
+
+volumes:
+  db_data:

@@ -1,0 +1,102 @@
+"""
+GUÍA RÁPIDA: Como ejecutar el proyecto
+
+Este archivo contiene los comandos para iniciar el servidor y probar los endpoints.
+"""
+
+# ============ PASO 1: INSTALAR DEPENDENCIAS ============
+pip install -r requirements.txt
+pip install python-dotenv  # Si no está en requirements.txt
+
+# ============ PASO 2: CONFIGURAR BASE DE DATOS ============
+# Crear base de datos MySQL
+mysql -u root -p
+> CREATE DATABASE wms_esp CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+> EXIT;
+
+# Ejecutar script SQL
+mysql -u root -p wms_esp < mysql-init/02_usuarios_auth.sql
+
+# ============ PASO 3: CONFIGURAR VARIABLES DE ENTORNO ============
+# Copiar archivo de ejemplo
+cp .env.example .env
+
+# Editar .env con datos de tu MySQL local
+# DATABASE_URL=mysql+aiomysql://root:tu_contraseña@localhost:3306/wms_esp
+
+# ============ PASO 4: INICIAR SERVIDOR ============
+python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+
+# Debería ver algo como:
+# INFO:     Uvicorn running on http://0.0.0.0:8000
+
+# ============ PASO 5: VERIFICAR QUE FUNCIONA ============
+
+# Health Check
+curl http://localhost:8000/health
+
+# Documentación Swagger UI
+open http://localhost:8000/docs
+
+# Documentación ReDoc
+open http://localhost:8000/redoc
+
+# ============ PASO 6: PROBAR ENDPOINTS ============
+
+# Login (contraseña: Test1234)
+curl -X POST http://localhost:8000/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "correo": "admin@wmscode.cl",
+    "contrasena": "Test1234"
+  }'
+
+# Registrar nuevo usuario
+curl -X POST http://localhost:8000/api/v1/auth/registrar \
+  -H "Content-Type: application/json" \
+  -d '{
+    "correo": "nuevo@usuario.cl",
+    "contrasena": "Password123",
+    "nombre": "Juan",
+    "apellido": "Pérez",
+    "rut": "15.555.555-5"
+  }'
+
+# ============ TROUBLESHOOTING ============
+
+# Problema: ModuleNotFoundError
+Solución: Asegúrate de que estés en el directorio raíz (wms_esp/)
+          y que el entorno virtual esté activado
+
+# Problema: "Unknown database 'wms_esp'"
+Solución: Ejecutar: mysql -u root -p wms_esp < mysql-init/02_usuarios_auth.sql
+
+# Problema: "Cannot connect to MySQL"
+Solución: Verificar DATABASE_URL en .env
+          Verificar que MySQL está corriendo: sudo systemctl status mysql
+
+# Problema: "ModuleNotFoundError: No module named 'dotenv'"
+Solución: pip install python-dotenv
+
+# ============ ARCHIVOS IMPORTANTES ============
+
+- app/main.py              → Punto de entrada
+- app/core/config.py       → Configuración
+- .env                     → Variables de entorno
+- mysql-init/02_usuarios_auth.sql → Datos de prueba
+
+# ============ CREDENCIALES DE PRUEBA ============
+
+Usuario: admin@wmscode.cl
+Contraseña: Test1234
+
+Usuario: usuario@prueba.cl
+Contraseña: Test1234
+
+# ============ NOTAS ============
+
+- El servidor se reinicia automáticamente al cambiar código (--reload)
+- La documentación interactiva está en /docs
+- Todos los tokens expiran en 30 minutos (configurable)
+- Cada usuario está limitado a su empresa_id por la regla de multi-tenancy
+"""
