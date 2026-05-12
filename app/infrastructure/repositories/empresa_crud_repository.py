@@ -1,0 +1,201 @@
+"""
+Repositorio CRUD de Empresas (Capa de Datos).
+CRUD para gestión de empresas multi-tenant.
+"""
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, update, and_, func
+from sqlalchemy.exc import SQLAlchemyError
+from datetime import datetime
+from app.infrastructure.models.usuario import Empresa
+
+
+class EmpresaCRUDRepository:
+    """Acceso a datos de empresas con aislamiento multi-tenant."""
+    
+    def __init__(self, session: AsyncSession):
+        self.session = session
+    
+    async def listar(
+        self,
+        pagina: int = 1,
+        por_pagina: int = 10,
+        solo_activas: bool = False
+    ) -> tuple[list[Empresa], int]:
+        """
+        Lista empresas con paginación.
+        
+        Args:
+            pagina: Número de página (desde 1)
+            por_pagina: Empresas por página
+            solo_activas: Si True, solo devuelve empresas activas
+            
+        Returns:
+            Tupla (lista_empresas, total_empresas)
+        """
+        try:
+            # Contar total
+            stmt_count = select(Empresa)
+            if solo_activas:
+                stmt_count = stmt_count.where(Empresa.esta_activa == True)
+            
+            result_count = await self.session.execute(stmt_count)
+            total = len(result_count.scalars().all())
+            
+            # Listar con paginación
+            offset = (pagina - 1) * por_pagina
+            stmt = select(Empresa)
+            if solo_activas:
+                stmt = stmt.where(Empresa.esta_activa == True)
+            
+            stmt = stmt.offset(offset).limit(por_pagina).order_by(Empresa.id)
+            
+            result = await self.session.execute(stmt)
+            empresas = result.scalars().all()
+            return empresas, total
+        except SQLAlchemyError as e:
+            raise Exception(f"Error al listar empresas: {str(e)}")
+    
+    async def obtener_por_id(self, id: int) -> Empresa | None:
+        """
+        Obtiene una empresa por ID.
+        """
+        try:
+            stmt = select(Empresa).where(Empresa.id == id)
+            result = await self.session.execute(stmt)
+            return result.scalars().first()
+        except SQLAlchemyError as e:
+            raise Exception(f"Error al obtener empresa: {str(e)}")
+    
+    async def obtener_por_codigo(self, codigo: str) -> Empresa | None:
+        """
+        Obtiene una empresa por código.
+        """
+        try:
+            stmt = select(Empresa).where(Empresa.codigo == codigo)
+            result = await self.session.execute(stmt)
+            return result.scalars().first()
+        except SQLAlchemyError as e:
+            raise Exception(f"Error al obtener empresa por código: {str(e)}")
+    
+    async def crear(
+        self,
+        codigo: str,
+        nombre: str,
+        rut: str = None
+    ) -> Empresa:
+        """
+        Crea una nueva empresa.
+        
+        Args:
+            codigo: Código único de la empresa
+            nombre: Nombre de la empresa
+            rut: RUT de la empresa (opcional)
+            
+        Returns:
+            Objeto Empresa creado
+            
+        Raises:
+            Exception: Si el código ya existe o hay error de base de datos
+        """
+        try:
+            # Validar que el código no existe
+            empresa_existente = await self.obtener_por_codigo(codigo)
+            if empresa_existente:
+                raise ValueError(f"El código de empresa '{codigo}' ya existe")
+            
+            nueva_empresa = Empresa(
+                codigo=codigo,
+                nombre=nombre,
+                rut=rut,
+                esta_activa=True,
+                creado_at=datetime.utcnow()
+            )
+            self.session.add(nueva_empresa)
+            await self.session.commit()
+            await self.session.refresh(nueva_empresa)
+            return nueva_empresa
+        except ValueError as ve:
+            await self.session.rollback()
+            raise ve
+        except SQLAlchemyError as e:
+            await self.session.rollback()
+            raise Exception(f"Error al crear empresa: {str(e)}")
+    
+    async def actualizar(self, empresa_id: int, **datos) -> Empresa | None:
+        """
+        Actualiza una empresa existente.
+        
+        Args:
+            empresa_id: ID de la empresa
+            **datos: Campos a actualizar (nombre, rut, esta_activa)
+            
+        Returns:
+            Objeto Empresa actualizado o None si no existe
+            
+        Raises:
+            Exception: Si hay error de base de datos
+        """
+        try:
+            # Validar que la empresa existe
+            empresa = await self.obtener_por_id(empresa_id)
+            if not empresa:
+                raise ValueError("Empresa no encontrada")
+            
+            # Filtrar campos válidos
+            campos_validos = {"nombre", "rut", "esta_activa"}
+            datos_filtrados = {k: v for k, v in datos.items() if k in campos_validos and v is not None}
+            
+            if not datos_filtrados:
+                return empresa
+            
+            # Ejecutar actualización
+            stmt = update(Empresa).where(
+                Empresa.id == empresa_id
+            ).values(**datos_filtrados)
+            
+            await self.session.execute(stmt)
+            await self.session.commit()
+            
+            # Obtener y retornar empresa actualizada
+            empresa_actualizada = await self.obtener_por_id(empresa_id)
+            return empresa_actualizada
+        except ValueError as ve:
+            await self.session.rollback()
+            raise ve
+        except SQLAlchemyError as e:
+            await self.session.rollback()
+            raise Exception(f"Error al actualizar empresa: {str(e)}")
+    
+    async def eliminar(self, empresa_id: int) -> bool:
+        """
+        Desactiva una empresa (soft delete).
+        
+        Args:
+            empresa_id: ID de la empresa
+            
+        Returns:
+            True si se eliminó, False si no existe
+            
+        Raises:
+            Exception: Si hay error de base de datos
+        """
+        try:
+            # Validar que la empresa existe
+            empresa = await self.obtener_por_id(empresa_id)
+            if not empresa:
+                raise ValueError("Empresa no encontrada")
+            
+            # Desactivar empresa
+            stmt = update(Empresa).where(
+                Empresa.id == empresa_id
+            ).values(esta_activa=False)
+            
+            await self.session.execute(stmt)
+            await self.session.commit()
+            return True
+        except ValueError as ve:
+            await self.session.rollback()
+            raise ve
+        except SQLAlchemyError as e:
+            await self.session.rollback()
+            raise Exception(f"Error al eliminar empresa: {str(e)}")

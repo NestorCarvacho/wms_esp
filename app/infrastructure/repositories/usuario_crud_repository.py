@@ -38,23 +38,24 @@ class UsuarioCRUDRepository:
             Tupla (lista_usuarios, total_usuarios)
         """
         try:
-            # Si es super admin, no filtrar por empresa
-            filtro_empresa = [] if es_super_admin else [Usuario.empresa_id == empresa_id]
+            # Construir statement base
+            stmt_base = select(Usuario)
+            
+            # Agregar filtro de empresa si no es super admin
+            if not es_super_admin:
+                stmt_base = stmt_base.where(Usuario.empresa_id == empresa_id)
+            
+            # Agregar filtro de activos si es necesario
+            if solo_activos:
+                stmt_base = stmt_base.where(Usuario.esta_activo == True)
             
             # Contar total
-            stmt_count = select(Usuario).where(
-                *filtro_empresa,
-                Usuario.esta_activo == True if solo_activos else True
-            )
-            result_count = await self.session.execute(stmt_count)
+            result_count = await self.session.execute(stmt_base)
             total = len(result_count.scalars().all())
             
             # Listar con paginación
             offset = (pagina - 1) * por_pagina
-            stmt = select(Usuario).where(
-                *filtro_empresa,
-                Usuario.esta_activo == True if solo_activos else True
-            ).offset(offset).limit(por_pagina)
+            stmt = stmt_base.offset(offset).limit(por_pagina)
             
             result = await self.session.execute(stmt)
             usuarios = result.scalars().all()
@@ -67,11 +68,12 @@ class UsuarioCRUDRepository:
         Obtiene un usuario por ID, filtrando por empresa.
         Si empresa_id es None, obtiene el usuario sin filtrar por empresa (super admin).
         """
-        filtro_empresa = [] if empresa_id is None else [Usuario.empresa_id == empresa_id]
-        stmt = select(Usuario).where(
-            Usuario.id == id,
-            *filtro_empresa
-        )
+        stmt = select(Usuario).where(Usuario.id == id)
+        
+        # Agregar filtro de empresa si se proporciona
+        if empresa_id is not None:
+            stmt = stmt.where(Usuario.empresa_id == empresa_id)
+        
         result = await self.session.execute(stmt)
         return result.scalars().first()
     

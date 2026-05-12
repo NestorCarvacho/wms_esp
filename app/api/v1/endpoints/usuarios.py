@@ -160,7 +160,7 @@ async def crear_usuario(
     Crea un nuevo usuario en la empresa.
     
     **Comportamiento multi-tenant:**
-    - Super admin: Puede crear usuarios en cualquier empresa (especificar empresa_id)
+    - Super admin: Puede crear usuarios en cualquier empresa (especificar empresa_id en body)
     - Usuario normal: Solo puede crear en su propia empresa
     
     **Body:**
@@ -169,6 +169,7 @@ async def crear_usuario(
     - nombre_completo: Nombre del usuario (1-255 caracteres)
     - rut: RUT opcional (máximo 20 caracteres)
     - cargo_id: ID del cargo opcional
+    - empresa_id: ID de la empresa (SOLO SUPER ADMIN puede especificar, sino usa su empresa)
     
     **Respuesta:**
     - Datos del usuario creado (status 201 Created)
@@ -179,10 +180,23 @@ async def crear_usuario(
     - Super admin puede crear en cualquier empresa
     """
     try:
-        empresa_id = usuario_autenticado.get("empresa_id")
+        usuario_empresa_id = usuario_autenticado.get("empresa_id")
+        
+        # Determinar empresa_id final
+        if es_admin:
+            # Super admin puede especificar empresa_id en el body
+            empresa_destino = usuario_dto.empresa_id or usuario_empresa_id
+        else:
+            # Usuario normal: validar que no intente usar otra empresa
+            if usuario_dto.empresa_id and usuario_dto.empresa_id != usuario_empresa_id:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="No puede crear usuarios en otra empresa"
+                )
+            empresa_destino = usuario_empresa_id
         
         nuevo_usuario = await service.crear_usuario(
-            empresa_id=empresa_id,
+            empresa_id=empresa_destino,
             email=usuario_dto.email,
             nombre_completo=usuario_dto.nombre_completo,
             contrasena=usuario_dto.contrasena,
@@ -195,6 +209,8 @@ async def crear_usuario(
             datos=nuevo_usuario,
             mensaje="Usuario creado exitosamente"
         ).dict()
+    except HTTPException:
+        raise
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

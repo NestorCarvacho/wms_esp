@@ -15,6 +15,8 @@ class UsuarioCrearDTO(BaseModel):
     contrasena: str = Field(..., min_length=8, max_length=72, description="Mínimo 8 caracteres, debe incluir mayúscula y número")
     nombre_completo: str = Field(..., min_length=1, max_length=255, description="nombre completo completo del usuario")
     rut: Optional[str] = Field(None, max_length=20, description="RUT (opcional)")
+    cargo_id: Optional[int] = Field(None, description="ID del cargo (opcional)")
+    empresa_id: Optional[int] = Field(None, description="ID de la empresa (solo para super admin, opcional)")
     
     @validator("contrasena")
     def validar_contrasena(cls, v):
@@ -31,7 +33,9 @@ class UsuarioCrearDTO(BaseModel):
                 "email": "juan.perez@empresa.cl",
                 "contrasena": "Password123",
                 "nombre_completo": "Juan Pérez García",
-                "rut": "15.555.555-5"
+                "rut": "15.555.555-5",
+                "cargo_id": 1,
+                "empresa_id": 2
             }
         }
 
@@ -67,7 +71,20 @@ class UsuarioActualizarDTO(BaseModel):
     email: Optional[EmailStr] = Field(None, description="Email único del usuario")
     nombre_completo: Optional[str] = Field(None, min_length=1, max_length=255, description="Nombre completo del usuario")
     rut: Optional[str] = Field(None, max_length=20, description="RUT (opcional)")
+    cargo_id: Optional[int] = Field(None, description="ID del cargo (opcional)")
+    contrasena: Optional[str] = Field(None, min_length=8, max_length=72, description="Nueva contraseña (opcional, mínimo 8 caracteres)")
     esta_activo: Optional[bool] = Field(None, description="Indica si el usuario está activo")
+    
+    @validator("contrasena")
+    def validar_contrasena(cls, v):
+        """Valida que la contraseña sea fuerte si se proporciona."""
+        if v is None:
+            return v
+        if not any(c.isupper() for c in v):
+            raise ValueError("La contraseña debe contener al menos una mayúscula")
+        if not any(c.isdigit() for c in v):
+            raise ValueError("La contraseña debe contener al menos un número")
+        return v
     
     class Config:
         schema_extra = {
@@ -75,6 +92,8 @@ class UsuarioActualizarDTO(BaseModel):
                 "email": "juan.perez@empresa.cl",
                 "nombre_completo": "Juan Pérez García",
                 "rut": "15.555.555-5",
+                "cargo_id": 1,
+                "contrasena": "NewPassword123",
                 "esta_activo": True
             }
         }
