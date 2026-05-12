@@ -88,8 +88,8 @@ Todo acceso a datos **DEBE filtrar por `empresa_id`**:
 
 ## 🛠️ Próximos Pasos
 
-- [ ] Crear endpoints de usuarios
-- [ ] Crear endpoints de empresas
+- [ ✅ ] Crear endpoints de usuarios
+- [ ✅ ] Crear endpoints de empresas
 - [ ] Crear endpoints de productos
 - [ ] Crear endpoints de inventario
 - [ ] Crear endpoints de órdenes
