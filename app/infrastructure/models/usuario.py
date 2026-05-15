@@ -11,13 +11,14 @@ Base = declarative_base()
 
 class Empresa(Base):
     """Tabla de empresas multi-tenant."""
-    __tablename__ = "empresas"
+    __tablename__ = "empresa"
     
     id = Column(BigInteger, primary_key=True, index=True)
     codigo = Column(String(50), unique=True, nullable=False, index=True)
     nombre = Column(String(255), nullable=False)
     rut = Column(String(50), nullable=True)
     esta_activa = Column(Boolean, default=True)
+    activo = Column(Boolean, default=True)
     creado_at = Column(DateTime, default=datetime.utcnow)
     
     # Relaciones
@@ -29,11 +30,12 @@ class Empresa(Base):
 
 class Cargo(Base):
     """Tabla de cargos (roles de trabajo) por empresa."""
-    __tablename__ = "cargos"
+    __tablename__ = "cargo"
     
     id = Column(BigInteger, primary_key=True, index=True)
-    empresa_id = Column(BigInteger, ForeignKey("empresas.id"), nullable=False, index=True)
+    empresa_id = Column(BigInteger, ForeignKey("empresa.id"), nullable=False, index=True)
     nombre = Column(String(255), nullable=False)
+    activo = Column(Boolean, default=True)
     
     def __repr__(self):
         return f"<Cargo(id={self.id}, nombre='{self.nombre}')>"
@@ -61,17 +63,18 @@ class Cargo(Base):
 
 class Usuario(Base):
     """Tabla de usuarios con asociación a empresa."""
-    __tablename__ = "usuarios"
+    __tablename__ = "usuario"
     
     id = Column(BigInteger, primary_key=True, index=True)
-    empresa_id = Column(BigInteger, ForeignKey("empresas.id"), nullable=False, index=True)
-    cargo_id = Column(BigInteger, ForeignKey("cargos.id"), nullable=True)
+    empresa_id = Column(BigInteger, ForeignKey("empresa.id"), nullable=False, index=True)
+    cargo_id = Column(BigInteger, ForeignKey("cargo.id"), nullable=True)
     email = Column(String(255), unique=True, nullable=False, index=True)
     password_hash = Column(String(255), nullable=False)
     nombre_completo = Column(String(255), nullable=True)
+    rut = Column(String(20), nullable=True, index=True)
     esta_activo = Column(Boolean, default=True)
+    activo = Column(Boolean, default=True)
     fecha_creacion = Column(DateTime, default=datetime.utcnow)
-    rut = Column(String(20), unique=True, nullable=True, index=True)
     ultimo_login = Column(DateTime, nullable=True)
     fecha_actualizacion = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     # Relaciones
@@ -83,35 +86,42 @@ class Usuario(Base):
 
 class PerfilUsuario(Base):
     """Tabla de perfil de usuario con datos personales."""
-    __tablename__ = "perfiles_usuario"
+    __tablename__ = "perfil_usuario"
     
-    id = Column(BigInteger, ForeignKey("usuarios.id"), primary_key=True)
-    rut = Column(String(20), unique=True, nullable=True, index=True)
+    id = Column(BigInteger, ForeignKey("usuario.id"), primary_key=True)
+    rut = Column(String(20), nullable=True, index=True)
     nombre_completo = Column(String(255), nullable=True)
     genero = Column(String(20), nullable=True)
     direccion = Column(Text, nullable=True)
+    activo = Column(Boolean, default=True)
     
     def __repr__(self):
         return f"<PerfilUsuario(id={self.id}, rut='{self.rut}')>"
 
 
 class Rol(Base):
-    """Tabla de roles globales."""
-    __tablename__ = "roles"
+    """Tabla de roles por empresa y cargo."""
+    __tablename__ = "rol"
     
     id = Column(BigInteger, primary_key=True, index=True)
-    nombre = Column(String(50), unique=True, nullable=False)
+    empresa_id = Column(BigInteger, ForeignKey("empresa.id"), nullable=False)
+    cargo_id = Column(BigInteger, ForeignKey("cargo.id"), nullable=False)
+    nombre = Column(String(50), nullable=False)
+    descripcion = Column(String(255), nullable=True)
+    activo = Column(Boolean, default=True)
+    creado_at = Column(DateTime, default=datetime.utcnow)
     
     def __repr__(self):
-        return f"<Rol(id={self.id}, nombre='{self.nombre}')>"
+        return f"<Rol(id={self.id}, nombre='{self.nombre}', cargo_id={self.cargo_id})>"
 
 
 class PermisoCargo(Base):
     """Tabla de relación N:N entre Cargos y Roles."""
-    __tablename__ = "permisos_cargo"
+    __tablename__ = "permiso_cargo"
     
-    cargo_id = Column(BigInteger, ForeignKey("cargos.id"), primary_key=True)
-    rol_id = Column(BigInteger, ForeignKey("roles.id"), primary_key=True)
+    cargo_id = Column(BigInteger, ForeignKey("cargo.id"), primary_key=True)
+    rol_id = Column(BigInteger, ForeignKey("rol.id"), primary_key=True)
+    activo = Column(Boolean, default=True)
     
     def __repr__(self):
         return f"<PermisoCargo(cargo_id={self.cargo_id}, rol_id={self.rol_id})>"

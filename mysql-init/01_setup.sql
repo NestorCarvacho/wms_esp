@@ -1,243 +1,214 @@
 -- ============================================
--- WMS MULTI-TENANT - SCRIPT UNIFICADO v4.0
--- Estructura + Datos Iniciales
+-- WMS MULTI-TENANT - CREACIÓN DE TABLAS
+-- Soft Delete con campo activo
 -- ============================================
-
 SET FOREIGN_KEY_CHECKS=0;
-
--- 1. LIMPIEZA DE TABLAS
 DROP TABLE IF EXISTS log_auditoria;
-DROP TABLE IF EXISTS movimientos_stock;
+DROP TABLE IF EXISTS movimiento_stock;
 DROP TABLE IF EXISTS inventario;
-DROP TABLE IF EXISTS ordenes_venta;
-DROP TABLE IF EXISTS productos;
-DROP TABLE IF EXISTS perfiles_usuario;
-DROP TABLE IF EXISTS usuarios;
-DROP TABLE IF EXISTS permisos_cargo;
-DROP TABLE IF EXISTS cargos;
-DROP TABLE IF EXISTS estados_orden;
-DROP TABLE IF EXISTS estados_inventario;
-DROP TABLE IF EXISTS unidades_medida;
-DROP TABLE IF EXISTS tipos_zona;
-DROP TABLE IF EXISTS zonas_bodega;
-DROP TABLE IF EXISTS bodegas;
-DROP TABLE IF EXISTS roles;
-DROP TABLE IF EXISTS empresas;
-
+DROP TABLE IF EXISTS orden_venta;
+DROP TABLE IF EXISTS producto;
+DROP TABLE IF EXISTS perfil_usuario;
+DROP TABLE IF EXISTS usuario;
+DROP TABLE IF EXISTS permiso_cargo;
+DROP TABLE IF EXISTS cargo;
+DROP TABLE IF EXISTS estado_orden;
+DROP TABLE IF EXISTS estado_inventario;
+DROP TABLE IF EXISTS unidad_medida;
+DROP TABLE IF EXISTS tipo_zona;
+DROP TABLE IF EXISTS zona_bodega;
+DROP TABLE IF EXISTS bodega;
+DROP TABLE IF EXISTS rol;
+DROP TABLE IF EXISTS empresa;
 SET FOREIGN_KEY_CHECKS=1;
-
 -- ============================================
--- 2. CREACIÓN DE TABLAS (ESTRUCTURA)
+-- TABLAS
 -- ============================================
 
-CREATE TABLE empresas (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    codigo VARCHAR(50) UNIQUE NOT NULL,
-    nombre VARCHAR(255) NOT NULL,
-    rut VARCHAR(50),
-    esta_activa BOOLEAN DEFAULT TRUE,
-    creado_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE empresa (
+id BIGINT PRIMARY KEY AUTO_INCREMENT,
+codigo VARCHAR(50) UNIQUE NOT NULL,
+nombre VARCHAR(255) NOT NULL,
+rut VARCHAR(50),
+esta_activa TINYINT(1) DEFAULT 1,
+activo TINYINT(1) DEFAULT 1,
+creado_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE roles (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    nombre VARCHAR(50) UNIQUE NOT NULL
+CREATE TABLE cargo (
+id BIGINT PRIMARY KEY AUTO_INCREMENT,
+empresa_id BIGINT NOT NULL,
+nombre VARCHAR(100) NOT NULL,
+activo TINYINT(1) DEFAULT 1,
+FOREIGN KEY (empresa_id) REFERENCES empresa(id),
+UNIQUE KEY uk_cargo_empresa (nombre, empresa_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE cargos (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    empresa_id BIGINT NOT NULL,
-    nombre VARCHAR(100) NOT NULL,
-    FOREIGN KEY (empresa_id) REFERENCES empresas(id) ON DELETE CASCADE,
-    UNIQUE KEY uk_cargo_empresa (nombre, empresa_id)
+CREATE TABLE rol (
+id BIGINT PRIMARY KEY AUTO_INCREMENT,
+empresa_id BIGINT NOT NULL,
+cargo_id BIGINT NOT NULL,
+nombre VARCHAR(50) NOT NULL,
+descripcion VARCHAR(255),
+activo TINYINT(1) DEFAULT 1,
+creado_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+FOREIGN KEY (empresa_id) REFERENCES empresa(id),
+FOREIGN KEY (cargo_id) REFERENCES cargo(id),
+UNIQUE KEY uk_rol_cargo_empresa (nombre, cargo_id, empresa_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE permisos_cargo (
-    cargo_id BIGINT NOT NULL,
-    rol_id BIGINT NOT NULL,
-    PRIMARY KEY (cargo_id, rol_id),
-    FOREIGN KEY (cargo_id) REFERENCES cargos(id) ON DELETE CASCADE,
-    FOREIGN KEY (rol_id) REFERENCES roles(id) ON DELETE CASCADE
+cargo_id BIGINT NOT NULL,
+rol_id BIGINT NOT NULL,
+activo TINYINT(1) DEFAULT 1,
+PRIMARY KEY (cargo_id, rol_id),
+FOREIGN KEY (cargo_id) REFERENCES cargo(id),
+FOREIGN KEY (rol_id) REFERENCES rol(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE estados_inventario (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    empresa_id BIGINT NOT NULL,
-    nombre VARCHAR(50) NOT NULL,
-    descripcion VARCHAR(255),
-    permite_venta BOOLEAN DEFAULT TRUE,
-    FOREIGN KEY (empresa_id) REFERENCES empresas(id) ON DELETE CASCADE,
-    UNIQUE KEY uk_estado_inv_empresa (nombre, empresa_id)
+CREATE TABLE estado_inventario (
+id BIGINT PRIMARY KEY AUTO_INCREMENT,
+empresa_id BIGINT NOT NULL,
+nombre VARCHAR(50) NOT NULL,
+descripcion VARCHAR(255),
+permite_venta TINYINT(1) DEFAULT 1,
+activo TINYINT(1) DEFAULT 1,
+FOREIGN KEY (empresa_id) REFERENCES empresa(id),
+UNIQUE KEY uk_estado_inv_empresa (nombre, empresa_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE estados_orden (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    empresa_id BIGINT NOT NULL,
-    nombre VARCHAR(50) NOT NULL,
-    orden_flujo INT DEFAULT 0,
-    FOREIGN KEY (empresa_id) REFERENCES empresas(id) ON DELETE CASCADE,
-    UNIQUE KEY uk_estado_ord_empresa (nombre, empresa_id)
+CREATE TABLE estado_orden (
+id BIGINT PRIMARY KEY AUTO_INCREMENT,
+empresa_id BIGINT NOT NULL,
+nombre VARCHAR(50) NOT NULL,
+orden_flujo INT DEFAULT 0,
+activo TINYINT(1) DEFAULT 1,
+FOREIGN KEY (empresa_id) REFERENCES empresa(id),
+UNIQUE KEY uk_estado_ord_empresa (nombre, empresa_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE unidades_medida (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    empresa_id BIGINT NOT NULL,
-    codigo VARCHAR(10) NOT NULL,
-    nombre VARCHAR(50) NOT NULL,
-    FOREIGN KEY (empresa_id) REFERENCES empresas(id) ON DELETE CASCADE,
-    UNIQUE KEY uk_unidad_empresa (codigo, empresa_id)
+CREATE TABLE unidad_medida (
+id BIGINT PRIMARY KEY AUTO_INCREMENT,
+empresa_id BIGINT NOT NULL,
+codigo VARCHAR(10) NOT NULL,
+nombre VARCHAR(50) NOT NULL,
+activo TINYINT(1) DEFAULT 1,
+FOREIGN KEY (empresa_id) REFERENCES empresa(id),
+UNIQUE KEY uk_unidad_empresa (codigo, empresa_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE tipos_zona (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    empresa_id BIGINT NOT NULL,
-    nombre VARCHAR(50) NOT NULL,
-    FOREIGN KEY (empresa_id) REFERENCES empresas(id) ON DELETE CASCADE,
-    UNIQUE KEY uk_tipozona_empresa (nombre, empresa_id)
+CREATE TABLE tipo_zona (
+id BIGINT PRIMARY KEY AUTO_INCREMENT,
+empresa_id BIGINT NOT NULL,
+nombre VARCHAR(50) NOT NULL,
+activo TINYINT(1) DEFAULT 1,
+FOREIGN KEY (empresa_id) REFERENCES empresa(id),
+UNIQUE KEY uk_tipozona_empresa (nombre, empresa_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE usuarios (
-  id bigint NOT NULL AUTO_INCREMENT,
-  empresa_id bigint NOT NULL,
-  cargo_id bigint DEFAULT NULL,
-  email varchar(255) NOT NULL,
-  password_hash varchar(255) NOT NULL,
-  no_Usar tinyint(1) DEFAULT '1',
-  nombre_completo varchar(255) DEFAULT '',
-  rut varchar(20) DEFAULT NULL,
-  esta_activo tinyint(1) DEFAULT '1',
-  ultimo_login datetime DEFAULT NULL,
-  fecha_creacion datetime DEFAULT CURRENT_TIMESTAMP,
-  fecha_actualizacion datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (id),
-  UNIQUE KEY uk_email_empresa (email,empresa_id),
-  KEY empresa_id (empresa_id),
-  KEY cargo_id (cargo_id),
-  CONSTRAINT usuarios_ibfk_1 FOREIGN KEY (empresa_id) REFERENCES empresas (id) ON DELETE CASCADE,
-  CONSTRAINT usuarios_ibfk_2 FOREIGN KEY (cargo_id) REFERENCES cargos (id) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
-CREATE TABLE perfiles_usuario (
-    id BIGINT PRIMARY KEY,
-    rut VARCHAR(20) UNIQUE,
-    nombre_completo VARCHAR(255),
-    genero VARCHAR(20),
-    direccion TEXT,
-    FOREIGN KEY (id) REFERENCES usuarios(id) ON DELETE CASCADE
+CREATE TABLE usuario (
+id bigint NOT NULL AUTO_INCREMENT,
+empresa_id bigint NOT NULL,
+cargo_id bigint DEFAULT NULL,
+email varchar(255) NOT NULL,
+password_hash varchar(255) NOT NULL,
+no_Usar tinyint(1) DEFAULT '1',
+nombre_completo varchar(255) DEFAULT '',
+rut varchar(20) DEFAULT NULL,
+esta_activo tinyint(1) DEFAULT '1',
+activo TINYINT(1) DEFAULT 1,
+ultimo_login datetime DEFAULT NULL,
+fecha_creacion datetime DEFAULT CURRENT_TIMESTAMP,
+fecha_actualizacion datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE
+CURRENT_TIMESTAMP,
+PRIMARY KEY (id),
+UNIQUE KEY uk_email_empresa (email,empresa_id),
+KEY empresa_id (empresa_id),
+KEY cargo_id (cargo_id),
+CONSTRAINT usuarios_ibfk_1 FOREIGN KEY (empresa_id) REFERENCES empresa(id),
+CONSTRAINT usuarios_ibfk_2 FOREIGN KEY (cargo_id) REFERENCES cargo (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE bodegas (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    empresa_id BIGINT NOT NULL,
-    codigo VARCHAR(50) NOT NULL,
-    nombre VARCHAR(255) NOT NULL,
-    FOREIGN KEY (empresa_id) REFERENCES empresas(id) ON DELETE CASCADE
+CREATE TABLE perfil_usuario (
+id BIGINT PRIMARY KEY,
+rut VARCHAR(20) UNIQUE,
+nombre_completo VARCHAR(255),
+genero VARCHAR(20),
+direccion TEXT,
+activo TINYINT(1) DEFAULT 1,
+FOREIGN KEY (id) REFERENCES usuario(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE zonas_bodega (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    bodega_id BIGINT NOT NULL,
-    tipo_zona_id BIGINT NOT NULL,
-    nombre VARCHAR(100),
-    FOREIGN KEY (bodega_id) REFERENCES bodegas(id) ON DELETE CASCADE,
-    FOREIGN KEY (tipo_zona_id) REFERENCES tipos_zona(id)
+CREATE TABLE bodega (
+id BIGINT PRIMARY KEY AUTO_INCREMENT,
+empresa_id BIGINT NOT NULL,
+codigo VARCHAR(50) NOT NULL,
+nombre VARCHAR(255) NOT NULL,
+activo TINYINT(1) DEFAULT 1,
+FOREIGN KEY (empresa_id) REFERENCES empresa(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE productos (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    empresa_id BIGINT NOT NULL,
-    sku VARCHAR(100) NOT NULL,
-    nombre VARCHAR(255) NOT NULL,
-    unidad_medida_id BIGINT NOT NULL,
-    precio_costo DECIMAL(12,2),
-    FOREIGN KEY (empresa_id) REFERENCES empresas(id) ON DELETE CASCADE,
-    FOREIGN KEY (unidad_medida_id) REFERENCES unidades_medida(id)
+CREATE TABLE zona_bodega (
+id BIGINT PRIMARY KEY AUTO_INCREMENT,
+bodega_id BIGINT NOT NULL,
+tipo_zona_id BIGINT NOT NULL,
+nombre VARCHAR(100),
+activo TINYINT(1) DEFAULT 1,
+FOREIGN KEY (bodega_id) REFERENCES bodega(id),
+FOREIGN KEY (tipo_zona_id) REFERENCES tipo_zona(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE producto (
+id BIGINT PRIMARY KEY AUTO_INCREMENT,
+empresa_id BIGINT NOT NULL,
+sku VARCHAR(100) NOT NULL,
+nombre VARCHAR(255) NOT NULL,
+unidad_medida_id BIGINT NOT NULL,
+precio_costo DECIMAL(12,2),
+activo TINYINT(1) DEFAULT 1,
+FOREIGN KEY (empresa_id) REFERENCES empresa(id),
+FOREIGN KEY (unidad_medida_id) REFERENCES unidad_medida(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE inventario (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    bodega_id BIGINT NOT NULL,
-    producto_id BIGINT NOT NULL,
-    estado_id BIGINT NOT NULL,
-    cantidad INT NOT NULL DEFAULT 0,
-    cantidad_reservada INT DEFAULT 0,
-    ultimo_movimiento_por BIGINT,
-    actualizado_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (bodega_id) REFERENCES bodegas(id) ON DELETE CASCADE,
-    FOREIGN KEY (producto_id) REFERENCES productos(id) ON DELETE CASCADE,
-    FOREIGN KEY (estado_id) REFERENCES estados_inventario(id),
-    FOREIGN KEY (ultimo_movimiento_por) REFERENCES usuarios(id) ON DELETE SET NULL,
-    UNIQUE KEY uk_inventario_fina (bodega_id, producto_id, estado_id)
+id BIGINT PRIMARY KEY AUTO_INCREMENT,
+bodega_id BIGINT NOT NULL,
+producto_id BIGINT NOT NULL,
+estado_id BIGINT NOT NULL,
+cantidad INT NOT NULL DEFAULT 0,
+cantidad_reservada INT DEFAULT 0,
+ultimo_movimiento_por BIGINT,
+activo TINYINT(1) DEFAULT 1,
+actualizado_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE
+CURRENT_TIMESTAMP,
+FOREIGN KEY (bodega_id) REFERENCES bodega(id),
+FOREIGN KEY (producto_id) REFERENCES producto(id),
+FOREIGN KEY (estado_id) REFERENCES estado_inventario(id),
+FOREIGN KEY (ultimo_movimiento_por) REFERENCES usuario(id),
+UNIQUE KEY uk_inventario_fina (bodega_id, producto_id, estado_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE movimientos_stock (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    empresa_id BIGINT NOT NULL,
-    id BIGINT NOT NULL,
-    producto_id BIGINT NOT NULL,
-    cantidad INT NOT NULL,
-    bodega_origen_id BIGINT,
-    bodega_destino_id BIGINT,
-    estado_inv_anterior_id BIGINT,
-    estado_inv_nuevo_id BIGINT,
-    fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (empresa_id) REFERENCES empresas(id) ON DELETE CASCADE,
-    FOREIGN KEY (id) REFERENCES usuarios(id),
-    FOREIGN KEY (producto_id) REFERENCES productos(id)
+CREATE TABLE movimiento_stock (
+id BIGINT PRIMARY KEY AUTO_INCREMENT,
+empresa_id BIGINT NOT NULL,
+usuario_id BIGINT DEFAULT NULL,
+producto_id BIGINT NOT NULL,
+cantidad INT NOT NULL,
+bodega_origen_id BIGINT,
+bodega_destino_id BIGINT,
+estado_inv_anterior_id BIGINT,
+estado_inv_nuevo_id BIGINT,
+activo TINYINT(1) DEFAULT 1,
+fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+FOREIGN KEY (empresa_id) REFERENCES empresa(id),
+FOREIGN KEY (usuario_id) REFERENCES usuario(id),
+FOREIGN KEY (producto_id) REFERENCES producto(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+
 -- ============================================
--- 3. POBLACIÓN DE DATOS (DML)
+-- ÍNDICES
 -- ============================================
-
--- Roles Globales
-INSERT INTO roles (nombre) VALUES ('admin'), ('operario'), ('ventas'), ('visor');
-
--- EMPRESA MAESTRA (Tu Administración)
-INSERT INTO empresas (codigo, nombre, rut) VALUES ('SaaS-CORE', 'Admin Central WMS', '99.999.999-0');
-SET @corp_id = LAST_INSERT_ID();
-
-INSERT INTO cargos (empresa_id, nombre) VALUES (@corp_id, 'Soporte Global');
-SET @cargo_corp = LAST_INSERT_ID();
-
-INSERT INTO permisos_cargo (cargo_id, rol_id) SELECT @cargo_corp, id FROM roles;
-
-INSERT INTO usuarios (empresa_id, cargo_id, email, password_hash) 
-VALUES (@corp_id, @cargo_corp, 'tu_usuario@wms.com', 'hash_seguro');
-SET @u_corp = LAST_INSERT_ID();
-
-INSERT INTO perfiles_usuario (id, rut, nombre_completo) VALUES (@u_corp, '1-1', 'Super Administrador');
-
--- EMPRESA CLIENTE (Ejemplo de Gran Magnitud)
-INSERT INTO empresas (codigo, nombre, rut) VALUES ('CLIENTE-01', 'Logística Avanzada S.A.', '77.777.777-7');
-SET @client_id = LAST_INSERT_ID();
-
--- Parametrización del Cliente
-INSERT INTO estados_inventario (empresa_id, nombre, permite_venta) VALUES 
-(@client_id, 'Disponible', TRUE), (@client_id, 'Merma', FALSE), (@client_id, 'Chatarra', FALSE);
-SET @est_disponible = (SELECT id FROM estados_inventario WHERE empresa_id = @client_id AND nombre = 'Disponible');
-
-INSERT INTO unidades_medida (empresa_id, codigo, nombre) VALUES (@client_id, 'UN', 'Unidad');
-SET @u_medida = LAST_INSERT_ID();
-
-INSERT INTO tipos_zona (empresa_id, nombre) VALUES (@client_id, 'Almacenamiento');
-SET @t_zona = LAST_INSERT_ID();
-
--- Personal del Cliente
-INSERT INTO cargos (empresa_id, nombre) VALUES (@client_id, 'Jefe de Bodega');
-SET @cargo_client = LAST_INSERT_ID();
-INSERT INTO permisos_cargo (cargo_id, rol_id) VALUES (@cargo_client, 2), (@cargo_client, 4); -- Operario y Visor
-
-INSERT INTO usuarios (empresa_id, cargo_id, email, password_hash) 
-VALUES (@client_id, @cargo_client, 'jefe.bodega@logistica.cl', 'hash_cliente');
-SET @u_client = LAST_INSERT_ID();
-
--- Inventario de Prueba
-INSERT INTO bodegas (empresa_id, codigo, nombre) VALUES (@client_id, 'B-01', 'Bodega Norte');
-SET @bod_id = LAST_INSERT_ID();
-
-INSERT INTO productos (empresa_id, sku, nombre, unidad_medida_id) VALUES (@client_id, 'ITEM-001', 'Producto de Prueba', @u_medida);
-SET @prod_id = LAST_INSERT_ID();
-
-INSERT INTO inventario (bodega_id, producto_id, estado_id, cantidad, ultimo_movimiento_por) 
-VALUES (@bod_id, @prod_id, @est_disponible, 500, @u_client);
+CREATE INDEX idx_rol_empresa_id ON rol (empresa_id);
+CREATE INDEX idx_rol_cargo_id ON rol (cargo_id);
+CREATE INDEX idx_cargo_empresa_id ON cargo (empresa_id);

@@ -1,0 +1,30 @@
+#agregar al git ignore
+# agregar venv
+# Ignorar la carpeta del entorno virtual
+venv/
+#agregar .env
+# Ignorar archivos de entorno
+.env
+.env.*.local
+# Ignorar archivos de entorno de desarrollo
+.env.development
+.env.development.local
+# Ignorar archivos de entorno de producción
+.env.production
+.env.production.local
+# Ignorar archivos de entorno de prueba
+.env.test
+.env.test.local
+# Ignorar archivos de entorno de staging
+.env.staging
+.env.staging.local
+# Ignorar archivos de entorno de CI/CD
+.env.ci
+.env.ci.local
+# Ignorar archivos de entorno de Docker
+.env.docker
+.env.docker.local
+# Ignorar archivos de entorno de Kubernetes
+
+
+

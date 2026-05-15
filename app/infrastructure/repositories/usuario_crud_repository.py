@@ -47,7 +47,7 @@ class UsuarioCRUDRepository:
             
             # Agregar filtro de activos si es necesario
             if solo_activos:
-                stmt_base = stmt_base.where(Usuario.esta_activo == True)
+                stmt_base = stmt_base.where(Usuario.activo == True)
             
             # Contar total
             result_count = await self.session.execute(stmt_base)
@@ -162,7 +162,7 @@ class UsuarioCRUDRepository:
     
     async def eliminar(self, usuario_id: int, empresa_id: int) -> bool:
         """
-        Elimina (desactiva) un usuario.
+        Elimina (desactiva) un usuario (soft delete).
         """
         try:
             usuario = await self.obtener_por_id(usuario_id, empresa_id)
@@ -171,7 +171,7 @@ class UsuarioCRUDRepository:
             
             stmt = update(Usuario).where(
                 and_(Usuario.id == usuario_id, Usuario.empresa_id == empresa_id)
-            ).values(esta_activo=False)
+            ).values(activo=False, esta_activo=False)
             
             await self.session.execute(stmt)
             await self.session.commit()
@@ -187,7 +187,7 @@ class UsuarioCRUDRepository:
         try:
             stmt = update(Usuario).where(
                 and_(Usuario.id == usuario_id, Usuario.empresa_id == empresa_id)
-            ).values(esta_activo=True)
+            ).values(activo=True, esta_activo=True)
             
             await self.session.execute(stmt)
             await self.session.commit()
