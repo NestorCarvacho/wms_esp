@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.openapi.utils import get_openapi
 from app.core.config import APP_NAME, APP_VERSION, DEBUG
-from app.api.v1.endpoints import auth, usuarios, empresas, cargos, roles
+from app.api.v1.endpoints import auth, bodegas, usuarios, empresas, cargos, roles
 
 # Crear instancia de FastAPI
 app = FastAPI(
@@ -22,19 +22,23 @@ app = FastAPI(
         },
         {
             "name": "Usuarios",
-            "description": "CRUD de usuarios (próximamente)",
+            "description": "CRUD de usuarios (usuarios asociados a empresas)",
         },
         {
             "name": "Empresas",
-            "description": "CRUD de empresas (próximamente)",
+            "description": "CRUD de empresas (Empresas multi-tenant)",
         },
         {
             "name": "Cargos",
-            "description": "CRUD de cargos (roles de trabajo)",
+            "description": "CRUD de cargos (cargos de trabajo)",
         },
         {
             "name": "Roles",
-            "description": "CRUD de roles (próximamente)",
+            "description": "CRUD de roles (Roles de usuario con permisos específicos)",
+        },
+        {
+            "name": "Bodegas",
+            "description": "CRUD de bodegas (Bodegas asociadas a empresas)",
         },
         {
             "name": "Productos",
@@ -82,10 +86,23 @@ app.include_router(cargos.router)
 # Roles
 app.include_router(roles.router)
 
+# Bodegas
+app.include_router(bodegas.router)
+
 # TODO: Agregar routers de:
 # - Productos
 # - Inventario
 # - Órdenes
+# - log_auditoria;
+# - movimiento_stock;
+# - inventario;
+# - perfil_usuario;
+# - permiso_cargo;
+# - estado_orden;
+# - estado_inventario;
+# - unidad_medida;
+# - tipo_zona;
+# - zona_bodega;
 
 
 # ============ HEALTH CHECK ============

@@ -108,3 +108,16 @@ class PermisoCargo(Base):
     
     def __repr__(self):
         return f"<PermisoCargo(cargo_id={self.cargo_id}, rol_id={self.rol_id})>"
+    
+class Bodega(Base):
+    """Tabla de bodegas por empresa."""
+    __tablename__ = "bodega"
+    
+    id = Column(BigInteger, primary_key=True, index=True)
+    empresa_id = Column(BigInteger, ForeignKey("empresa.id"), nullable=False, index=True)
+    codigo = Column(String(50), nullable=False)
+    nombre = Column(String(255), nullable=False)
+    activo = Column(Boolean, default=True)
+
+    def __repr__(self):
+        return f"<Bodega(id={self.id}, nombre='{self.nombre}', empresa_id={self.empresa_id})>"
