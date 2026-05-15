@@ -36,30 +36,11 @@ class Cargo(Base):
     empresa_id = Column(BigInteger, ForeignKey("empresa.id"), nullable=False, index=True)
     nombre = Column(String(255), nullable=False)
     activo = Column(Boolean, default=True)
+
+    roles = relationship("Rol", back_populates="cargo")
     
     def __repr__(self):
         return f"<Cargo(id={self.id}, nombre='{self.nombre}')>"
-
-#base para Ususario
-# CREATE TABLE `usuarios` (
-#   `id` bigint NOT NULL AUTO_INCREMENT,
-#   `empresa_id` bigint NOT NULL,
-#   `cargo_id` bigint DEFAULT NULL,
-#   `email` varchar(255) NOT NULL,
-#   `password_hash` varchar(255) NOT NULL,
-#   `nombre_completo` varchar(255) NOT NULL,
-#   `rut` varchar(20) DEFAULT NULL,
-#   `esta_activo` tinyint(1) DEFAULT '1',
-#   `ultimo_login` datetime DEFAULT NULL,
-#   `fecha_creacion` datetime DEFAULT CURRENT_TIMESTAMP,
-#   `fecha_actualizacion` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-#   PRIMARY KEY (`id`),
-#   UNIQUE KEY `uk_email_empresa` (`email`,`empresa_id`),
-#   KEY `empresa_id` (`empresa_id`),
-#   KEY `cargo_id` (`cargo_id`),
-#   CONSTRAINT `usuarios_ibfk_1` FOREIGN KEY (`empresa_id`) REFERENCES `empresas` (`id`) ON DELETE CASCADE,
-#   CONSTRAINT `usuarios_ibfk_2` FOREIGN KEY (`cargo_id`) REFERENCES `cargos` (`id`) ON DELETE SET NULL
-# ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 class Usuario(Base):
     """Tabla de usuarios con asociación a empresa."""
@@ -110,6 +91,8 @@ class Rol(Base):
     descripcion = Column(String(255), nullable=True)
     activo = Column(Boolean, default=True)
     creado_at = Column(DateTime, default=datetime.utcnow)
+    cargo_id = Column(Integer, ForeignKey("cargo.id"))
+    cargo = relationship("Cargo", back_populates="roles")
     
     def __repr__(self):
         return f"<Rol(id={self.id}, nombre='{self.nombre}', cargo_id={self.cargo_id})>"

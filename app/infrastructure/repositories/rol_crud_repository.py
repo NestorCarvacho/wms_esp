@@ -3,8 +3,9 @@ Repositorio CRUD de Roles (Capa de Datos).
 CRUD con filtrado automático por empresa_id.
 """
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update, and_, func
+from sqlalchemy import select, update, and_, func, select
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import selectinload
 from app.infrastructure.models.usuario import Rol
 
 
@@ -21,45 +22,44 @@ class RolCRUDRepository:
         por_pagina: int = 10,
         es_super_admin: bool = False
     ) -> tuple[list[Rol], int]:
-        """
-        Lista roles de una empresa con paginación.
-        
-        Args:
-            empresa_id: ID de la empresa (multi-tenant)
-            pagina: Número de página (desde 1)
-            por_pagina: Roles por página
-            es_super_admin: Si True, lista TODOS los roles de todas las empresas
-            
-        Returns:
-            Tupla (lista_roles, total_roles)
-        """
+
         try:
-            # Construir statement base
-            stmt_base = select(Rol)
-            
-            # Agregar filtro de empresa si no es super admin
+
+            # Query base con eager loading
+            stmt_base = (
+                select(Rol)
+                .options(selectinload(Rol.cargo))
+            )
+
+            # Filtro empresa
             if not es_super_admin:
                 stmt_base = stmt_base.where(Rol.empresa_id == empresa_id)
-            
-            # Filtrar solo activos
+
+            # Solo activos
             stmt_base = stmt_base.where(Rol.activo == True)
-            
-            # Contar total
+
+            # Count
             count_stmt = select(func.count(Rol.id))
+
             if not es_super_admin:
                 count_stmt = count_stmt.where(Rol.empresa_id == empresa_id)
+
             count_stmt = count_stmt.where(Rol.activo == True)
-            
+
             count_result = await self.session.execute(count_stmt)
             total = count_result.scalar() or 0
-            
-            # Listar con paginación
+
+            # Paginación
             offset = (pagina - 1) * por_pagina
+
             stmt = stmt_base.offset(offset).limit(por_pagina)
-            
+
             result = await self.session.execute(stmt)
+
             roles = result.scalars().all()
+
             return roles, total
+
         except SQLAlchemyError as e:
             raise Exception(f"Error al listar roles: {str(e)}")
     

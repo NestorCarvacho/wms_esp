@@ -6,6 +6,7 @@ Multi-tenant con soporte para super admin.
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import relationship
 from app.infrastructure.database import get_db_session
 from app.infrastructure.repositories.rol_crud_repository import RolCRUDRepository
 from app.domain.services.rol_service import RolService

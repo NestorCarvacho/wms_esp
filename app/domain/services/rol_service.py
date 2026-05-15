@@ -19,25 +19,14 @@ class RolService:
         por_pagina: int = 10,
         es_super_admin: bool = False
     ) -> Dict[str, Any]:
-        """
-        Lista roles de una empresa.
-        
-        Args:
-            empresa_id: ID de la empresa
-            pagina: Número de página
-            por_pagina: Roles por página
-            es_super_admin: Si True, lista roles de TODAS las empresas
-            
-        Returns:
-            Dict con total, página actual, roles por página y lista de roles
-        """
+
         roles, total = await self.repository.listar(
             empresa_id=empresa_id,
             pagina=pagina,
             por_pagina=por_pagina,
             es_super_admin=es_super_admin
         )
-        
+
         return {
             "total": total,
             "pagina": pagina,
@@ -46,7 +35,11 @@ class RolService:
                 {
                     "id": r.id,
                     "nombre": r.nombre,
-                    "empresa_id": r.empresa_id
+                    "descripcion": r.descripcion,
+                    "activo": r.activo,
+                    "empresa_id": r.empresa_id,
+                    "cargo_id": r.cargo_id,
+                    "cargo_nombre": r.cargo.nombre if r.cargo_id else None
                 }
                 for r in roles
             ]
