@@ -9,7 +9,7 @@ services:
       MYSQL_DATABASE: wms_db
       MYSQL_ROOT_PASSWORD: root_password_segura
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
       # Montamos el script SQL para que se ejecute al iniciar por primera vez
       - ./mysql-init:/docker-entrypoint-initdb.d
@@ -20,7 +20,7 @@ services:
     container_name: wms_api_backend
     restart: always
     ports:
-      - "5000:5000"
+      - "8000:8000"
     environment:
       DB_HOST: db
       DB_USER: root
