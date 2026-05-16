@@ -1,7 +1,7 @@
 """
 Modelos ORM: Entidades de base de datos mapeadas con SQLAlchemy.
 """
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, Text, DECIMAL, ForeignKey, BigInteger
+from sqlalchemy import Column, Integer, Numeric, String, DateTime, Boolean, Text, DECIMAL, ForeignKey, BigInteger
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from datetime import datetime
@@ -121,3 +121,31 @@ class Bodega(Base):
 
     def __repr__(self):
         return f"<Bodega(id={self.id}, nombre='{self.nombre}', empresa_id={self.empresa_id})>"
+
+class Producto(Base):
+    """Tabla de productos por empresa."""
+    __tablename__ = "producto"
+    
+    id = Column(BigInteger, primary_key=True, index=True)
+    empresa_id = Column(BigInteger, ForeignKey("empresa.id"), nullable=False, index=True)
+    sku = Column(String(100), nullable=False)
+    nombre = Column(String(255), nullable=False)
+    unidad_medida_id = Column(BigInteger, ForeignKey("unidad_medida.id"), nullable=False)
+    precio_costo = Column(Numeric(12, 2), nullable=True)
+    activo = Column(Boolean, default=True)
+
+    def __repr__(self):
+        return f"<Producto(id={self.id}, nombre='{self.nombre}', empresa_id={self.empresa_id}, sku='{self.sku}')>"
+    
+class UnidadMedida(Base):
+    """Tabla de unidades de medida por empresa."""
+    __tablename__ = "unidad_medida"
+    
+    id = Column(BigInteger, primary_key=True, index=True)
+    empresa_id = Column(BigInteger, ForeignKey("empresa.id"), nullable=False, index=True)
+    nombre = Column(String(255), nullable=False)
+    codigo = Column(String(50), nullable=False)
+    activo = Column(Boolean, default=True)
+
+    def __repr__(self):
+        return f"<UnidadMedida(id={self.id}, nombre='{self.nombre}', empresa_id={self.empresa_id}, codigo='{self.codigo}')>"
