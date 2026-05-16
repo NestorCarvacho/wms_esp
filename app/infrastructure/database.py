@@ -11,6 +11,7 @@ engine = create_async_engine(
     DATABASE_URL,
     echo=False,  # Cambiar a True para debug SQL
     poolclass=NullPool,  # Para conexiones de corta duración
+    pool_pre_ping=True
 )
 
 # Factory de sesiones asincrónicas

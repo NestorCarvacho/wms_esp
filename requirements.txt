@@ -6,3 +6,4 @@ aiomysql
 mysqlclient
 python-jose[cryptography]
 passlib[bcrypt]
+pymysql
