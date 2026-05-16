@@ -61,7 +61,7 @@ async def test_login():
             # "cargo_id": usuario.cargo_id
 
 
-    email = "tu_usuario@wms.com"
+    email = "nestor.carvacho@wms.com"
     contrasena = "Test1234"
     
     try:

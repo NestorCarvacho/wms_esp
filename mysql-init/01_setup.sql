@@ -2,25 +2,25 @@
 -- WMS MULTI-TENANT - CREACIÓN DE TABLAS
 -- Soft Delete con campo activo
 -- ============================================
-SET FOREIGN_KEY_CHECKS=0;
-DROP TABLE IF EXISTS log_auditoria;
-DROP TABLE IF EXISTS movimiento_stock;
-DROP TABLE IF EXISTS inventario;
-DROP TABLE IF EXISTS orden_venta;
-DROP TABLE IF EXISTS producto;
-DROP TABLE IF EXISTS perfil_usuario;
-DROP TABLE IF EXISTS usuario;
-DROP TABLE IF EXISTS permiso_cargo;
-DROP TABLE IF EXISTS cargo;
-DROP TABLE IF EXISTS estado_orden;
-DROP TABLE IF EXISTS estado_inventario;
-DROP TABLE IF EXISTS unidad_medida;
-DROP TABLE IF EXISTS tipo_zona;
-DROP TABLE IF EXISTS zona_bodega;
-DROP TABLE IF EXISTS bodega;
-DROP TABLE IF EXISTS rol;
-DROP TABLE IF EXISTS empresa;
-SET FOREIGN_KEY_CHECKS=1;
+-- SET FOREIGN_KEY_CHECKS=0;
+-- DROP TABLE IF EXISTS log_auditoria;
+-- DROP TABLE IF EXISTS movimiento_stock;
+-- DROP TABLE IF EXISTS inventario;
+-- DROP TABLE IF EXISTS orden_venta;
+-- DROP TABLE IF EXISTS producto;
+-- DROP TABLE IF EXISTS perfil_usuario;
+-- DROP TABLE IF EXISTS usuario;
+-- DROP TABLE IF EXISTS permiso_cargo;
+-- DROP TABLE IF EXISTS cargo;
+-- DROP TABLE IF EXISTS estado_orden;
+-- DROP TABLE IF EXISTS estado_inventario;
+-- DROP TABLE IF EXISTS unidad_medida;
+-- DROP TABLE IF EXISTS tipo_zona;
+-- DROP TABLE IF EXISTS zona_bodega;
+-- DROP TABLE IF EXISTS bodega;
+-- DROP TABLE IF EXISTS rol;
+-- DROP TABLE IF EXISTS empresa;
+-- SET FOREIGN_KEY_CHECKS=1;
 -- ============================================
 -- TABLAS
 -- ============================================
