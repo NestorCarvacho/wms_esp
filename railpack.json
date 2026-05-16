@@ -1,8 +1,6 @@
 {
   "$schema": "https://railpack.com/schema.json",
-  "providers": [
-    "python"
-  ],
+  "providers": ["python"],
   "build": {
     "steps": [
       "pip install -r requirements.txt"
