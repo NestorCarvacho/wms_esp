@@ -2,6 +2,8 @@
 # agregar venv
 # Ignorar la carpeta del entorno virtual
 venv/
+venv/Scripts/
+venv/Lib/
 #agregar .env
 # Ignorar archivos de entorno
 .env
