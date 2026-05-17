@@ -82,7 +82,9 @@ class ProductoService:
         empresa_id: int,
         nombre: str,
         sku: str,
-        activo: bool = True
+        activo: bool = True,
+        unidad_medida_id: int = None,
+        precio_costo: float = None
     ) -> Dict[str, Any]:
         """
         Crea una nueva producto.
@@ -92,6 +94,8 @@ class ProductoService:
             nombre: Nombre de producto
             sku: Código de el producto
             activo: Estado de el producto
+            unidad_medida_id: ID de la unidad de medida
+            precio_costo: Precio de costo de el producto
         Returns:
             Dict con datos de el producto creada
             
@@ -115,14 +119,16 @@ class ProductoService:
             raise ValueError(f"Ya existe una producto con el nombre '{nombre}' en esta empresa")
         
         # Crear producto
-        nueva_producto = await self.repository.crear(empresa_id, nombre, sku, activo)
+        nuevo_producto = await self.repository.crear(empresa_id, nombre, sku, activo, unidad_medida_id, precio_costo)
         
         return {
-            "id": nueva_producto.id,
-            "empresa_id": nueva_producto.empresa_id,
-            "nombre": nueva_producto.nombre,
-            "sku": nueva_producto.sku,
-            "activo": nueva_producto.activo   
+            "id": nuevo_producto.id,
+            "empresa_id": nuevo_producto.empresa_id,
+            "nombre": nuevo_producto.nombre,
+            "sku": nuevo_producto.sku,
+            "activo": nuevo_producto.activo,
+            "unidad_medida_id": nuevo_producto.unidad_medida_id,
+            "precio_costo": nuevo_producto.precio_costo
         }
     
     async def actualizar_producto(
@@ -130,7 +136,9 @@ class ProductoService:
         producto_id: int,
         empresa_id: int,
         nombre: str = None,
-        sku: str = None
+        sku: str = None,
+        unidad_medida_id: int = None,
+        precio_costo: float = None
 
     ) -> Dict[str, Any]:
         """
@@ -141,6 +149,8 @@ class ProductoService:
             empresa_id: ID de la empresa (validación multi-tenant)
             nombre: Nuevo nombre de el producto
             sku: Nuevo código de el producto
+            unidad_medida_id: Nuevo ID de la unidad de medida
+            precio_costo: Nuevo precio de costo de el producto
             
         Returns:
             Dict con datos de el producto actualizada
@@ -172,7 +182,7 @@ class ProductoService:
                 raise ValueError(f"Ya existe una producto con el nombre '{nombre}' en esta empresa")
         
         # Actualizar producto
-        producto_actualizada = await self.repository.actualizar(producto_id, empresa_id, nombre, sku)
+        producto_actualizada = await self.repository.actualizar(producto_id, empresa_id, nombre, sku, unidad_medida_id, precio_costo)
 
         if not producto_actualizada:
             raise ValueError("Error al actualizar el producto")
@@ -181,7 +191,9 @@ class ProductoService:
             "id": producto_actualizada.id,
             "empresa_id": producto_actualizada.empresa_id,
             "nombre": producto_actualizada.nombre,
-            "sku": producto_actualizada.sku
+            "sku": producto_actualizada.sku,
+            "unidad_medida_id": producto_actualizada.unidad_medida_id,
+            "precio_costo": producto_actualizada.precio_costo
         }
     
     async def eliminar_producto(self, producto_id: int, empresa_id: int) -> Dict[str, Any]:

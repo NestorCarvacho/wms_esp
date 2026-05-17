@@ -117,12 +117,20 @@ class ProductoCRUDRepository:
         result = await self.session.execute(stmt)
         return result.scalars().first()
     
+#   "nombre": "Caja clavos",
+#   "sku": "CLAV0001",
+#   "activo": 1,
+#   "unidad_medida_id": 3,
+#   "precio_costo": 1200
+
     async def crear(
         self,
         empresa_id: int,
         nombre: str,
         sku: str,
-        activo: bool = True
+        activo: bool = True,
+        unidad_medida_id: int = None,
+        precio_costo: float = None
     ) -> Producto:
         """
         Crea un nuevo producto.
@@ -132,7 +140,9 @@ class ProductoCRUDRepository:
                 empresa_id=empresa_id,
                 nombre=nombre,
                 sku=sku,
-                activo=activo
+                activo=activo,
+                unidad_medida_id=unidad_medida_id,
+                precio_costo=precio_costo
             )
             self.session.add(nuevo_producto)
             await self.session.commit()
@@ -147,7 +157,9 @@ class ProductoCRUDRepository:
                          empresa_id: int, 
                          nombre: str, 
                          sku: str, 
-                         activo: bool= True ) -> Producto | None:
+                         activo: bool= True,
+                         unidad_medida_id: int = None,
+                         precio_costo: float = None ) -> Producto | None:
         """
         Actualiza un producto existente.
         
@@ -157,6 +169,8 @@ class ProductoCRUDRepository:
             nombre: Nuevo nombre del producto
             sku: Nuevo SKU del producto
             activo: Nuevo estado del producto
+            unidad_medida_id: Nuevo ID de la unidad de medida
+            precio_costo: Nuevo precio de costo del producto
         """
 
         try:
@@ -173,7 +187,10 @@ class ProductoCRUDRepository:
                 datos_actualizar["sku"] = sku
             if activo is not None:
                 datos_actualizar["activo"] = activo
-
+            if unidad_medida_id is not None:
+                datos_actualizar["unidad_medida_id"] = unidad_medida_id
+            if precio_costo is not None:
+                datos_actualizar["precio_costo"] = precio_costo
             if not datos_actualizar:
                 return producto
             
