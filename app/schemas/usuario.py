@@ -28,7 +28,7 @@ class UsuarioCrearDTO(BaseModel):
         return v
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "email": "juan.perez@empresa.cl",
                 "contrasena": "Password123",
@@ -55,7 +55,7 @@ class UsuarioRespuestaDTO(BaseModel):
     
     class Config:
         from_attributes = True
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "id": 1,
                 "empresa_id": 1,
@@ -87,7 +87,7 @@ class UsuarioActualizarDTO(BaseModel):
         return v
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "email": "juan.perez@empresa.cl",
                 "nombre_completo": "Juan Pérez García",
@@ -109,7 +109,7 @@ class UsuarioListaDTO(BaseModel):
     
     class Config:
         from_attributes = True
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "id": 1,
                 "empresa_id": 1,
@@ -127,7 +127,7 @@ class LoginRequestDTO(BaseModel):
     contrasena: str = Field(..., description="Contraseña del usuario", max_length=72)
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "email": "admin@wmscode.cl",
                 "contrasena": "Test1234"
@@ -173,7 +173,7 @@ class RespuestaAPIDTO(BaseModel):
     errores: Optional[List[str]] = Field(None, description="Lista de errores si los hay")
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "exito": True,
                 "datos": {"id": 1, "acceso_token": "eyJ..."},

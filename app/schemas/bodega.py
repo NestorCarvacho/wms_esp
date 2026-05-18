@@ -46,7 +46,7 @@ class BodegaCrearDTO(BaseModel):
         return v.strip()
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "nombre": "Bodega Central",
                 "codigo": "BOD001",
@@ -96,7 +96,7 @@ class BodegaActualizarDTO(BaseModel):
         return v
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "nombre": "Bodega Central",
                 "codigo": "BOD001",
@@ -112,8 +112,8 @@ class BodegaRespuestaDTO(BaseModel):
     nombre: str
     
     class Config:
-        orm_mode = True
-        schema_extra = {
+        from_attributes = True
+        json_schema_extra = {
             "example": {
                 "id": 1,
                 "empresa_id": 1,
@@ -130,8 +130,8 @@ class BodegaListaDTO(BaseModel):
     nombre: str
     
     class Config:
-        orm_mode = True
-        schema_extra = {
+        from_attributes = True
+        json_schema_extra = {
             "example": {
                 "id": 1,
                 "nombre": "Bodega Central",
@@ -148,7 +148,7 @@ class RespuestaAPIDTO(BaseModel):
     mensaje: str
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "exito": True,
                 "datos": {

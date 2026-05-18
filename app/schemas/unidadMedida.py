@@ -53,31 +53,7 @@ class UnidadMedidaCrearDTO(BaseModel):
         return v.strip()
 
     class Config:
-        schema_extra = {
-            "example": {
-                "codigo": "KG",
-                "nombre": "Kilogramo",
-                "activo": 1
-            }
-        }
-        min_length=1,
-        max_length=50,
-        description="Código de la unidad de medida (1-50 caracteres)"
-    activo: int = Field(
-        1,
-        description="Indica si la unidad de medida está activa (1) o no (0)"
-    )
-
-
-    @validator("nombre")
-    def validar_nombre(cls, v):
-        """Valida que el nombre no esté vacío y sea válido."""
-        if not v.strip():
-            raise ValueError("El nombre de la unidad de medida no puede estar vacío")
-        return v.strip()
-    
-    class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "codigo": "KG",
                 "nombre": "Kilogramo",
@@ -127,7 +103,7 @@ class UnidadMedidaActualizarDTO(BaseModel):
         return v
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "codigo": "KG",
                 "nombre": "Kilogramo",
@@ -144,8 +120,8 @@ class UnidadMedidaRespuestaDTO(BaseModel):
     activo: int
 
     class Config:
-        orm_mode = True
-        schema_extra = {
+        from_attributes = True
+        json_schema_extra = {
             "example": {
                 "id": 1,
                 "empresa_id": 1,
@@ -164,8 +140,8 @@ class UnidadMedidaListaDTO(BaseModel):
     activo: int
 
     class Config:
-        orm_mode = True
-        schema_extra = {
+        from_attributes = True
+        json_schema_extra = {
             "example": {
                 "id": 1,
                 "nombre": "Kilogramo",
@@ -182,7 +158,7 @@ class RespuestaAPIDTO(BaseModel):
     mensaje: str
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "exito": True,
                 "datos": {

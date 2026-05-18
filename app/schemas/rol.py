@@ -15,16 +15,16 @@ class RolCrearDTO(BaseModel):
         min_length=1,
         max_length=100,
         description="Nombre del rol (1-100 caracteres)"
-    ),
+    )
     cargo_id: Optional[int] = Field(
         None,
         description="ID del cargo asociado (opcional, pero recomendado)"
-    ),
+    )
     descripcion: Optional[str] = Field(
         None,
         max_length=255,
         description="Descripción del rol (opcional, máximo 255 caracteres)"
-    ),
+    )
     activo: Optional[int] = Field(
         1,
         description="Indica si el rol está activo (1) o inactivo (0). Por defecto es 1 (activo)."
@@ -38,7 +38,7 @@ class RolCrearDTO(BaseModel):
         return v.strip()
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "nombre": "Receptor",
                 "cargo_id": 1,
@@ -55,16 +55,16 @@ class RolActualizarDTO(BaseModel):
         min_length=1,
         max_length=100,
         description="Nombre del rol (1-100 caracteres)"
-    ),
+    )
     cargo_id: Optional[int] = Field(
         None,
         description="ID del cargo asociado (opcional, pero recomendado)"
-    ),
+    )
     descripcion: Optional[str] = Field(
         None,
         max_length=255,
         description="Descripción del rol (opcional, máximo 255 caracteres)"
-    ),
+    )
     activo: Optional[bool] = Field(
         None,
         description="Indica si el rol está activo (1) o inactivo (0)."
@@ -78,7 +78,7 @@ class RolActualizarDTO(BaseModel):
         return v.strip() if v else None
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "nombre": "Recepcionista",
                 "cargo_id": 1,
@@ -98,8 +98,8 @@ class RolRespuestaDTO(BaseModel):
     cargo_id: Optional[int] = None
 
     class Config:
-        orm_mode = True
-        schema_extra = {
+        from_attributes = True
+        json_schema_extra = {
             "example": {
                 "id": 1,
                 "empresa_id": 1,
@@ -121,8 +121,8 @@ class RolListaDTO(BaseModel):
     cargo_id: Optional[int] = None
     
     class Config:
-        orm_mode = True
-        schema_extra = {
+        from_attributes = True
+        json_schema_extra = {
             "example": {
                 "id": 1,
                 "empresa_id": 1,
@@ -141,7 +141,7 @@ class RespuestaAPIDTO(BaseModel):
     mensaje: str
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "exito": True,
                 "datos": {

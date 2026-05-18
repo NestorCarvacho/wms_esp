@@ -58,7 +58,7 @@ class ProductoCrearDTO(BaseModel):
         return v.strip()
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "nombre": "Producto Central",
                 "sku": "BOD001",
@@ -119,7 +119,7 @@ class ProductoActualizarDTO(BaseModel):
         return v
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "nombre": "Producto Prueba 1",
                 "sku": "PRO001",
@@ -141,8 +141,8 @@ class ProductoRespuestaDTO(BaseModel):
     precio_costo: Optional[float]
 
     class Config:
-        orm_mode = True
-        schema_extra = {
+        from_attributes = True
+        json_schema_extra = {
             "example": {
                 "id": 1,
                 "empresa_id": 1,
@@ -165,8 +165,8 @@ class ProductoListaDTO(BaseModel):
     precio_costo: Optional[float]
 
     class Config:
-        orm_mode = True
-        schema_extra = {
+        from_attributes = True
+        json_schema_extra = {
             "example": {
                 "id": 1,
                 "nombre": "Producto Prueba 1",
@@ -185,7 +185,7 @@ class RespuestaAPIDTO(BaseModel):
     mensaje: str
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "exito": True,
                 "datos": {

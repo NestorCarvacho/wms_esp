@@ -15,7 +15,7 @@ class EmpresaCrearDTO(BaseModel):
     rut: Optional[str] = Field(None, max_length=50, description="RUT de la empresa (opcional)")
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "codigo": "EMP001",
                 "nombre": "Almacén Central S.A.",
@@ -31,7 +31,7 @@ class EmpresaActualizarDTO(BaseModel):
     esta_activa: Optional[bool] = Field(None, description="Indica si la empresa está activa")
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "nombre": "Almacén Central S.A. - Sucursal",
                 "rut": "76.555.555-5",
@@ -51,7 +51,7 @@ class EmpresaRespuestaDTO(BaseModel):
     
     class Config:
         from_attributes = True
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "id": 1,
                 "codigo": "EMP001",
@@ -74,7 +74,7 @@ class EmpresaListaDTO(BaseModel):
     
     class Config:
         from_attributes = True
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "id": 1,
                 "codigo": "EMP001",
@@ -94,7 +94,7 @@ class RespuestaAPIDTO(BaseModel):
     errores: Optional[list] = None
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "exito": True,
                 "datos": [],
