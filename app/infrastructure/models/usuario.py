@@ -1,7 +1,7 @@
 """
 Modelos ORM: Entidades de base de datos mapeadas con SQLAlchemy.
 """
-from sqlalchemy import Column, Integer, Numeric, String, DateTime, Boolean, Text, DECIMAL, ForeignKey, BigInteger
+from sqlalchemy import Column, Integer, Numeric, String, DateTime, Date, Boolean, Text, DECIMAL, ForeignKey, BigInteger
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from datetime import datetime
@@ -49,17 +49,16 @@ class Usuario(Base):
     id = Column(BigInteger, primary_key=True, index=True)
     empresa_id = Column(BigInteger, ForeignKey("empresa.id"), nullable=False, index=True)
     cargo_id = Column(BigInteger, ForeignKey("cargo.id"), nullable=True)
-    email = Column(String(255), unique=True, nullable=False, index=True)
+    email = Column(String(255), nullable=False, index=True)
     password_hash = Column(String(255), nullable=False)
-    nombre_completo = Column(String(255), nullable=True)
-    rut = Column(String(20), nullable=True, index=True)
-    esta_activo = Column(Boolean, default=True)
     activo = Column(Boolean, default=True)
-    fecha_creacion = Column(DateTime, default=datetime.utcnow)
     ultimo_login = Column(DateTime, nullable=True)
+    fecha_creacion = Column(DateTime, default=datetime.utcnow)
     fecha_actualizacion = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
     # Relaciones
     empresa = relationship("Empresa", back_populates="usuarios")
+    perfil = relationship("PerfilUsuario", back_populates="usuario", uselist=False, cascade="all, delete-orphan")
     
     def __repr__(self):
         return f"<Usuario(id={self.id}, email='{self.email}', empresa_id={self.empresa_id})>"
@@ -69,15 +68,27 @@ class PerfilUsuario(Base):
     """Tabla de perfil de usuario con datos personales."""
     __tablename__ = "perfil_usuario"
     
-    id = Column(BigInteger, ForeignKey("usuario.id"), primary_key=True)
-    rut = Column(String(20), nullable=True, index=True)
-    nombre_completo = Column(String(255), nullable=True)
+    usuario_id = Column(BigInteger, ForeignKey("usuario.id", ondelete="CASCADE"), primary_key=True)
+    rut = Column(String(20), nullable=True, unique=True, index=True)
+    nombres = Column(String(100), nullable=True)
+    apellido_paterno = Column(String(100), nullable=True)
+    apellido_materno = Column(String(100), nullable=True)
+    fecha_nacimiento = Column(Date, nullable=True)
     genero = Column(String(20), nullable=True)
-    direccion = Column(Text, nullable=True)
-    activo = Column(Boolean, default=True)
+    telefono = Column(String(30), nullable=True)
+    direccion = Column(String(255), nullable=True)
+    comuna = Column(String(100), nullable=True)
+    ciudad = Column(String(100), nullable=True)
+    region = Column(String(100), nullable=True)
+    pais = Column(String(100), nullable=True)
+    foto_url = Column(String(500), nullable=True)
+    biografia = Column(Text, nullable=True)
+    
+    # Relaciones
+    usuario = relationship("Usuario", back_populates="perfil")
     
     def __repr__(self):
-        return f"<PerfilUsuario(id={self.id}, rut='{self.rut}')>"
+        return f"<PerfilUsuario(usuario_id={self.usuario_id}, rut='{self.rut}')>"
 
 
 class Rol(Base):

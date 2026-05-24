@@ -14,10 +14,7 @@ from app.core.security import decode_access_token
 from app.api.v1.dependencies import obtener_empresa_id
 
 #revisar error "detail": "Error interno: 'nombre_completo'"
-# TODO: Implementar validación para el campo nombre_completo
-def validar_nombre_completo(nombre_completo: str):
-    if not nombre_completo or len(nombre_completo.strip()) == 0:
-        raise ValueError("El campo nombre_completo es obligatorio")
+# TODO: Implementar validación para email único por empresa
 
 router = APIRouter(
     prefix="/api/v1/auth",
@@ -126,11 +123,9 @@ async def obtener_empresa_id_del_token(authorization: str = None) -> int:
                             "usuario": {
                                 "id": 1,
                                 "empresa_id": 1,
+                                "cargo_id": 1,
                                 "email": "admin@wmscode.cl",
-                                "nombre": "Admin",
-                                "apellido": "Sistema",
-                                "rut": "11.111.111-1",
-                                "esta_activo": True,
+                                "activo": True,
                                 "fecha_creacion": "2026-05-10T12:30:00"
                             }
                         },
@@ -215,11 +210,9 @@ async def login(
                         "datos": {
                             "id": 3,
                             "empresa_id": 1,
+                            "cargo_id": None,
                             "email": "nuevo@empresa.cl",
-                            "nombre": "Carlos",
-                            "apellido": "López",
-                            "rut": "15.555.555-5",
-                            "esta_activo": True,
+                            "activo": True,
                             "fecha_creacion": "2026-05-10T14:45:00"
                         },
                         "mensaje": "Usuario registrado exitosamente",
@@ -253,10 +246,8 @@ async def registrar(
         resultado = await auth_service.registrar_usuario(
             email=datos_usuario.email,
             contrasena=datos_usuario.contrasena,
-            nombre_completo=datos_usuario.nombre_completo,
-            #apellido=datos_usuario.apellido,
             empresa_id=empresa_id,
-            rut=datos_usuario.rut
+            cargo_id=datos_usuario.cargo_id
         )
         
         return RespuestaAPIDTO(

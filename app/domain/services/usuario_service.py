@@ -4,7 +4,7 @@ Orquesta la lógica de negocio para operaciones CRUD.
 """
 from typing import Dict, Any, List, Tuple
 from app.infrastructure.repositories.usuario_crud_repository import UsuarioCRUDRepository
-
+from app.schemas.usuario import UsuarioRespuestaDTO, UsuarioListaDTO
 
 class UsuarioService:
     """Servicio CRUD de usuarios con validaciones de negocio."""
@@ -39,24 +39,16 @@ class UsuarioService:
             es_super_admin=es_super_admin
         )
         
+        usuarios_dtos = [
+            UsuarioListaDTO.model_validate(u) 
+            for u in usuarios
+        ]
+        
         return {
             "total": total,
             "pagina": pagina,
             "por_pagina": por_pagina,
-            "usuarios": [
-                {
-                    "id": u.id,
-                    "email": u.email,
-                    "nombre_completo": u.nombre_completo,
-                    "rut": u.rut,
-                    "cargo_id": u.cargo_id,
-                    "esta_activo": u.esta_activo,
-                    "ultimo_login": u.ultimo_login,
-                    "fecha_creacion": u.fecha_creacion,
-                    "empresa_id": u.empresa_id
-                }
-                for u in usuarios
-            ]
+            "usuarios": [u.model_dump() for u in usuarios_dtos]
         }
     
     async def obtener_usuario(self, usuario_id: int, empresa_id: int = None) -> Dict[str, Any]:
@@ -71,25 +63,14 @@ class UsuarioService:
         if not usuario:
             raise ValueError("Usuario no encontrado")
         
-        return {
-            "id": usuario.id,
-            "empresa_id": usuario.empresa_id,
-            "email": usuario.email,
-            "nombre_completo": usuario.nombre_completo,
-            "rut": usuario.rut,
-            "cargo_id": usuario.cargo_id,
-            "esta_activo": usuario.esta_activo,
-            "ultimo_login": usuario.ultimo_login,
-            "fecha_creacion": usuario.fecha_creacion
-        }
+        usuario_dto = UsuarioRespuestaDTO.model_validate(usuario)
+        return usuario_dto.model_dump()
     
     async def crear_usuario(
         self,
         empresa_id: int,
         email: str,
-        nombre_completo: str,
         contrasena: str,
-        rut: str = None,
         cargo_id: int = None
     ) -> Dict[str, Any]:
         """
@@ -110,9 +91,7 @@ class UsuarioService:
         nuevo_usuario = await self.repository.crear(
             empresa_id=empresa_id,
             email=email,
-            nombre_completo=nombre_completo,
             contrasena=contrasena,
-            rut=rut,
             cargo_id=cargo_id
         )
         
@@ -120,10 +99,8 @@ class UsuarioService:
             "id": nuevo_usuario.id,
             "empresa_id": nuevo_usuario.empresa_id,
             "email": nuevo_usuario.email,
-            "nombre_completo": nuevo_usuario.nombre_completo,
-            "rut": nuevo_usuario.rut,
             "cargo_id": nuevo_usuario.cargo_id,
-            "esta_activo": nuevo_usuario.esta_activo,
+            "activo": nuevo_usuario.activo,
             "fecha_creacion": nuevo_usuario.fecha_creacion
         }
     
@@ -131,10 +108,9 @@ class UsuarioService:
         self,
         usuario_id: int,
         empresa_id: int,
-        nombre_completo: str = None,
-        rut: str = None,
         cargo_id: int = None,
-        contrasena: str = None
+        contrasena: str = None,
+        activo: bool = None
     ) -> Dict[str, Any]:
         """
         Actualiza un usuario existente.
@@ -143,10 +119,9 @@ class UsuarioService:
             ValueError: Si el usuario no existe
         """
         datos_actualizacion = {
-            "nombre_completo": nombre_completo,
-            "rut": rut,
             "cargo_id": cargo_id,
-            "contrasena": contrasena
+            "contrasena": contrasena,
+            "activo": activo
         }
         
         usuario_actualizado = await self.repository.actualizar(
@@ -162,10 +137,8 @@ class UsuarioService:
             "id": usuario_actualizado.id,
             "empresa_id": usuario_actualizado.empresa_id,
             "email": usuario_actualizado.email,
-            "nombre_completo": usuario_actualizado.nombre_completo,
-            "rut": usuario_actualizado.rut,
             "cargo_id": usuario_actualizado.cargo_id,
-            "esta_activo": usuario_actualizado.esta_activo,
+            "activo": usuario_actualizado.activo,
             "fecha_creacion": usuario_actualizado.fecha_creacion
         }
     
@@ -201,7 +174,6 @@ class UsuarioService:
         return {
             "id": usuario_reactivado.id,
             "email": usuario_reactivado.email,
-            "nombre_completo": usuario_reactivado.nombre_completo,
-            "esta_activo": usuario_reactivado.esta_activo,
+            "activo": usuario_reactivado.activo,
             "mensaje": "Usuario reactivado correctamente"
         }

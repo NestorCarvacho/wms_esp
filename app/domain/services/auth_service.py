@@ -48,7 +48,7 @@ class AuthService:
             raise ValueError("Usuario no encontrado")
         
         # 2. Validar que el usuario esté activo
-        if not usuario.esta_activo:
+        if not usuario.activo:
             raise ValueError("Usuario inactivo")
         
         # 3. Verificar contraseña
@@ -94,15 +94,13 @@ class AuthService:
             return False
         
         usuario = await self.repository.obtener_por_id(usuario_id, empresa_id)
-        return usuario is not None and usuario.esta_activo
+        return usuario is not None and usuario.activo
     
     async def registrar_usuario(
         self,
         email: str,
         contrasena: str,
-        nombre_completo: str,
         empresa_id: int,
-        rut: str = None,
         cargo_id: int = None
     ) -> Dict[str, Any]:
         """
@@ -111,9 +109,7 @@ class AuthService:
         Args:
             email: Email del usuario (único por empresa)
             contrasena: Contraseña en texto plano
-            nombre_completo: Nombre completo del usuario
             empresa_id: ID de la empresa (multi-tenant)
-            rut: RUT del usuario (opcional)
             cargo_id: ID del cargo (opcional)
             
         Returns:
@@ -123,24 +119,21 @@ class AuthService:
             ValueError: Si el email ya existe en la empresa
         """
         # 1. Verificar que el email no exista ya
-        usuario_existente = await self.repository.obtener_por_email(email, empresa_id)
+        usuario_existente = await self.repository.obtener_por_email(email)
         if usuario_existente:
-            raise ValueError(f"El email {email} ya está registrado en esta empresa")
+            raise ValueError(f"El email {email} ya está registrado")
         
         # 2. Crear usuario
         nuevo_usuario = await self.repository.crear_usuario(
             empresa_id=empresa_id,
             email=email,
-            nombre_completo=nombre_completo,
             contrasena=contrasena,
-            rut=rut,
             cargo_id=cargo_id
         )
         
         return {
             "usuario_id": nuevo_usuario.id,
             "email": nuevo_usuario.email,
-            "nombre_completo": nuevo_usuario.nombre_completo,
             "empresa_id": nuevo_usuario.empresa_id,
-            "esta_activo": nuevo_usuario.esta_activo
+            "activo": nuevo_usuario.activo
         }

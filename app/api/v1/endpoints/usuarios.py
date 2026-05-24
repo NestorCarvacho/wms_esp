@@ -166,10 +166,10 @@ async def crear_usuario(
     **Body:**
     - email: Email único (formato válido)
     - contrasena: Mínimo 8 caracteres (mayúscula + número requeridos)
-    - nombre_completo: Nombre del usuario (1-255 caracteres)
-    - rut: RUT opcional (máximo 20 caracteres)
     - cargo_id: ID del cargo opcional
     - empresa_id: ID de la empresa (SOLO SUPER ADMIN puede especificar, sino usa su empresa)
+    
+    **Nota:** Datos personales (nombre, rut, etc.) se configuran en el perfil de usuario
     
     **Respuesta:**
     - Datos del usuario creado (status 201 Created)
@@ -198,9 +198,7 @@ async def crear_usuario(
         nuevo_usuario = await service.crear_usuario(
             empresa_id=empresa_destino,
             email=usuario_dto.email,
-            nombre_completo=usuario_dto.nombre_completo,
             contrasena=usuario_dto.contrasena,
-            rut=usuario_dto.rut,
             cargo_id=usuario_dto.cargo_id
         )
         
@@ -248,10 +246,12 @@ async def actualizar_usuario(
     - usuario_id: ID del usuario a actualizar
     
     **Body (todos los campos opcionales):**
-    - nombre_completo: Nuevo nombre
-    - rut: Nuevo RUT
+    - email: Nuevo email
     - cargo_id: Nuevo cargo
     - contrasena: Nueva contraseña (si se proporciona, debe cumplir requisitos)
+    - activo: Activar/desactivar usuario
+    
+    **Nota:** Para actualizar datos personales (nombre, rut, etc.) usar el endpoint de perfil de usuario
     
     **Respuesta:**
     - Datos actualizados del usuario
@@ -265,10 +265,9 @@ async def actualizar_usuario(
         usuario_actualizado = await service.actualizar_usuario(
             usuario_id=id,
             empresa_id=empresa_id,
-            nombre_completo=actualizar_dto.nombre_completo,
-            rut=actualizar_dto.rut,
             cargo_id=actualizar_dto.cargo_id,
-            contrasena=actualizar_dto.contrasena
+            contrasena=actualizar_dto.contrasena,
+            activo=actualizar_dto.activo
         )
         
         return RespuestaAPIDTO(

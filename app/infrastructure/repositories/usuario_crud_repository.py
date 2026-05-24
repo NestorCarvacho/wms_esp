@@ -4,6 +4,7 @@ CRUD con filtrado automático por empresa_id.
 """
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update, and_
+from sqlalchemy.orm import selectinload
 from sqlalchemy.exc import SQLAlchemyError
 from datetime import datetime
 from app.infrastructure.models.usuario import Usuario
@@ -38,8 +39,8 @@ class UsuarioCRUDRepository:
             Tupla (lista_usuarios, total_usuarios)
         """
         try:
-            # Construir statement base
-            stmt_base = select(Usuario)
+            # Construir statement base con carga ansiosa del perfil
+            stmt_base = select(Usuario).options(selectinload(Usuario.perfil))
             
             # Agregar filtro de empresa si no es super admin
             if not es_super_admin:
@@ -68,7 +69,7 @@ class UsuarioCRUDRepository:
         Obtiene un usuario por ID, filtrando por empresa.
         Si empresa_id es None, obtiene el usuario sin filtrar por empresa (super admin).
         """
-        stmt = select(Usuario).where(Usuario.id == id)
+        stmt = select(Usuario).options(selectinload(Usuario.perfil)).where(Usuario.id == id)
         
         # Agregar filtro de empresa si se proporciona
         if empresa_id is not None:
@@ -81,7 +82,7 @@ class UsuarioCRUDRepository:
         """
         Obtiene un usuario por email, filtrando por empresa.
         """
-        stmt = select(Usuario).where(
+        stmt = select(Usuario).options(selectinload(Usuario.perfil)).where(
             Usuario.email == email,
             Usuario.empresa_id == empresa_id
         )
@@ -92,9 +93,7 @@ class UsuarioCRUDRepository:
         self,
         empresa_id: int,
         email: str,
-        nombre_completo: str,
         contrasena: str,
-        rut: str = None,
         cargo_id: int = None
     ) -> Usuario:
         """
@@ -104,11 +103,9 @@ class UsuarioCRUDRepository:
             nuevo_usuario = Usuario(
                 empresa_id=empresa_id,
                 email=email,
-                nombre_completo=nombre_completo,
                 password_hash=hash_password(contrasena),
-                rut=rut,
                 cargo_id=cargo_id,
-                esta_activo=True
+                activo=True
             )
             self.session.add(nuevo_usuario)
             await self.session.commit()
@@ -125,7 +122,7 @@ class UsuarioCRUDRepository:
         Args:
             usuario_id: ID del usuario
             empresa_id: ID de la empresa (validación multi-tenant)
-            **datos: Campos a actualizar (nombre_completo, rut, cargo_id, contrasena)
+            **datos: Campos a actualizar (email, cargo_id, contrasena, activo)
         """
         try:
             # Validar que el usuario existe y pertenece a la empresa
@@ -140,7 +137,7 @@ class UsuarioCRUDRepository:
                 datos.pop("contrasena", None)
             
             # Filtrar campos válidos
-            campos_validos = {"nombre_completo", "rut", "cargo_id", "password_hash"}
+            campos_validos = {"email", "cargo_id", "password_hash", "activo"}
             datos_filtrados = {k: v for k, v in datos.items() if k in campos_validos and v is not None}
             
             if not datos_filtrados:
@@ -171,7 +168,7 @@ class UsuarioCRUDRepository:
             
             stmt = update(Usuario).where(
                 and_(Usuario.id == usuario_id, Usuario.empresa_id == empresa_id)
-            ).values(activo=False, esta_activo=False)
+            ).values(activo=False)
             
             await self.session.execute(stmt)
             await self.session.commit()
@@ -187,7 +184,7 @@ class UsuarioCRUDRepository:
         try:
             stmt = update(Usuario).where(
                 and_(Usuario.id == usuario_id, Usuario.empresa_id == empresa_id)
-            ).values(activo=True, esta_activo=True)
+            ).values(activo=True)
             
             await self.session.execute(stmt)
             await self.session.commit()

@@ -4,6 +4,7 @@ CRUD con filtrado automático por empresa_id.
 """
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
+from sqlalchemy.orm import selectinload
 from sqlalchemy.exc import SQLAlchemyError
 from datetime import datetime
 from app.infrastructure.models.usuario import Usuario
@@ -20,9 +21,7 @@ class UsuarioRepository:
         self,
         empresa_id: int,
         email: str,
-        nombre_completo: str,
         contrasena: str,
-        rut: str = None,
         cargo_id: int = None
     ) -> Usuario:
         """
@@ -35,7 +34,7 @@ class UsuarioRepository:
                 cargo_id=cargo_id,
                 email=email,
                 password_hash=hash_password(contrasena),
-                esta_activo=True
+                activo=True
             )
             self.session.add(nuevo_usuario)
             await self.session.commit()
@@ -53,11 +52,10 @@ class UsuarioRepository:
         Obtiene un usuario por email, filtrando por empresa.
         Garantiza aislamiento multi-tenant.
         """
-        stmt = select(Usuario).where(
+        stmt = select(Usuario).options(selectinload(Usuario.perfil)).where(
             Usuario.email == email,
             #Usuario.empresa_id == empresa_id,
-            Usuario.esta_activo == True,
-            Usuario.nombre_completo != None
+            Usuario.activo == True
         )
         result = await self.session.execute(stmt)
         return result.scalars().first()
@@ -66,11 +64,10 @@ class UsuarioRepository:
         """
         Obtiene un usuario por ID, filtrando por empresa.
         """
-        stmt = select(Usuario).where(
+        stmt = select(Usuario).options(selectinload(Usuario.perfil)).where(
             Usuario.id == id,
             Usuario.empresa_id == empresa_id,
-            Usuario.esta_activo == True,
-            Usuario.nombre_completo != None
+            Usuario.activo == True
         )
         result = await self.session.execute(stmt)
         return result.scalars().first()
