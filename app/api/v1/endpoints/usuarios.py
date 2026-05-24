@@ -265,6 +265,7 @@ async def actualizar_usuario(
         usuario_actualizado = await service.actualizar_usuario(
             usuario_id=id,
             empresa_id=empresa_id,
+            email=actualizar_dto.email,
             cargo_id=actualizar_dto.cargo_id,
             contrasena=actualizar_dto.contrasena,
             activo=actualizar_dto.activo

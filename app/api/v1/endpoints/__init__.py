@@ -8,5 +8,6 @@ from . import empresas
 from . import cargos
 from . import roles
 from . import bodegas
+from . import perfil_usuario
 
-__all__ = ["auth", "usuarios", "empresas", "cargos", "roles", "bodegas"]
+__all__ = ["auth", "usuarios", "empresas", "cargos", "roles", "bodegas", "perfil_usuario"]

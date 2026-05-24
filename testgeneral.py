@@ -1,5 +1,6 @@
 #test poara saber de doinde ocurre el error "detail": "Error interno: 'nombre_completo'"
 
+import argparse
 import asyncio
 import tracemalloc
 from unittest.mock import AsyncMock, MagicMock
@@ -10,7 +11,72 @@ from app.infrastructure.models.usuario import Usuario # Asegúrate de importar t
 
 tracemalloc.start()
 
-async def test_login():
+DEFAULT_EMAIL = "nestor.carvacho@wms.com"
+DEFAULT_PASSWORD = "Test1234"
+
+
+def sql_literal(value: str) -> str:
+    """Return a MySQL string literal."""
+    return "'" + value.replace("\\", "\\\\").replace("'", "''") + "'"
+
+
+def escape_for_bash_double_quotes(value: str) -> str:
+    """Escape characters that Bash expands inside double quotes."""
+    return (
+        value
+        .replace("\\", "\\\\")
+        .replace("$", "\\$")
+        .replace("`", "\\`")
+        .replace('"', '\\"')
+    )
+
+
+def escape_for_bash_single_quotes(value: str) -> str:
+    """Escape a string so it can be wrapped in single quotes in Bash."""
+    return "'" + value.replace("'", "'\"'\"'") + "'"
+
+
+def mostrar_password_hash(contrasena: str, email: str) -> str:
+    password_hash = hash_password(contrasena)
+    password_hash_hex = password_hash.encode("ascii").hex()
+    railway_sql = (
+        f"UPDATE usuario SET password_hash = {sql_literal(password_hash)} "
+        f"WHERE email = {sql_literal(email)};"
+    )
+    railway_sql_hex = (
+        f"UPDATE usuario SET password_hash = CAST(UNHEX('{password_hash_hex}') AS CHAR) "
+        f"WHERE email = {sql_literal(email)};"
+    )
+    mysql_e_sql = (
+        f'UPDATE usuario SET password_hash = "{password_hash}" '
+        f'WHERE email = "{email}";'
+    )
+
+    print("\n=== Password hash generado ===")
+    print("Contrasena plana:", contrasena)
+    print("Hash bcrypt:")
+    print(password_hash)
+    print("Largo del hash:", len(password_hash))
+
+    print("\nValor para pegar en Railway Query/MySQL:")
+    print(sql_literal(password_hash))
+
+    print("\nQuery para pegar en Railway Query/MySQL:")
+    print(railway_sql)
+
+    print("\nQuery recomendada para Railway usando UNHEX:")
+    print(railway_sql_hex)
+
+    print("\nQuery para ejecutar con mysql -e desde Bash/Railway CLI:")
+    print(f"mysql -e {escape_for_bash_single_quotes(mysql_e_sql)}")
+
+    print("\nAlternativa para mysql -e con comillas dobles:")
+    print(f'mysql -e "{escape_for_bash_double_quotes(railway_sql)}"')
+
+    return password_hash
+
+
+async def test_login(contrasena: str = DEFAULT_PASSWORD, email: str = DEFAULT_EMAIL):
     print("Iniciando prueba de login con Mock...")
 
     # evitar "Error inesperado: TypeError - AuthService.login() takes 3 positional arguments but 4 were given"
@@ -45,7 +111,7 @@ async def test_login():
     # IMPORTANTE: Este hash debe ser válido para la contraseña "Test1234"
     # Si usas passlib, puedes generar uno real aquí para la prueba
     from app.core.security import hash_password
-    usuario_falso.password_hash = hash_password("Test1234")
+    usuario_falso.password_hash = hash_password(contrasena)
 
     # 2. Creamos un Repositorio falso (Mock)
     # En lugar de session=None, simulamos el método que busca al usuario
@@ -61,9 +127,6 @@ async def test_login():
             # "cargo_id": usuario.cargo_id
 
 
-    email = "nestor.carvacho@wms.com"
-    contrasena = "Test1234"
-    
     try:
         # Ahora sí funcionará porque el repo no intentará usar 'execute' en None
         print(f"Intentando login con email: {email}, contraseña: {contrasena}")
@@ -72,15 +135,43 @@ async def test_login():
         resultado = await auth_service.login(email, contrasena)
         print("\n✅ Login exitoso!")
         # print("Resultado del login:", resultado)
-        print("Hash de la contraseña:", hash_password("Test1234"))
+        print("Hash de la contrasena:", usuario_falso.password_hash)
 
     except ValueError as e:
         print("\n❌ Error de autenticación esperado:", str(e))
     except Exception as e:
         print(f"\n🔥 Error inesperado: {type(e).__name__} - {str(e)}")
 
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description="Genera un hash bcrypt y muestra formatos seguros para Railway/MySQL."
+    )
+    parser.add_argument(
+        "-p",
+        "--password",
+        default=DEFAULT_PASSWORD,
+        help=f"Contrasena en texto plano. Default: {DEFAULT_PASSWORD}",
+    )
+    parser.add_argument(
+        "-e",
+        "--email",
+        default=DEFAULT_EMAIL,
+        help=f"Email usado para armar el UPDATE. Default: {DEFAULT_EMAIL}",
+    )
+    parser.add_argument(
+        "--probar-login",
+        action="store_true",
+        help="Ademas ejecuta el test de login con mocks.",
+    )
+    return parser.parse_args()
+
+
 if __name__ == "__main__":
-    asyncio.run(test_login())
+    args = parse_args()
+    mostrar_password_hash(args.password, args.email)
+
+    if args.probar_login:
+        asyncio.run(test_login(args.password, args.email))
 
 
 

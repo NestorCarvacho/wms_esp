@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.openapi.utils import get_openapi
 from app.core.config import APP_NAME, APP_VERSION, DEBUG
-from app.api.v1.endpoints import auth, bodegas, productos, unidadesMedidas, usuarios, empresas, cargos, roles
+from app.api.v1.endpoints import auth, bodegas, productos, unidadesMedidas, usuarios, empresas, cargos, roles, perfil_usuario
 
 # Crear instancia de FastAPI
 app = FastAPI(
@@ -80,6 +80,9 @@ app.include_router(auth.router)
 
 # Usuarios
 app.include_router(usuarios.router)
+
+# Perfil de usuario
+app.include_router(perfil_usuario.router)
 
 # Empresas
 app.include_router(empresas.router)

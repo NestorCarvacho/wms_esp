@@ -108,6 +108,7 @@ class UsuarioService:
         self,
         usuario_id: int,
         empresa_id: int,
+        email: str = None,
         cargo_id: int = None,
         contrasena: str = None,
         activo: bool = None
@@ -118,7 +119,17 @@ class UsuarioService:
         Raises:
             ValueError: Si el usuario no existe
         """
+        usuario_actual = await self.repository.obtener_por_id(usuario_id, empresa_id)
+        if not usuario_actual:
+            raise ValueError("Usuario no encontrado")
+
+        if email and email != usuario_actual.email:
+            usuario_existente = await self.repository.obtener_por_email(email, empresa_id)
+            if usuario_existente and usuario_existente.id != usuario_id:
+                raise ValueError(f"El email {email} ya está registrado en esta empresa")
+
         datos_actualizacion = {
+            "email": email,
             "cargo_id": cargo_id,
             "contrasena": contrasena,
             "activo": activo
