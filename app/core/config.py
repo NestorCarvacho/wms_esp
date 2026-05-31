@@ -6,8 +6,25 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
+def _normalize_database_url(url: str) -> str:
+    """Convierte mysql:// (Railway) a mysql+aiomysql:// (SQLAlchemy async)."""
+    if url.startswith("mysql://"):
+        return f"mysql+aiomysql://{url[len('mysql://'):]}"
+    return url
+
+
 # Base de Datos
-DATABASE_URL = os.getenv("DATABASE_URL", "mysql+aiomysql://root:password@localhost:3306/wms_esp")
+DATABASE_URL = _normalize_database_url(
+    os.getenv("DATABASE_URL", "mysql+aiomysql://root:password@localhost:3306/wms_esp")
+)
+
+# CORS — lista separada por comas (URL pública del frontend en producción)
+_cors_raw = os.getenv(
+    "CORS_ORIGINS",
+    "http://localhost:5173,http://127.0.0.1:5173",
+)
+CORS_ORIGINS = [origin.strip() for origin in _cors_raw.split(",") if origin.strip()]
 
 # JWT y Seguridad
 SECRET_KEY = os.getenv("SECRET_KEY", "tu-clave-secreta-super-fuerte-cambiar-en-produccion")

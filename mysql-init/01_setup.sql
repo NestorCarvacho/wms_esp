@@ -47,16 +47,34 @@ UNIQUE KEY uk_cargo_empresa (nombre, empresa_id)
 CREATE TABLE rol (
 id BIGINT PRIMARY KEY AUTO_INCREMENT,
 empresa_id BIGINT NOT NULL,
-cargo_id BIGINT NOT NULL,
 nombre VARCHAR(50) NOT NULL,
 descripcion VARCHAR(255),
 activo TINYINT(1) DEFAULT 1,
 creado_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 FOREIGN KEY (empresa_id) REFERENCES empresa(id),
-FOREIGN KEY (cargo_id) REFERENCES cargo(id),
-UNIQUE KEY uk_rol_cargo_empresa (nombre, cargo_id, empresa_id)
+UNIQUE KEY uk_rol_empresa (nombre, empresa_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE permiso (
+id BIGINT PRIMARY KEY AUTO_INCREMENT,
+empresa_id BIGINT NOT NULL,
+codigo VARCHAR(100) NOT NULL,
+descripcion VARCHAR(255),
+activo TINYINT(1) DEFAULT 1,
+FOREIGN KEY (empresa_id) REFERENCES empresa(id),
+UNIQUE KEY uk_permiso_empresa (codigo, empresa_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE rol_permiso (
+rol_id BIGINT NOT NULL,
+permiso_id BIGINT NOT NULL,
+activo TINYINT(1) DEFAULT 1,
+PRIMARY KEY (rol_id, permiso_id),
+FOREIGN KEY (rol_id) REFERENCES rol(id),
+FOREIGN KEY (permiso_id) REFERENCES permiso(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- cargo_rol (tabla legacy: permisos_cargo)
 CREATE TABLE permisos_cargo (
 cargo_id BIGINT NOT NULL,
 rol_id BIGINT NOT NULL,

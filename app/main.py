@@ -6,8 +6,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.openapi.utils import get_openapi
-from app.core.config import APP_NAME, APP_VERSION, DEBUG
-from app.api.v1.endpoints import auth, bodegas, productos, unidadesMedidas, usuarios, empresas, cargos, roles, perfil_usuario
+from app.core.config import APP_NAME, APP_VERSION, CORS_ORIGINS, DEBUG
+from app.api.v1.endpoints import auth, bodegas, productos, unidadesMedidas, usuarios, empresas, cargos, roles, perfil_usuario, permiso_cargo, permisos, rol_permiso, tipo_zona, zona_bodega
 
 # Crear instancia de FastAPI
 app = FastAPI(
@@ -59,7 +59,15 @@ app = FastAPI(
         {
             "name": "Unidades de Medida",
             "description": "Unidades de medida asociadas a empresas (CRUD completo)",
-        }
+        },
+        {
+            "name": "Tipos de Zona",
+            "description": "Tipos de zona por empresa (picking, recepción, etc.)",
+        },
+        {
+            "name": "Zonas de Bodega",
+            "description": "Zonas dentro de cada bodega",
+        },
     ]
 )
 
@@ -67,7 +75,7 @@ app = FastAPI(
 # CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # TODO: Configurar en producción
+    allow_origins=CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -93,6 +101,13 @@ app.include_router(cargos.router)
 # Roles
 app.include_router(roles.router)
 
+# Permisos cargo (cargo_rol)
+app.include_router(permiso_cargo.router)
+
+# Permisos atómicos y rol_permiso
+app.include_router(permisos.router)
+app.include_router(rol_permiso.router)
+
 # Bodegas
 app.include_router(bodegas.router)
 
@@ -100,7 +115,11 @@ app.include_router(bodegas.router)
 app.include_router(productos.router)
 
 # Unidades de medida
-app.include_router(unidadesMedidas.router)    
+app.include_router(unidadesMedidas.router)
+
+# Tipos de zona y zonas de bodega
+app.include_router(tipo_zona.router)
+app.include_router(zona_bodega.router)
 
 # TODO: Agregar routers de:
 # - Inventario
@@ -112,8 +131,7 @@ app.include_router(unidadesMedidas.router)
 # - permiso_cargo;
 # - estado_orden;
 # - estado_inventario;
-# - tipo_zona;
-# - zona_bodega;
+# - movimiento_stock;
 
 
 # ============ HEALTH CHECK ============

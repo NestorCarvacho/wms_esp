@@ -38,6 +38,7 @@ async def obtener_usuario_service(session: AsyncSession = Depends(get_db_session
 async def listar_usuarios(
     pagina: int = 1,
     por_pagina: int = 10,
+    buscar: str | None = None,
     usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
     es_admin: bool = Depends(es_super_admin),
     service: UsuarioService = Depends(obtener_usuario_service)
@@ -66,7 +67,8 @@ async def listar_usuarios(
             empresa_id=empresa_id,
             pagina=pagina,
             por_pagina=por_pagina,
-            es_super_admin=es_admin
+            es_super_admin=es_admin,
+            buscar=buscar,
         )
         
         return RespuestaAPIDTO(
@@ -199,7 +201,7 @@ async def crear_usuario(
             empresa_id=empresa_destino,
             email=usuario_dto.email,
             contrasena=usuario_dto.contrasena,
-            cargo_id=usuario_dto.cargo_id
+            cargo_id=usuario_dto.cargo_id,
         )
         
         return RespuestaAPIDTO(
@@ -261,14 +263,13 @@ async def actualizar_usuario(
     """
     try:
         empresa_id = usuario_autenticado.get("empresa_id")
-        
+        campos = actualizar_dto.model_dump(exclude_unset=True)
+
         usuario_actualizado = await service.actualizar_usuario(
             usuario_id=id,
             empresa_id=empresa_id,
-            email=actualizar_dto.email,
-            cargo_id=actualizar_dto.cargo_id,
-            contrasena=actualizar_dto.contrasena,
-            activo=actualizar_dto.activo
+            es_super_admin=es_admin,
+            **campos,
         )
         
         return RespuestaAPIDTO(

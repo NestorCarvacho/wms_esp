@@ -39,6 +39,7 @@ async def obtener_rol_service(session: AsyncSession = Depends(get_db_session)) -
 async def listar_roles(
     pagina: int = 1,
     por_pagina: int = 10,
+    buscar: str | None = None,
     usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
     es_admin: bool = Depends(es_super_admin),
     service: RolService = Depends(obtener_rol_service)
@@ -65,10 +66,11 @@ async def listar_roles(
         empresa_id = usuario_autenticado.get("empresa_id")
 
         resultado = await service.listar_roles(
-            empresa_id=None,  # El servicio maneja el filtrado multi-tenant
+            empresa_id=empresa_id,
             pagina=pagina,
             por_pagina=por_pagina,
-            es_super_admin=es_super_admin
+            es_super_admin=es_admin,
+            buscar=buscar,
         )
         
         return RespuestaAPIDTO(
@@ -185,9 +187,8 @@ async def crear_rol(
         nuevo_rol = await service.crear_rol(
             empresa_id=empresa_id,
             nombre=rol_dto.nombre,
-            cargo_id=rol_dto.cargo_id,
             descripcion=rol_dto.descripcion,
-            activo=rol_dto.activo
+            activo=bool(rol_dto.activo) if rol_dto.activo is not None else True
         )
         
         return RespuestaAPIDTO(
@@ -261,7 +262,9 @@ async def actualizar_rol(
         rol_actualizado = await service.actualizar_rol(
             rol_id=id,
             empresa_id=empresa_id,
-            nombre=actualizar_dto.nombre
+            nombre=actualizar_dto.nombre,
+            descripcion=actualizar_dto.descripcion,
+            activo=actualizar_dto.activo,
         )
         
         return RespuestaAPIDTO(

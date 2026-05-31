@@ -1,139 +1,139 @@
 """
+
 Servicio de autenticación y gestión de tokens JWT.
-Alineado con el esquema de base de datos multi-tenant.
+
 """
+
 from datetime import datetime
-from typing import Optional, Dict, Any
+
+from typing import Dict, Any
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
+
+
 from app.core.security import create_access_token, verify_password
+
 from app.infrastructure.repositories.usuario_repository import UsuarioRepository
-from app.schemas.usuario import TokenResponseDTO, UsuarioRespuestaDTO
+
+from app.domain.services.autorizacion_service import AutorizacionService
+
+from app.domain.services.display_helpers import format_empresa_nombre
+
+from app.schemas.usuario import UsuarioRespuestaDTO
+
+
+
 
 
 class AuthService:
-    """Servicio de autenticación con soporte multi-tenant."""
-    
-    def __init__(self, repository: UsuarioRepository):
-        """
-        Inicializa el servicio de autenticación.
-        
-        Args:
-            repository: UsuarioRepository para acceso a datos
-        """
+
+    def __init__(self, repository: UsuarioRepository, session: AsyncSession):
+
         self.repository = repository
+
+        self.session = session
+
     
-    async def login(
-                self,
-                email: str,
-                contrasena: str
-            ) -> Dict[str, Any]:
-        """
-        Autentica un usuario y genera token JWT.
-        
-        Args:
-            email: Email del usuario
-            contrasena: Contraseña en texto plano
-            empresa_id: ID de la empresa (multi-tenant)
-            
-        Returns:
-            Dict con acceso_token, token_type y datos del usuario
-            
-        Raises:
-            ValueError: Si el usuario no existe, está inactivo o contraseña es incorrecta
-        """
-        # 1. Buscar usuario por email y empresa (multi-tenant)
+
+    async def login(self, email: str, contrasena: str) -> Dict[str, Any]:
+
         usuario = await self.repository.obtener_por_email(email)
+
         if not usuario:
+
             raise ValueError("Usuario no encontrado")
+
         
-        # 2. Validar que el usuario esté activo
+
         if not usuario.activo:
+
             raise ValueError("Usuario inactivo")
+
         
-        # 3. Verificar contraseña
+
         if not verify_password(contrasena, usuario.password_hash):
+
             raise ValueError("Contraseña incorrecta")
+
         
-        # 4. Actualizar último login
+
         usuario.ultimo_login = datetime.utcnow()
+
         await self.repository.actualizar(usuario)
-        
-        # 5. Generar token JWT con claims de la empresa
-        token_data = {
-            "usuario_id": usuario.id,
-            "empresa_id": usuario.empresa_id,
-            "email": usuario.email,
-            "cargo_id": usuario.cargo_id
-        }
-        access_token = create_access_token(data=token_data)
-        
-        # 6. Construir respuesta con DTO
-        usuario_dto = UsuarioRespuestaDTO.from_orm(usuario)
-        
-        return {
-            "acceso_token": access_token,
-            "token_type": "bearer",
-            "usuario": usuario_dto
-        }
-    
-    async def validar_token(self, payload: Dict[str, Any]) -> bool:
-        """
-        Valida que un usuario aún exista y esté activo.
-        
-        Args:
-            payload: Payload decodificado del JWT
-            
-        Returns:
-            True si el usuario es válido, False en caso contrario
-        """
-        usuario_id = payload.get("usuario_id")
-        empresa_id = payload.get("empresa_id")
-        
-        if not usuario_id or not empresa_id:
-            return False
-        
-        usuario = await self.repository.obtener_por_id(usuario_id, empresa_id)
-        return usuario is not None and usuario.activo
-    
-    async def registrar_usuario(
-        self,
-        email: str,
-        contrasena: str,
-        empresa_id: int,
-        cargo_id: int = None
-    ) -> Dict[str, Any]:
-        """
-        Registra un nuevo usuario en la empresa.
-        
-        Args:
-            email: Email del usuario (único por empresa)
-            contrasena: Contraseña en texto plano
-            empresa_id: ID de la empresa (multi-tenant)
-            cargo_id: ID del cargo (opcional)
-            
-        Returns:
-            Dict con datos del usuario creado
-            
-        Raises:
-            ValueError: Si el email ya existe en la empresa
-        """
-        # 1. Verificar que el email no exista ya
-        usuario_existente = await self.repository.obtener_por_email(email)
-        if usuario_existente:
-            raise ValueError(f"El email {email} ya está registrado")
-        
-        # 2. Crear usuario
-        nuevo_usuario = await self.repository.crear_usuario(
-            empresa_id=empresa_id,
-            email=email,
-            contrasena=contrasena,
-            cargo_id=cargo_id
+
+
+
+        autorizacion = AutorizacionService(self.session)
+
+        permisos, roles = await autorizacion.resolver_permisos_por_cargo(
+
+            usuario.cargo_id,
+
+            usuario.empresa_id,
+
         )
-        
-        return {
-            "usuario_id": nuevo_usuario.id,
-            "email": nuevo_usuario.email,
-            "empresa_id": nuevo_usuario.empresa_id,
-            "activo": nuevo_usuario.activo
+
+
+
+        token_data = {
+
+            "usuario_id": usuario.id,
+
+            "empresa_id": usuario.empresa_id,
+
+            "email": usuario.email,
+
+            "cargo_id": usuario.cargo_id,
+
+            "roles": roles,
+
+            "permisos": permisos,
+
         }
+
+        access_token = create_access_token(data=token_data)
+
+        
+
+        usuario_dto = UsuarioRespuestaDTO.model_validate(usuario)
+
+        usuario_data = usuario_dto.model_dump()
+
+        usuario_data["empresa_nombre"] = format_empresa_nombre(usuario.empresa)
+
+        usuario_data["cargo_nombre"] = usuario.cargo.nombre if usuario.cargo else None
+
+        
+
+        return {
+
+            "acceso_token": access_token,
+
+            "token_type": "bearer",
+
+            "usuario": usuario_data
+
+        }
+
+    
+
+    async def validar_token(self, payload: Dict[str, Any]) -> bool:
+
+        usuario_id = payload.get("usuario_id")
+
+        empresa_id = payload.get("empresa_id")
+
+        
+
+        if not usuario_id or not empresa_id:
+
+            return False
+
+        
+
+        usuario = await self.repository.obtener_por_id(usuario_id, empresa_id)
+
+        return usuario is not None and usuario.activo
+
+

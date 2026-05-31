@@ -52,7 +52,11 @@ class UsuarioRepository:
         Obtiene un usuario por email, filtrando por empresa.
         Garantiza aislamiento multi-tenant.
         """
-        stmt = select(Usuario).options(selectinload(Usuario.perfil)).where(
+        stmt = select(Usuario).options(
+            selectinload(Usuario.perfil),
+            selectinload(Usuario.empresa),
+            selectinload(Usuario.cargo),
+        ).where(
             Usuario.email == email,
             #Usuario.empresa_id == empresa_id,
             Usuario.activo == True

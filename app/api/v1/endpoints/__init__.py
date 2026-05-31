@@ -10,4 +10,8 @@ from . import roles
 from . import bodegas
 from . import perfil_usuario
 
-__all__ = ["auth", "usuarios", "empresas", "cargos", "roles", "bodegas", "perfil_usuario"]
+from . import permiso_cargo
+from . import permisos
+from . import rol_permiso
+
+__all__ = ["auth", "usuarios", "empresas", "cargos", "roles", "bodegas", "perfil_usuario", "permiso_cargo", "permisos", "rol_permiso"]

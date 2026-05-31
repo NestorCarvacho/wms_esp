@@ -3,12 +3,13 @@ Repositorio CRUD de Usuarios (Capa de Datos).
 CRUD con filtrado automático por empresa_id.
 """
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update, and_
+from sqlalchemy import select, update, and_, func
 from sqlalchemy.orm import selectinload
 from sqlalchemy.exc import SQLAlchemyError
 from datetime import datetime
 from app.infrastructure.models.usuario import Usuario
 from app.core.security import hash_password
+from app.infrastructure.repositories.listado_helpers import condicion_buscar
 
 
 class UsuarioCRUDRepository:
@@ -23,7 +24,8 @@ class UsuarioCRUDRepository:
         pagina: int = 1,
         por_pagina: int = 10,
         solo_activos: bool = True,
-        es_super_admin: bool = False
+        es_super_admin: bool = False,
+        buscar: str | None = None,
     ) -> tuple[list[Usuario], int]:
         """
         Lista usuarios de una empresa con paginación.
@@ -40,7 +42,11 @@ class UsuarioCRUDRepository:
         """
         try:
             # Construir statement base con carga ansiosa del perfil
-            stmt_base = select(Usuario).options(selectinload(Usuario.perfil))
+            stmt_base = select(Usuario).options(
+                selectinload(Usuario.perfil),
+                selectinload(Usuario.empresa),
+                selectinload(Usuario.cargo),
+            )
             
             # Agregar filtro de empresa si no es super admin
             if not es_super_admin:
@@ -49,10 +55,20 @@ class UsuarioCRUDRepository:
             # Agregar filtro de activos si es necesario
             if solo_activos:
                 stmt_base = stmt_base.where(Usuario.activo == True)
-            
-            # Contar total
-            result_count = await self.session.execute(stmt_base)
-            total = len(result_count.scalars().all())
+            buscar_cond = condicion_buscar(Usuario, buscar, "email")
+            if buscar_cond is not None:
+                stmt_base = stmt_base.where(buscar_cond)
+
+            count_stmt = select(func.count(Usuario.id))
+            if not es_super_admin:
+                count_stmt = count_stmt.where(Usuario.empresa_id == empresa_id)
+            if solo_activos:
+                count_stmt = count_stmt.where(Usuario.activo == True)
+            if buscar_cond is not None:
+                count_stmt = count_stmt.where(buscar_cond)
+
+            count_result = await self.session.execute(count_stmt)
+            total = count_result.scalar() or 0
             
             # Listar con paginación
             offset = (pagina - 1) * por_pagina
@@ -69,7 +85,11 @@ class UsuarioCRUDRepository:
         Obtiene un usuario por ID, filtrando por empresa.
         Si empresa_id es None, obtiene el usuario sin filtrar por empresa (super admin).
         """
-        stmt = select(Usuario).options(selectinload(Usuario.perfil)).where(Usuario.id == id)
+        stmt = select(Usuario).options(
+            selectinload(Usuario.perfil),
+            selectinload(Usuario.empresa),
+            selectinload(Usuario.cargo),
+        ).where(Usuario.id == id)
         
         # Agregar filtro de empresa si se proporciona
         if empresa_id is not None:
@@ -94,7 +114,7 @@ class UsuarioCRUDRepository:
         empresa_id: int,
         email: str,
         contrasena: str,
-        cargo_id: int = None
+        cargo_id: int = None,
     ) -> Usuario:
         """
         Crea un nuevo usuario.
@@ -136,9 +156,17 @@ class UsuarioCRUDRepository:
             else:
                 datos.pop("contrasena", None)
             
-            # Filtrar campos válidos
-            campos_validos = {"email", "cargo_id", "password_hash", "activo"}
-            datos_filtrados = {k: v for k, v in datos.items() if k in campos_validos and v is not None}
+            # Filtrar campos válidos (cargo_id admite null explícito)
+            campos_validos = {"email", "cargo_id", "password_hash", "contrasena", "activo"}
+            nullable_fields = {"cargo_id"}
+            datos_filtrados: dict = {}
+            for k, v in datos.items():
+                if k not in campos_validos:
+                    continue
+                if k in nullable_fields:
+                    datos_filtrados[k] = v
+                elif v is not None:
+                    datos_filtrados[k] = v
             
             if not datos_filtrados:
                 return usuario

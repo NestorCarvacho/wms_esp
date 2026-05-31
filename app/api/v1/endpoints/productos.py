@@ -3,11 +3,14 @@ Endpoints CRUD de Productos (Capa de Presentación).
 5 endpoints: GET (listar), GET (detalle), POST (crear), PUT (actualizar), DELETE (eliminar).
 Multi-tenant con soporte para super admin.
 """
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
+from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
+from io import BytesIO
 from app.infrastructure.database import get_db_session
 from app.infrastructure.repositories.producto_crud_repository import ProductoCRUDRepository
 from app.domain.services.producto_service import ProductoService
+from app.domain.services.producto_importacion_service import ProductoImportacionService
 from app.api.v1.dependencies import obtener_usuario_autenticado, es_super_admin
 from app.schemas.producto import (
     ProductoCrearDTO,
@@ -28,6 +31,10 @@ async def obtener_producto_service(session: AsyncSession = Depends(get_db_sessio
     return ProductoService(repository)
 
 
+async def obtener_importacion_service(session: AsyncSession = Depends(get_db_session)) -> ProductoImportacionService:
+    return ProductoImportacionService(session)
+
+
 # ============ GET: LISTAR BODEGAS (CON PAGINACIÓN) ============
 @router.get(
     "",
@@ -38,6 +45,7 @@ async def obtener_producto_service(session: AsyncSession = Depends(get_db_sessio
 async def listar_Productos(
     pagina: int = 1,
     por_pagina: int = 10,
+    buscar: str | None = None,
     usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
     es_admin: bool = Depends(es_super_admin),
     service: ProductoService = Depends(obtener_producto_service)
@@ -66,7 +74,8 @@ async def listar_Productos(
             empresa_id=empresa_id,
             pagina=pagina,
             por_pagina=por_pagina,
-            es_super_admin=es_admin
+            es_super_admin=es_admin,
+            buscar=buscar,
         )
         
         return RespuestaAPIDTO(
@@ -81,7 +90,87 @@ async def listar_Productos(
         )
 
 
-# ============ GET: OBTENER BODEGA POR ID ============
+# ============ PLANTILLA E IMPORTACIÓN MASIVA ============
+@router.get(
+    "/plantilla-importacion",
+    summary="Descargar plantilla Excel para importación de productos",
+    status_code=status.HTTP_200_OK,
+)
+async def descargar_plantilla_importacion(
+    usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
+    service: ProductoImportacionService = Depends(obtener_importacion_service),
+):
+    """
+    Genera un Excel con:
+    - Hoja **Productos**: columnas sku, nombre, unidad_medida_id, precio_costo
+    - Hoja **Unidades_medida**: IDs de unidades activas de la empresa (JWT)
+    """
+    try:
+        empresa_id = usuario_autenticado.get("empresa_id")
+        contenido = await service.generar_plantilla(empresa_id)
+        return StreamingResponse(
+            BytesIO(contenido),
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={
+                "Content-Disposition": 'attachment; filename="plantilla_productos.xlsx"',
+            },
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e),
+        )
+
+
+@router.post(
+    "/importacion",
+    response_model=RespuestaAPIDTO,
+    summary="Importar productos desde Excel",
+    status_code=status.HTTP_200_OK,
+)
+async def importar_productos(
+    archivo: UploadFile = File(...),
+    usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
+    service: ProductoImportacionService = Depends(obtener_importacion_service),
+):
+    """
+    Importa productos de la hoja **Productos**.
+    `empresa_id` y `activo` se toman del JWT (empresa del usuario).
+    """
+    try:
+        if not archivo.filename or not archivo.filename.lower().endswith((".xlsx", ".xlsm")):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="El archivo debe ser Excel (.xlsx)",
+            )
+        contenido = await archivo.read()
+        if not contenido:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="El archivo está vacío",
+            )
+        empresa_id = usuario_autenticado.get("empresa_id")
+        resultado = await service.importar_desde_excel(contenido, empresa_id)
+        mensaje = f"Importación completada: {resultado['creados']} creados"
+        if resultado["con_errores"]:
+            mensaje += f", {resultado['con_errores']} filas con errores"
+        return RespuestaAPIDTO(
+            exito=True,
+            datos=resultado,
+            mensaje=mensaje,
+        ).dict()
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e),
+        )
+
+
+# ============ GET: OBTENER PRODUCTO POR ID ============
 @router.get(
     "/{id}",
     response_model=RespuestaAPIDTO,

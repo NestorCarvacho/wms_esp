@@ -4,6 +4,7 @@ Orquesta la lógica de negocio para operaciones CRUD.
 """
 from typing import Dict, Any
 from app.infrastructure.repositories.cargo_crud_repository import CargoCRUDRepository
+from app.domain.services.display_helpers import format_empresa_nombre
 
 
 class CargoService:
@@ -17,7 +18,8 @@ class CargoService:
         empresa_id: int,
         pagina: int = 1,
         por_pagina: int = 10,
-        es_super_admin: bool = False
+        es_super_admin: bool = False,
+        buscar: str | None = None,
     ) -> Dict[str, Any]:
         """
         Lista cargos de una empresa.
@@ -35,7 +37,8 @@ class CargoService:
             empresa_id=empresa_id,
             pagina=pagina,
             por_pagina=por_pagina,
-            es_super_admin=es_super_admin
+            es_super_admin=es_super_admin,
+            buscar=buscar,
         )
         
         return {
@@ -46,7 +49,8 @@ class CargoService:
                 {
                     "id": c.id,
                     "nombre": c.nombre,
-                    "empresa_id": c.empresa_id
+                    "empresa_id": c.empresa_id,
+                    "empresa_nombre": format_empresa_nombre(c.empresa),
                 }
                 for c in cargos
             ]

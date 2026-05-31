@@ -4,6 +4,7 @@ Orquesta la lógica de negocio para operaciones CRUD.
 """
 from typing import Dict, Any
 from app.infrastructure.repositories.unidadMedida_crud_repository import UnidadMedidaCRUDRepository
+from app.domain.services.display_helpers import format_empresa_nombre
 
 
 class UnidadMedidaService:
@@ -17,7 +18,8 @@ class UnidadMedidaService:
         empresa_id: int,
         pagina: int = 1,
         por_pagina: int = 10,
-        es_super_admin: bool = False
+        es_super_admin: bool = False,
+        buscar: str | None = None,
     ) -> Dict[str, Any]:
         """
         Lista unidades de medida de una empresa.
@@ -35,7 +37,8 @@ class UnidadMedidaService:
             empresa_id=empresa_id,
             pagina=pagina,
             por_pagina=por_pagina,
-            es_super_admin=es_super_admin
+            es_super_admin=es_super_admin,
+            buscar=buscar,
         )
         
                 # "empresa_id": 1,
@@ -51,6 +54,7 @@ class UnidadMedidaService:
                 {
                     "id": b.id,
                     "empresa_id": b.empresa_id,
+                    "empresa_nombre": format_empresa_nombre(b.empresa),
                     "nombre": b.nombre,
                     "codigo": b.codigo,
                     "activo": b.activo

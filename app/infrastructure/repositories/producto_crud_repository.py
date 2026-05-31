@@ -4,8 +4,10 @@ CRUD con filtrado automático por empresa_id.
 """
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update, and_, func
+from sqlalchemy.orm import selectinload
 from sqlalchemy.exc import SQLAlchemyError
 from app.infrastructure.models.usuario import Producto
+from app.infrastructure.repositories.listado_helpers import condicion_buscar
 
 
 class ProductoCRUDRepository:
@@ -19,7 +21,8 @@ class ProductoCRUDRepository:
         empresa_id: int,
         pagina: int = 1,
         por_pagina: int = 10,
-        es_super_admin: bool = False
+        es_super_admin: bool = False,
+        buscar: str | None = None,
     ) -> tuple[list[Producto], int]:
         """
         Lista productos de una empresa con paginación.
@@ -35,7 +38,10 @@ class ProductoCRUDRepository:
         """
         try:
             # Construir statement base
-            stmt_base = select(Producto)
+            stmt_base = select(Producto).options(
+                selectinload(Producto.empresa),
+                selectinload(Producto.unidad_medida),
+            )
             
             # Agregar filtro de empresa si no es super admin
             if not es_super_admin:
@@ -43,12 +49,15 @@ class ProductoCRUDRepository:
             
             # Filtrar solo activos
             stmt_base = stmt_base.where(Producto.activo == True)
-            
-            # Contar total
-            count_stmt = select(func.count(Producto.id))
+            buscar_cond = condicion_buscar(Producto, buscar, "nombre", "sku")
+            if buscar_cond is not None:
+                stmt_base = stmt_base.where(buscar_cond)
+
+            count_stmt = select(func.count(Producto.id)).where(Producto.activo == True)
             if not es_super_admin:
                 count_stmt = count_stmt.where(Producto.empresa_id == empresa_id)
-            count_stmt = count_stmt.where(Producto.activo == True)
+            if buscar_cond is not None:
+                count_stmt = count_stmt.where(buscar_cond)
             
             count_result = await self.session.execute(count_stmt)
             total = count_result.scalar() or 0
@@ -151,6 +160,19 @@ class ProductoCRUDRepository:
         except SQLAlchemyError as e:
             await self.session.rollback()
             raise Exception(f"Error al crear producto: {str(e)}")
+
+    async def crear_masivo(self, items: list[dict]) -> int:
+        """Inserta varios productos en una sola transacción."""
+        if not items:
+            return 0
+        try:
+            objetos = [Producto(**item) for item in items]
+            self.session.add_all(objetos)
+            await self.session.commit()
+            return len(objetos)
+        except SQLAlchemyError as e:
+            await self.session.rollback()
+            raise Exception(f"Error al importar productos: {str(e)}")
 
     async def actualizar(self, 
                          producto_id: int, 

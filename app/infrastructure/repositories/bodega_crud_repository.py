@@ -4,8 +4,10 @@ CRUD con filtrado automático por empresa_id.
 """
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update, and_, func
+from sqlalchemy.orm import selectinload
 from sqlalchemy.exc import SQLAlchemyError
 from app.infrastructure.models.usuario import Bodega
+from app.infrastructure.repositories.listado_helpers import condicion_buscar
 
 
 class BodegaCRUDRepository:
@@ -19,7 +21,8 @@ class BodegaCRUDRepository:
         empresa_id: int,
         pagina: int = 1,
         por_pagina: int = 10,
-        es_super_admin: bool = False
+        es_super_admin: bool = False,
+        buscar: str | None = None,
     ) -> tuple[list[Bodega], int]:
         """
         Lista bodegas de una empresa con paginación.
@@ -35,7 +38,7 @@ class BodegaCRUDRepository:
         """
         try:
             # Construir statement base
-            stmt_base = select(Bodega)
+            stmt_base = select(Bodega).options(selectinload(Bodega.empresa))
             
             # Agregar filtro de empresa si no es super admin
             if not es_super_admin:
@@ -43,12 +46,15 @@ class BodegaCRUDRepository:
             
             # Filtrar solo activos
             stmt_base = stmt_base.where(Bodega.activo == True)
-            
-            # Contar total
-            count_stmt = select(func.count(Bodega.id))
+            buscar_cond = condicion_buscar(Bodega, buscar, "nombre", "codigo")
+            if buscar_cond is not None:
+                stmt_base = stmt_base.where(buscar_cond)
+
+            count_stmt = select(func.count(Bodega.id)).where(Bodega.activo == True)
             if not es_super_admin:
                 count_stmt = count_stmt.where(Bodega.empresa_id == empresa_id)
-            count_stmt = count_stmt.where(Bodega.activo == True)
+            if buscar_cond is not None:
+                count_stmt = count_stmt.where(buscar_cond)
             
             count_result = await self.session.execute(count_stmt)
             total = count_result.scalar() or 0

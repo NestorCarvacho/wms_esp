@@ -1,0 +1,13 @@
+{
+  "$schema": "https://railpack.com/schema.json",
+  "providers": ["node"],
+  "build": {
+    "steps": [
+      "npm ci",
+      "npm run build"
+    ]
+  },
+  "start": {
+    "cmd": "npm run start"
+  }
+}

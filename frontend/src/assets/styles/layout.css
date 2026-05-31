@@ -1,0 +1,41 @@
+:root {
+  --top-nav-height: 56px;
+  --options-bar-height: 48px;
+  --total-nav-height: calc(var(--top-nav-height) + var(--options-bar-height));
+}
+
+.top-nav-height {
+  min-height: var(--top-nav-height);
+  height: var(--top-nav-height);
+}
+
+.options-bar-height {
+  min-height: var(--options-bar-height);
+  height: var(--options-bar-height);
+}
+
+.main-content-padding {
+  padding-top: var(--total-nav-height);
+}
+
+.desktop-options-bar {
+  display: none;
+}
+
+.desktop-search-bar {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .desktop-options-bar {
+    display: block;
+  }
+
+  .desktop-search-bar {
+    display: flex;
+  }
+
+  .mobile-menu-button {
+    display: none;
+  }
+}

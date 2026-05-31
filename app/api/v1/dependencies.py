@@ -65,22 +65,16 @@ def es_super_admin(usuario: dict = Depends(obtener_usuario_autenticado)) -> bool
 
 
 async def validar_permisos(
-    roles_requeridos: list[str],
+    permisos_requeridos: list[str],
     usuario: dict = Depends(obtener_usuario_autenticado)
 ) -> dict:
-    """
-    Valida que el usuario tenga al menos uno de los roles requeridos.
+    """Valida que el usuario tenga al menos uno de los permisos requeridos."""
+    usuario_permisos = usuario.get("permisos", [])
     
-    Uso:
-        async def validar_admin(usuario = Depends(validar_permisos(["admin"]))):
-            ...
-    """
-    usuario_roles = usuario.get("roles", [])
-    
-    if not any(rol in usuario_roles for rol in roles_requeridos):
+    if not any(p in usuario_permisos for p in permisos_requeridos):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"Permisos insuficientes. Se requiere uno de: {roles_requeridos}"
+            detail=f"Permisos insuficientes. Se requiere uno de: {permisos_requeridos}"
         )
     
     return usuario
@@ -89,6 +83,5 @@ async def validar_permisos(
 async def obtener_auth_service(
     session: AsyncSession = Depends(get_db_session)
 ) -> AuthService:
-    """Factory para obtener el servicio de autenticación."""
     usuario_repo = UsuarioRepository(session)
-    return AuthService(usuario_repo)
+    return AuthService(usuario_repo, session)

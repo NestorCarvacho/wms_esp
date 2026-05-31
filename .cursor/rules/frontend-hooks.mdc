@@ -1,0 +1,27 @@
+---
+description: Al crear hooks React, consultar primero hooks_ejemplos como referencia de patrones
+globs: frontend/src/hooks/**/*.{ts,tsx},frontend/src/crud/**/*.ts
+alwaysApply: false
+---
+
+# Hooks frontend WMS
+
+## Primer paso obligatorio
+
+Antes de escribir un hook nuevo o ampliar uno existente:
+
+1. Lee `frontend/src/hooks/README.md`
+2. Busca un patrón similar en `frontend/src/hooks/hooks_ejemplos/` (tabla, formulario, menú, UI)
+3. Implementa el hook en la carpeta **activa** (`ui/`, `mainMenu/` o `crud/`), no dentro de `hooks_ejemplos/`
+
+`hooks_ejemplos/` es referencia copiable; **no importar** desde ahí en código productivo.
+
+## Dónde colocar hooks nuevos
+
+- Tabla / búsqueda / paginación server-side → reutilizar `usePaginatedCrudTable`; ver `hooks_ejemplos/ui/table/`
+- UI global (notificaciones, modales) → `@/hooks/ui` / `UIContext`
+- Menú → `mainMenu/`
+
+## API de listados
+
+Listados paginados: `pagina=1`, `por_pagina=10` por defecto; búsqueda con query `buscar` vía `buildListQuery` (`src/api/listQuery.ts`).

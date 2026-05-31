@@ -13,7 +13,7 @@ class UsuarioCrearDTO(BaseModel):
     """DTO para crear un nuevo usuario."""
     email: EmailStr = Field(..., description="Email único del usuario")
     contrasena: str = Field(..., min_length=8, max_length=72, description="Mínimo 8 caracteres, debe incluir mayúscula y número")
-    cargo_id: Optional[int] = Field(None, description="ID del cargo (opcional)")
+    cargo_id: Optional[int] = Field(None, description="ID del cargo (define roles vía cargo_rol)")
     empresa_id: Optional[int] = Field(None, description="ID de la empresa (solo para super admin, opcional)")
     
     @validator("contrasena")
@@ -47,6 +47,8 @@ class UsuarioRespuestaDTO(BaseModel):
     fecha_creacion: datetime
     fecha_actualizacion: datetime
     perfil: Optional["PerfilUsuarioRespuestaDTO"] = None
+    empresa_nombre: Optional[str] = None
+    cargo_nombre: Optional[str] = None
     
     class Config:
         from_attributes = True
@@ -80,7 +82,7 @@ class UsuarioRespuestaDTO(BaseModel):
 class UsuarioActualizarDTO(BaseModel):
     """DTO para actualizar un usuario existente."""
     email: Optional[EmailStr] = Field(None, description="Email único del usuario")
-    cargo_id: Optional[int] = Field(None, description="ID del cargo (opcional)")
+    cargo_id: Optional[int] = Field(None, description="ID del cargo")
     contrasena: Optional[str] = Field(None, min_length=8, max_length=72, description="Nueva contraseña (opcional, mínimo 8 caracteres)")
     activo: Optional[bool] = Field(None, description="Indica si el usuario está activo")
     
@@ -267,9 +269,10 @@ class TokenPayload(BaseModel):
     usuario_id: int
     empresa_id: int
     email: str
-    cargo_id: int
+    cargo_id: Optional[int] = None
     exp: int
     roles: List[str] = Field(default_factory=list)
+    permisos: List[str] = Field(default_factory=list)
 
 
 # ============ EMPRESA ============

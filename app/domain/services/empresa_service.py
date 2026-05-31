@@ -16,7 +16,8 @@ class EmpresaService:
         self,
         pagina: int = 1,
         por_pagina: int = 10,
-        solo_activas: bool = False
+        solo_activas: bool = False,
+        buscar: str | None = None,
     ) -> Dict[str, Any]:
         """
         Lista empresas con paginación.
@@ -33,7 +34,8 @@ class EmpresaService:
             empresas, total = await self.repository.listar(
                 pagina=pagina,
                 por_pagina=por_pagina,
-                solo_activas=solo_activas
+                solo_activas=solo_activas,
+                buscar=buscar,
             )
             
             return {

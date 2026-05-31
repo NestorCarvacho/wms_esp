@@ -146,7 +146,7 @@ async def login(
     try:
 
         usuario_repo = UsuarioRepository(session)
-        auth_service = AuthService(usuario_repo)
+        auth_service = AuthService(usuario_repo, session)
 
         resultado = await auth_service.login(
             email=credenciales.email,
@@ -158,7 +158,7 @@ async def login(
             datos={
                 "acceso_token": resultado["acceso_token"],
                 "token_type": resultado["token_type"],
-                "usuario": resultado["usuario"].model_dump()
+                "usuario": resultado["usuario"],
             },
             mensaje="Login exitoso"
         ).model_dump()
@@ -241,7 +241,7 @@ async def registrar(
         # empresa_id = obtener_empresa_id()
         
         usuario_repo = UsuarioRepository(session)
-        auth_service = AuthService(usuario_repo)
+        auth_service = AuthService(usuario_repo, session)
         
         resultado = await auth_service.registrar_usuario(
             email=datos_usuario.email,

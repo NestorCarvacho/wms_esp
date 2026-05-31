@@ -4,6 +4,7 @@ Orquesta la lógica de negocio para operaciones CRUD.
 """
 from typing import Dict, Any
 from app.infrastructure.repositories.producto_crud_repository import ProductoCRUDRepository
+from app.domain.services.display_helpers import format_empresa_nombre
 
 
 class ProductoService:
@@ -17,7 +18,8 @@ class ProductoService:
         empresa_id: int,
         pagina: int = 1,
         por_pagina: int = 10,
-        es_super_admin: bool = False
+        es_super_admin: bool = False,
+        buscar: str | None = None,
     ) -> Dict[str, Any]:
         """
         Lista productos de una empresa.
@@ -35,7 +37,8 @@ class ProductoService:
             empresa_id=empresa_id,
             pagina=pagina,
             por_pagina=por_pagina,
-            es_super_admin=es_super_admin
+            es_super_admin=es_super_admin,
+            buscar=buscar,
         )
         
         return {
@@ -47,8 +50,12 @@ class ProductoService:
                     "id": b.id,
                     "nombre": b.nombre,
                     "empresa_id": b.empresa_id,
+                    "empresa_nombre": format_empresa_nombre(b.empresa),
                     "sku": b.sku,
-                    "activo": b.activo
+                    "activo": b.activo,
+                    "unidad_medida_id": b.unidad_medida_id,
+                    "unidad_medida_nombre": b.unidad_medida.nombre if b.unidad_medida else None,
+                    "precio_costo": float(b.precio_costo) if b.precio_costo is not None else None,
                 }
                 for b in productos
             ]

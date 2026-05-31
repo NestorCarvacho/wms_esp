@@ -49,6 +49,7 @@ async def listar_empresas(
     pagina: int = 1,
     por_pagina: int = 10,
     solo_activas: bool = False,
+    buscar: str | None = None,
     usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
     es_admin: bool = Depends(validar_super_admin),
     service: EmpresaService = Depends(obtener_empresa_service)
@@ -75,7 +76,8 @@ async def listar_empresas(
         resultado = await service.listar_empresas(
             pagina=pagina,
             por_pagina=por_pagina,
-            solo_activas=solo_activas
+            solo_activas=solo_activas,
+            buscar=buscar,
         )
         
         return RespuestaAPIDTO(

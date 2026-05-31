@@ -4,8 +4,10 @@ CRUD con filtrado automático por empresa_id.
 """
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update, and_, func
+from sqlalchemy.orm import selectinload
 from sqlalchemy.exc import SQLAlchemyError
 from app.infrastructure.models.usuario import UnidadMedida
+from app.infrastructure.repositories.listado_helpers import condicion_buscar
 
 
 class UnidadMedidaCRUDRepository:
@@ -19,7 +21,8 @@ class UnidadMedidaCRUDRepository:
         empresa_id: int,
         pagina: int = 1,
         por_pagina: int = 10,
-        es_super_admin: bool = False
+        es_super_admin: bool = False,
+        buscar: str | None = None,
     ) -> tuple[list[UnidadMedida], int]:
         """
         Lista unidades de medida de una empresa con paginación.
@@ -35,7 +38,7 @@ class UnidadMedidaCRUDRepository:
         """
         try:
             # Construir statement base
-            stmt_base = select(UnidadMedida)
+            stmt_base = select(UnidadMedida).options(selectinload(UnidadMedida.empresa))
             
             # Agregar filtro de empresa si no es super admin
             if not es_super_admin:
@@ -43,12 +46,15 @@ class UnidadMedidaCRUDRepository:
             
             # Filtrar solo activos
             stmt_base = stmt_base.where(UnidadMedida.activo == True)
-            
-            # Contar total
-            count_stmt = select(func.count(UnidadMedida.id))
+            buscar_cond = condicion_buscar(UnidadMedida, buscar, "nombre", "codigo")
+            if buscar_cond is not None:
+                stmt_base = stmt_base.where(buscar_cond)
+
+            count_stmt = select(func.count(UnidadMedida.id)).where(UnidadMedida.activo == True)
             if not es_super_admin:
                 count_stmt = count_stmt.where(UnidadMedida.empresa_id == empresa_id)
-            count_stmt = count_stmt.where(UnidadMedida.activo == True)
+            if buscar_cond is not None:
+                count_stmt = count_stmt.where(buscar_cond)
             
             count_result = await self.session.execute(count_stmt)
             total = count_result.scalar() or 0

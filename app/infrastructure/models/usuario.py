@@ -37,7 +37,7 @@ class Cargo(Base):
     nombre = Column(String(255), nullable=False)
     activo = Column(Boolean, default=True)
 
-    roles = relationship("Rol", back_populates="cargo")
+    empresa = relationship("Empresa")
     
     def __repr__(self):
         return f"<Cargo(id={self.id}, nombre='{self.nombre}')>"
@@ -58,6 +58,7 @@ class Usuario(Base):
     
     # Relaciones
     empresa = relationship("Empresa", back_populates="usuarios")
+    cargo = relationship("Cargo")
     perfil = relationship("PerfilUsuario", back_populates="usuario", uselist=False, cascade="all, delete-orphan")
     
     def __repr__(self):
@@ -92,26 +93,52 @@ class PerfilUsuario(Base):
 
 
 class Rol(Base):
-    """Tabla de roles por empresa y cargo."""
+    """Catálogo de roles reutilizables por empresa."""
     __tablename__ = "rol"
     
     id = Column(BigInteger, primary_key=True, index=True)
     empresa_id = Column(BigInteger, ForeignKey("empresa.id"), nullable=False)
-    cargo_id = Column(BigInteger, ForeignKey("cargo.id"), nullable=False)
     nombre = Column(String(50), nullable=False)
     descripcion = Column(String(255), nullable=True)
     activo = Column(Boolean, default=True)
     creado_at = Column(DateTime, default=datetime.utcnow)
-    cargo_id = Column(Integer, ForeignKey("cargo.id"))
-    cargo = relationship("Cargo", back_populates="roles")
+    empresa = relationship("Empresa")
+    permisos = relationship("Permiso", secondary="rol_permiso", viewonly=True)
     
     def __repr__(self):
-        return f"<Rol(id={self.id}, nombre='{self.nombre}', cargo_id={self.cargo_id})>"
+        return f"<Rol(id={self.id}, nombre='{self.nombre}')>"
+
+
+class Permiso(Base):
+    """Permisos atómicos del sistema (ej. inventario.ver)."""
+    __tablename__ = "permiso"
+    
+    id = Column(BigInteger, primary_key=True, index=True)
+    empresa_id = Column(BigInteger, ForeignKey("empresa.id"), nullable=False, index=True)
+    codigo = Column(String(100), nullable=False)
+    descripcion = Column(String(255), nullable=True)
+    activo = Column(Boolean, default=True)
+    empresa = relationship("Empresa")
+    
+    def __repr__(self):
+        return f"<Permiso(id={self.id}, codigo='{self.codigo}')>"
+
+
+class RolPermiso(Base):
+    """Relación N:N entre roles y permisos."""
+    __tablename__ = "rol_permiso"
+    
+    rol_id = Column(BigInteger, ForeignKey("rol.id"), primary_key=True)
+    permiso_id = Column(BigInteger, ForeignKey("permiso.id"), primary_key=True)
+    activo = Column(Boolean, default=True)
+    
+    def __repr__(self):
+        return f"<RolPermiso(rol_id={self.rol_id}, permiso_id={self.permiso_id})>"
 
 
 class PermisoCargo(Base):
-    """Tabla de relación N:N entre Cargos y Roles."""
-    __tablename__ = "permiso_cargo"
+    """Relación N:N cargo ↔ rol (cargo_rol)."""
+    __tablename__ = "permisos_cargo"
     
     cargo_id = Column(BigInteger, ForeignKey("cargo.id"), primary_key=True)
     rol_id = Column(BigInteger, ForeignKey("rol.id"), primary_key=True)
@@ -129,9 +156,45 @@ class Bodega(Base):
     codigo = Column(String(50), nullable=False)
     nombre = Column(String(255), nullable=False)
     activo = Column(Boolean, default=True)
+    empresa = relationship("Empresa")
 
     def __repr__(self):
         return f"<Bodega(id={self.id}, nombre='{self.nombre}', empresa_id={self.empresa_id})>"
+
+    zonas = relationship("ZonaBodega", back_populates="bodega")
+
+
+class TipoZona(Base):
+    """Tipos de zona por empresa (ej. picking, recepción)."""
+    __tablename__ = "tipo_zona"
+
+    id = Column(BigInteger, primary_key=True, index=True)
+    empresa_id = Column(BigInteger, ForeignKey("empresa.id"), nullable=False, index=True)
+    nombre = Column(String(50), nullable=False)
+    activo = Column(Boolean, default=True)
+
+    empresa = relationship("Empresa")
+    zonas = relationship("ZonaBodega", back_populates="tipo_zona")
+
+    def __repr__(self):
+        return f"<TipoZona(id={self.id}, nombre='{self.nombre}')>"
+
+
+class ZonaBodega(Base):
+    """Zonas dentro de una bodega."""
+    __tablename__ = "zona_bodega"
+
+    id = Column(BigInteger, primary_key=True, index=True)
+    bodega_id = Column(BigInteger, ForeignKey("bodega.id"), nullable=False, index=True)
+    tipo_zona_id = Column(BigInteger, ForeignKey("tipo_zona.id"), nullable=False, index=True)
+    nombre = Column(String(100), nullable=True)
+    activo = Column(Boolean, default=True)
+
+    bodega = relationship("Bodega", back_populates="zonas")
+    tipo_zona = relationship("TipoZona", back_populates="zonas")
+
+    def __repr__(self):
+        return f"<ZonaBodega(id={self.id}, nombre='{self.nombre}', bodega_id={self.bodega_id})>"
 
 class Producto(Base):
     """Tabla de productos por empresa."""
@@ -144,6 +207,8 @@ class Producto(Base):
     unidad_medida_id = Column(BigInteger, ForeignKey("unidad_medida.id"), nullable=False)
     precio_costo = Column(Numeric(12, 2), nullable=True)
     activo = Column(Boolean, default=True)
+    empresa = relationship("Empresa")
+    unidad_medida = relationship("UnidadMedida")
 
     def __repr__(self):
         return f"<Producto(id={self.id}, nombre='{self.nombre}', empresa_id={self.empresa_id}, sku='{self.sku}')>"
@@ -157,6 +222,7 @@ class UnidadMedida(Base):
     nombre = Column(String(255), nullable=False)
     codigo = Column(String(50), nullable=False)
     activo = Column(Boolean, default=True)
+    empresa = relationship("Empresa")
 
     def __repr__(self):
         return f"<UnidadMedida(id={self.id}, nombre='{self.nombre}', empresa_id={self.empresa_id}, codigo='{self.codigo}')>"

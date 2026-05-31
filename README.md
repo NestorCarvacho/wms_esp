@@ -98,3 +98,7 @@ Todo acceso a datos **DEBE filtrar por `empresa_id`**:
 ## 📞 Soporte
 
 Ver documentación en `docs/capas/` para detalles de cada capa.
+
+## ☁️ Despliegue en Railway
+
+Frontend y backend se despliegan como **dos servicios** en el mismo monorepo. Guía paso a paso: [`docs/DEPLOY_RAILWAY.md`](docs/DEPLOY_RAILWAY.md).

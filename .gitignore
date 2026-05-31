@@ -28,5 +28,7 @@ venv/Lib/
 .env.docker.local
 # Ignorar archivos de entorno de Kubernetes
 
-
+# Frontend
+frontend/node_modules/
+frontend/dist/
 

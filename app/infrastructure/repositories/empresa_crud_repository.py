@@ -7,6 +7,7 @@ from sqlalchemy import select, update, and_, func
 from sqlalchemy.exc import SQLAlchemyError
 from datetime import datetime
 from app.infrastructure.models.usuario import Empresa
+from app.infrastructure.repositories.listado_helpers import condicion_buscar
 
 
 class EmpresaCRUDRepository:
@@ -19,7 +20,8 @@ class EmpresaCRUDRepository:
         self,
         pagina: int = 1,
         por_pagina: int = 10,
-        solo_activas: bool = False
+        solo_activas: bool = False,
+        buscar: str | None = None,
     ) -> tuple[list[Empresa], int]:
         """
         Lista empresas con paginación.
@@ -33,19 +35,21 @@ class EmpresaCRUDRepository:
             Tupla (lista_empresas, total_empresas)
         """
         try:
-            # Contar total
-            stmt_count = select(Empresa)
+            buscar_cond = condicion_buscar(Empresa, buscar, "nombre", "codigo")
+
+            count_stmt = select(func.count(Empresa.id))
             if solo_activas:
-                stmt_count = stmt_count.where(Empresa.esta_activa == True)
-            
-            result_count = await self.session.execute(stmt_count)
-            total = len(result_count.scalars().all())
-            
-            # Listar con paginación
+                count_stmt = count_stmt.where(Empresa.esta_activa == True)
+            if buscar_cond is not None:
+                count_stmt = count_stmt.where(buscar_cond)
+            total = (await self.session.execute(count_stmt)).scalar() or 0
+
             offset = (pagina - 1) * por_pagina
             stmt = select(Empresa)
             if solo_activas:
                 stmt = stmt.where(Empresa.esta_activa == True)
+            if buscar_cond is not None:
+                stmt = stmt.where(buscar_cond)
             
             stmt = stmt.offset(offset).limit(por_pagina).order_by(Empresa.id)
             

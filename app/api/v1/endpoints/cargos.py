@@ -38,6 +38,7 @@ async def obtener_cargo_service(session: AsyncSession = Depends(get_db_session))
 async def listar_cargos(
     pagina: int = 1,
     por_pagina: int = 10,
+    buscar: str | None = None,
     usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
     es_admin: bool = Depends(es_super_admin),
     service: CargoService = Depends(obtener_cargo_service)
@@ -66,7 +67,8 @@ async def listar_cargos(
             empresa_id=empresa_id,
             pagina=pagina,
             por_pagina=por_pagina,
-            es_super_admin=es_admin
+            es_super_admin=es_admin,
+            buscar=buscar,
         )
         
         return RespuestaAPIDTO(
