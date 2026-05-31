@@ -1,104 +1,193 @@
-# WMS Multi-Tenant - Setup y Guía de Uso
+# WMS Multi-Tenant
 
-## 📋 Requisitos Previos
+Sistema de gestión de almacén multi-empresa con autenticación JWT, RBAC (Usuario → Cargo → Rol → Permiso) y frontend React.
 
-- Python 3.9+
-- MySQL 8.0+
-- Git
+## Requisitos
 
-## 🚀 Instalación
+| Componente | Versión |
+|------------|---------|
+| Python | 3.9+ |
+| Node.js | 18+ |
+| MySQL | 8.0+ |
+| Git | — |
 
-### 1. Clonar el repositorio
-```bash
-git clone <repo>
-cd wms_esp
+## Estructura del monorepo
+
+```
+wms_esp/
+├── app/                    # Backend FastAPI
+├── frontend/               # Frontend Vite + React
+├── mysql-init/             # Scripts SQL de inicialización
+├── docs/                   # Documentación
+├── docker-compose.yml      # MySQL + backend (local)
+├── railway.toml            # Config Railway — API
+└── frontend/railway.toml   # Config Railway — SPA
 ```
 
-### 2. Crear entorno virtual
-```bash
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-# o
-venv\Scripts\activate  # Windows
-```
-
-### 3. Instalar dependencias
-```bash
-pip install -r requirements.txt
-```
-
-### 4. Configurar variables de entorno
-```bash
-cp .env.example .env
-# Editar .env con tus datos de BD
-```
-
-### 5. Crear base de datos e iniciar el servidor
-```bash
-# Crear BD (ver mysql-init/01_setup.sql)
-mysql -u root -p < mysql-init/01_setup.sql
-
-# Iniciar servidor
-python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-```
-
-## 📚 API Endpoints
-
-### Autenticación (`/api/v1/auth/`)
-- `POST /login` - Login con correo y contraseña
-- `POST /registrar` - Registrar nuevo usuario
-
-### Documentación Interactiva
-- Swagger UI: http://localhost:8000/docs
-- ReDoc: http://localhost:8000/redoc
-- Health Check: http://localhost:8000/health
-
-## 🏗️ Estructura del Proyecto
+### Backend (`app/`)
 
 ```
 app/
-├── api/v1/endpoints/       # Controladores (Capa Presentación)
-│   └── auth.py
-├── core/                   # Configuración y seguridad
-│   ├── config.py
-│   └── security.py
+├── api/v1/endpoints/       # Controladores REST
+├── core/                   # Config, JWT, seguridad
 ├── domain/services/        # Lógica de negocio
-│   └── auth_service.py
-├── infrastructure/         # Acceso a datos
-│   ├── database.py
-│   ├── models/
-│   └── repositories/
-├── schemas/               # DTOs (Validación)
-└── main.py               # Entrada de la app
+├── infrastructure/         # Repositorios, modelos, BD
+├── schemas/                # DTOs Pydantic
+└── main.py
 ```
 
-## 🔐 Arquitectura de Capas
+### Frontend (`frontend/`)
 
-1. **Presentación** (`api/v1/endpoints/`) - Controllers y DTOs
-2. **Negocio** (`domain/services/`) - Lógica de dominio
-3. **Datos** (`infrastructure/`) - Repositorios y ORM
-4. **Seguridad** (`core/security.py`) - JWT, BCrypt
+```
+frontend/
+├── src/                    # Páginas, hooks, API, contexto auth
+├── component/              # UI legacy (layout, formularios, menú)
+└── assets/img/             # Logos WMS
+```
 
-## 📝 Regla de Oro: Multi-tenancy
+## Desarrollo local
 
-Todo acceso a datos **DEBE filtrar por `empresa_id`**:
-- Se extrae del JWT del usuario autenticado
-- Nunca se recibe como parámetro del body
+### 1. Clonar e instalar
+
+```bash
+git clone https://github.com/NestorCarvacho/wms_esp.git
+cd wms_esp
+
+python -m venv venv
+venv\Scripts\activate          # Windows
+# source venv/bin/activate     # Linux/Mac
+
+pip install -r requirements.txt
+```
+
+### 2. Base de datos
+
+```bash
+mysql -u root -p < mysql-init/01_setup.sql
+mysql -u root -p < mysql-init/02_altern_tables.sql
+mysql -u root -p < mysql-init/03_rbac_hierarchy.sql
+```
+
+Alternativa con Docker:
+
+```bash
+docker compose up -d db
+```
+
+### 3. Backend
+
+```bash
+cp .env.example .env
+# Editar DATABASE_URL, SECRET_KEY, CORS_ORIGINS
+
+python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+- Swagger: http://localhost:8000/docs
+- ReDoc: http://localhost:8000/redoc
+- Health: http://localhost:8000/health
+
+### 4. Frontend
+
+```bash
+cd frontend
+npm install
+cp .env.example .env          # VITE_API_URL vacío → proxy Vite a :8000
+npm run dev
+```
+
+- App: http://localhost:5173
+
+## Variables de entorno
+
+### Backend (`.env`)
+
+| Variable | Descripción |
+|----------|-------------|
+| `DATABASE_URL` | Conexión MySQL (`mysql+aiomysql://...`) |
+| `SECRET_KEY` | Clave para firmar JWT |
+| `DEBUG` | `True` en local, `False` en producción |
+| `CORS_ORIGINS` | URLs del frontend, separadas por coma |
+
+### Frontend (`frontend/.env`)
+
+| Variable | Descripción |
+|----------|-------------|
+| `VITE_API_URL` | URL del API en producción. Vacío en local (usa proxy Vite) |
+
+## API principal
+
+| Módulo | Prefijo |
+|--------|---------|
+| Autenticación | `/api/v1/auth/` |
+| Usuarios, empresas, cargos, roles | `/api/v1/...` |
+| Bodegas, productos, unidades de medida | `/api/v1/...` |
+| Tipos de zona, zonas de bodega | `/api/v1/...` |
+| Permisos y RBAC | `/api/v1/...` |
+
+## Multi-tenancy
+
+Todo acceso a datos **debe filtrar por `empresa_id`**:
+
+- Se obtiene del JWT del usuario autenticado
+- No se acepta como parámetro del body
 - Garantiza aislamiento entre empresas
 
-## 🛠️ Próximos Pasos
+## Arquitectura de capas
 
-- [ ✅ ] Crear endpoints de usuarios
-- [ ✅ ] Crear endpoints de empresas
-- [ ] Crear endpoints de productos
-- [ ] Crear endpoints de inventario
-- [ ] Crear endpoints de órdenes
-- [ ] Implementar middleware de autenticación global
+1. **Presentación** — `api/v1/endpoints/`
+2. **Negocio** — `domain/services/`
+3. **Datos** — `infrastructure/`
+4. **Seguridad** — `core/security.py`
 
-## 📞 Soporte
+Detalle en [`docs/capas/`](docs/capas/) y [`docs/ESTRUCTURA_PROYECTO.md`](docs/ESTRUCTURA_PROYECTO.md).
 
-Ver documentación en `docs/capas/` para detalles de cada capa.
+## Despliegue en Railway
 
-## ☁️ Despliegue en Railway
+Frontend y backend se despliegan como **servicios separados** en el mismo repositorio.
 
-Frontend y backend se despliegan como **dos servicios** en el mismo monorepo. Guía paso a paso: [`docs/DEPLOY_RAILWAY.md`](docs/DEPLOY_RAILWAY.md).
+| Servicio | Root directory | URL (production) |
+|----------|----------------|------------------|
+| `wms_esp` (API) | `/` | https://wmsesp-production.up.railway.app |
+| `wms-frontend` | `frontend` | https://wms-frontend-production-296e.up.railway.app |
+| MySQL | plugin Railway | — |
+
+Guías:
+
+- [`docs/DEPLOY_RAILWAY.md`](docs/DEPLOY_RAILWAY.md) — guía general paso a paso
+- [`docs/RAILWAY_WMS_ESP.md`](docs/RAILWAY_WMS_ESP.md) — estado y variables del proyecto WMS_ESP
+
+```bash
+npm i -g @railway/cli
+railway login
+railway link -p WMS_ESP
+
+# Backend
+railway service link wms_esp
+railway redeploy -y
+
+# Frontend
+railway service link wms-frontend
+railway up ./frontend --path-as-root --detach
+```
+
+## Funcionalidades
+
+- [x] Auth JWT multi-tenant
+- [x] CRUD usuarios, empresas, cargos, roles, permisos
+- [x] RBAC: Usuario → Cargo → Rol → Permiso
+- [x] Bodegas, productos, unidades de medida
+- [x] Tipos de zona y zonas de bodega
+- [x] Importación masiva de productos (Excel)
+- [x] Paginación y búsqueda server-side en tablas CRUD
+- [ ] Inventario y movimientos de stock
+- [ ] Órdenes de compra y venta
+
+## Documentación
+
+| Recurso | Contenido |
+|---------|-----------|
+| [`docs/capas/`](docs/capas/) | Capas presentación, negocio, datos, seguridad |
+| [`docs/DEPLOY_RAILWAY.md`](docs/DEPLOY_RAILWAY.md) | Despliegue en Railway |
+| [`docs/RAILWAY_WMS_ESP.md`](docs/RAILWAY_WMS_ESP.md) | Configuración actual en Railway |
+| [`frontend/src/hooks/README.md`](frontend/src/hooks/README.md) | Convenciones de hooks |
