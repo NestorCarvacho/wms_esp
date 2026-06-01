@@ -44,3 +44,5 @@ CREATE TABLE IF NOT EXISTS rol_permiso (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- permisos_cargo = cargo_rol (sin cambios de estructura)
+
+-- Datos iniciales: ver mysql-init/05_rbac_seed_empresa_1.sql

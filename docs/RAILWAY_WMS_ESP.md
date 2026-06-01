@@ -61,5 +61,11 @@ railway up ./frontend --path-as-root --detach
 1. **Frontend → GitHub:** en Railway, servicio `wms-frontend` → Settings → Connect Repo `NestorCarvacho/wms_esp`, Root Directory `frontend`.
 2. **Push** los cambios locales (`railway.toml`, `frontend/railway.toml`, CORS, etc.) a `main` para que GitHub dispare el deploy.
 3. **Deploy:** el plan free puede bloquear deploys en horario pico (8–20 h ET); reintentar después o usar `railway up`.
-4. **MySQL:** ejecutar `mysql-init/*.sql` si la BD aún no tiene el esquema completo.
+4. **MySQL:** ejecutar scripts si faltan tablas RBAC:
+   ```bash
+   # En consola MySQL de Railway (Query) o con cliente mysql:
+   mysql ... < mysql-init/04_rbac_missing_tables.sql
+   mysql ... < mysql-init/05_rbac_seed_empresa_1.sql
+   # Migración completa (BD antigua): mysql-init/03_rbac_hierarchy.sql
+   ```
 5. **SECRET_KEY:** generar una clave nueva en Variables del backend.
