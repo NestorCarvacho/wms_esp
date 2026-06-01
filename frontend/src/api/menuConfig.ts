@@ -35,6 +35,7 @@ const ROUTE_PERMISSIONS: Record<string, string> = {
   '/usuarios': 'usuarios.leer',
   '/cargos': 'cargos.leer',
   '/roles': 'roles.leer',
+  '/asignar-permisos': 'roles.leer',
   '/permisos': 'permisos.leer',
   '/empresas': 'empresas.leer',
 };
@@ -103,6 +104,7 @@ export function buildWmsMenu(
             { id: 'usuarios', title: 'Usuarios', url: '/usuarios', routeMetadata: { iconName: 'user', breadcrumbTitle: 'Usuarios' } },
             { id: 'cargos', title: 'Cargos', url: '/cargos', routeMetadata: { iconName: 'user', breadcrumbTitle: 'Cargos' } },
             { id: 'roles', title: 'Roles', url: '/roles', routeMetadata: { iconName: 'lock', breadcrumbTitle: 'Roles' } },
+            { id: 'asignar-permisos', title: 'Asignar permisos', url: '/asignar-permisos', routeMetadata: { iconName: 'lock', breadcrumbTitle: 'Asignar permisos' } },
             { id: 'permisos', title: 'Permisos', url: '/permisos', routeMetadata: { iconName: 'lock', breadcrumbTitle: 'Permisos' } },
           ],
         },

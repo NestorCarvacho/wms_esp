@@ -41,7 +41,7 @@ async def listar_roles(
     pagina: int = 1,
     por_pagina: int = 10,
     buscar: str | None = None,
-    ctx: ContextoEmpresa = Depends(obtener_contexto_empresa),
+    ctx: ContextoEmpresa = Depends(contexto_requiere_permiso("roles.leer")),
     service: RolService = Depends(obtener_rol_service)
 
 ):

@@ -12,6 +12,12 @@ class RolPermisoCRUDRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
 
+    async def obtener_rol(self, rol_id: int) -> Rol | None:
+        result = await self.session.execute(
+            select(Rol).where(Rol.id == rol_id, Rol.activo == True)
+        )
+        return result.scalars().first()
+
     async def listar_por_rol(self, rol_id: int, empresa_id: int) -> list[tuple[RolPermiso, Permiso]]:
         stmt = (
             select(RolPermiso, Permiso)

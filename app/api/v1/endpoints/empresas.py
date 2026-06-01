@@ -9,7 +9,9 @@ from app.infrastructure.database import get_db_session
 from app.infrastructure.repositories.empresa_crud_repository import EmpresaCRUDRepository
 from app.domain.services.empresa_service import EmpresaService
 from app.domain.services.empresa_maestra_service import EmpresaMaestraService
+from app.domain.services.empresa_rbac_bootstrap_service import EmpresaRbacBootstrapService
 from app.infrastructure.repositories.empresa_administrada_repository import EmpresaAdministradaRepository
+from app.infrastructure.repositories.empresa_rbac_bootstrap_repository import EmpresaRbacBootstrapRepository
 from app.api.v1.dependencies import obtener_usuario_autenticado, requiere_permiso, es_super_admin
 from app.schemas.empresa import (
     EmpresaCrearDTO,
@@ -32,6 +34,16 @@ async def obtener_empresa_service(session: AsyncSession = Depends(get_db_session
 
 async def obtener_empresa_maestra_service(session: AsyncSession = Depends(get_db_session)) -> EmpresaMaestraService:
     return EmpresaMaestraService(EmpresaAdministradaRepository(session))
+
+
+async def obtener_empresa_rbac_bootstrap_service(
+    session: AsyncSession = Depends(get_db_session),
+) -> EmpresaRbacBootstrapService:
+    return EmpresaRbacBootstrapService(
+        EmpresaRbacBootstrapRepository(session),
+        EmpresaCRUDRepository(session),
+        session,
+    )
 
 
 def validar_super_admin(es_admin: bool = Depends(es_super_admin)):
@@ -192,8 +204,8 @@ async def crear_empresa(
     dto: EmpresaCrearDTO,
     usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
     es_admin: bool = Depends(validar_super_admin),
-    service: EmpresaService = Depends(obtener_empresa_service)
-
+    service: EmpresaService = Depends(obtener_empresa_service),
+    rbac_service: EmpresaRbacBootstrapService = Depends(obtener_empresa_rbac_bootstrap_service),
 ):
     """
     Crea una nueva empresa.
@@ -225,6 +237,14 @@ async def crear_empresa(
             nombre=dto.nombre,
             rut=dto.rut
         )
+
+        try:
+            await rbac_service.provisionar(
+                empresa_destino_id=resultado["id"],
+                usuario=usuario_autenticado,
+            )
+        except ValueError:
+            pass
         
         return RespuestaAPIDTO(
             exito=True,
@@ -240,6 +260,46 @@ async def crear_empresa(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e)
+        )
+
+
+# ============ POST: PROVISIONAR RBAC ============
+@router.post(
+    "/{id}/provisionar-rbac",
+    response_model=RespuestaAPIDTO,
+    summary="Provisionar catálogo RBAC en una empresa",
+    status_code=status.HTTP_200_OK,
+)
+async def provisionar_rbac_empresa(
+    id: int,
+    usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
+    es_admin: bool = Depends(validar_super_admin),
+    rbac_service: EmpresaRbacBootstrapService = Depends(obtener_empresa_rbac_bootstrap_service),
+):
+    """
+    Copia permisos y roles estándar desde la empresa plantilla (id=1) hacia otra empresa.
+
+    Idempotente: solo agrega permisos y roles faltantes; sincroniza asignaciones rol↔permiso.
+    """
+    try:
+        resultado = await rbac_service.provisionar(
+            empresa_destino_id=id,
+            usuario=usuario_autenticado,
+        )
+        return RespuestaAPIDTO(
+            exito=True,
+            datos=resultado,
+            mensaje="Catálogo RBAC provisionado correctamente",
+        ).dict()
+    except ValueError as ve:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(ve),
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e),
         )
 
 

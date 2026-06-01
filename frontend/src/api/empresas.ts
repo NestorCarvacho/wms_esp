@@ -35,3 +35,21 @@ export async function actualizarEmpresa(id: number, data: EmpresaActualizar) {
 export async function eliminarEmpresa(id: number) {
   await apiRequest(`/api/v1/empresas/${id}`, { method: 'DELETE' });
 }
+
+export interface ProvisionRbacResult {
+  empresa_id: number;
+  empresa_plantilla_id: number;
+  permisos_antes: number;
+  permisos_creados: number;
+  total_permisos: number;
+  roles_provisionados: number;
+  ya_existia_catalogo: boolean;
+}
+
+export async function provisionarRbacEmpresa(empresaId: number) {
+  const response = await apiRequest<ProvisionRbacResult>(
+    `/api/v1/empresas/${empresaId}/provisionar-rbac`,
+    { method: 'POST' },
+  );
+  return response.datos!;
+}

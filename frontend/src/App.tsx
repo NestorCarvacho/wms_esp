@@ -29,6 +29,7 @@ import { EmpresasPage } from '@/pages/EmpresasPage';
 import { UnidadesMedidaPage } from '@/pages/UnidadesMedidaPage';
 import { CargosPage } from '@/pages/CargosPage';
 import { RolesPage } from '@/pages/RolesPage';
+import { AsignarPermisosPage } from '@/pages/AsignarPermisosPage';
 import { PermisosPage } from '@/pages/PermisosPage';
 import { PerfilPage } from '@/pages/PerfilPage';
 import SidePanelContainer from '@/components/layout/SidePanelContainer';
@@ -77,6 +78,7 @@ export default function App() {
 
             <Route path="cargos" element={guarded('/cargos', <CargosPage />)} />
             <Route path="roles" element={guarded('/roles', <RolesPage />)} />
+            <Route path="asignar-permisos" element={guarded('/asignar-permisos', <AsignarPermisosPage />)} />
             <Route path="permisos" element={guarded('/permisos', <PermisosPage />)} />
 
             <Route path="empresas" element={guarded('/empresas', <EmpresasPage />)} />
@@ -84,7 +86,7 @@ export default function App() {
             <Route path="unidades-medida" element={guarded('/unidades-medida', <UnidadesMedidaPage />)} />
             <Route path="perfil" element={<PerfilPage />} />
 
-            <Route path="permisos-cargo" element={<Navigate to="/usuarios" replace />} />
+            <Route path="permisos-cargo" element={<Navigate to="/asignar-permisos" replace />} />
 
           </Route>
 
