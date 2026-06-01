@@ -23,6 +23,6 @@ export function useAuth() {
 }
 
 export function useMenu() {
-  const { isSuperAdmin } = useAuthContext();
-  return useMemo(() => buildWmsMenu(isSuperAdmin), [isSuperAdmin]);
+  const { isSuperAdmin, permisos } = useAuthContext();
+  return useMemo(() => buildWmsMenu(isSuperAdmin, permisos), [isSuperAdmin, permisos]);
 }

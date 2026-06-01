@@ -8,8 +8,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.infrastructure.database import get_db_session
 from app.infrastructure.repositories.bodega_crud_repository import BodegaCRUDRepository
 from app.domain.services.bodega_service import BodegaService
-from app.api.v1.dependencies import obtener_usuario_autenticado, es_super_admin
-from app.api.v1.empresa_contexto import ContextoEmpresa, kwargs_listado, obtener_contexto_empresa
+from app.api.v1.dependencies import obtener_usuario_autenticado, requiere_permiso, es_super_admin
+from app.api.v1.empresa_contexto import ContextoEmpresa, kwargs_listado, obtener_contexto_empresa, contexto_requiere_permiso
 from app.schemas.bodega import (
     BodegaCrearDTO,
     BodegaActualizarDTO,
@@ -90,9 +90,9 @@ async def listar_Bodegas(
 )
 async def obtener_bodega(
     id: int,
-    usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
+    usuario_autenticado: dict = Depends(requiere_permiso("bodegas.leer")),
     es_admin: bool = Depends(es_super_admin),
-    service: BodegaService = Depends(obtener_bodega_service)
+    service: BodegaService = Depends(obtener_bodega_service),
 ):
     """
     Obtiene los datos de una bodega específica.
@@ -152,9 +152,9 @@ async def obtener_bodega(
 )
 async def crear_bodega(
     bodega_dto: BodegaCrearDTO,
-    usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
+    usuario_autenticado: dict = Depends(requiere_permiso("bodegas.crear")),
     es_admin: bool = Depends(es_super_admin),
-    service: BodegaService = Depends(obtener_bodega_service)
+    service: BodegaService = Depends(obtener_bodega_service),
 ):
     """
     Crea un nueva bodega en la empresa.
@@ -223,9 +223,9 @@ async def crear_bodega(
 async def actualizar_bodega(
     id: int,
     actualizar_dto: BodegaActualizarDTO,
-    usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
+    usuario_autenticado: dict = Depends(requiere_permiso("bodegas.editar")),
     es_admin: bool = Depends(es_super_admin),
-    service: BodegaService = Depends(obtener_bodega_service)
+    service: BodegaService = Depends(obtener_bodega_service),
 ):
     """
     Actualiza los datos de una bodega existente.
@@ -305,9 +305,9 @@ async def actualizar_bodega(
 )
 async def eliminar_bodega(
     id: int,
-    usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
+    usuario_autenticado: dict = Depends(requiere_permiso("bodegas.eliminar")),
     es_admin: bool = Depends(es_super_admin),
-    service: BodegaService = Depends(obtener_bodega_service)
+    service: BodegaService = Depends(obtener_bodega_service),
 ):
     """
     Elimina una bodega.

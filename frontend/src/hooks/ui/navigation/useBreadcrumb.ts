@@ -6,10 +6,10 @@ import { useAuthContext } from '@/context/AuthContext';
 
 export function useBreadcrumb() {
   const location = useLocation();
-  const { isSuperAdmin } = useAuthContext();
+  const { isSuperAdmin, permisos } = useAuthContext();
 
   return useMemo(() => {
-    const { mainMenu, configMenu } = buildWmsMenu(isSuperAdmin);
+    const { mainMenu, configMenu } = buildWmsMenu(isSuperAdmin, permisos);
     const allMenus = configMenu ? [...mainMenu, configMenu] : mainMenu;
 
     for (const menu of allMenus) {
@@ -50,5 +50,5 @@ export function useBreadcrumb() {
     }
 
     return null;
-  }, [isSuperAdmin, location.pathname]);
+  }, [isSuperAdmin, permisos, location.pathname]);
 }

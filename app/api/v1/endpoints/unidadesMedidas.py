@@ -8,8 +8,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.infrastructure.database import get_db_session
 from app.infrastructure.repositories.unidadMedida_crud_repository import UnidadMedidaCRUDRepository
 from app.domain.services.unidadMedidad_service import UnidadMedidaService
-from app.api.v1.dependencies import obtener_usuario_autenticado, es_super_admin
-from app.api.v1.empresa_contexto import ContextoEmpresa, kwargs_listado, obtener_contexto_empresa, resolver_empresa_creacion
+from app.api.v1.dependencies import obtener_usuario_autenticado, requiere_permiso, es_super_admin
+from app.api.v1.empresa_contexto import ContextoEmpresa, kwargs_listado, obtener_contexto_empresa, resolver_empresa_creacion, contexto_requiere_permiso
 from app.schemas.unidadMedida import (
     UnidadMedidaCrearDTO,
     UnidadMedidaActualizarDTO,
@@ -40,7 +40,7 @@ async def listar_Productos(
     pagina: int = 1,
     por_pagina: int = 10,
     buscar: str | None = None,
-    ctx: ContextoEmpresa = Depends(obtener_contexto_empresa),
+    ctx: ContextoEmpresa = Depends(contexto_requiere_permiso("unidades_medida.leer")),
     service: UnidadMedidaService = Depends(obtener_unidad_medida_service)
 ):
     """
@@ -90,7 +90,7 @@ async def listar_Productos(
 )
 async def obtener_UnidadMedida(
     id: int,
-    usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
+    usuario_autenticado: dict = Depends(requiere_permiso("unidades_medida.leer")),
     es_admin: bool = Depends(es_super_admin),
     service: UnidadMedidaService = Depends(obtener_unidad_medida_service)
 ):
@@ -152,9 +152,9 @@ async def obtener_UnidadMedida(
 )
 async def crear_unidad_medida(
     unidad_medida_dto: UnidadMedidaCrearDTO,
-    usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
+    usuario_autenticado: dict = Depends(requiere_permiso("unidades_medida.crear")),
     session: AsyncSession = Depends(get_db_session),
-    service: UnidadMedidaService = Depends(obtener_unidad_medida_service)
+    service: UnidadMedidaService = Depends(obtener_unidad_medida_service),
 ):
     """
     Crea un nueva unidad de medida en la empresa.
@@ -225,43 +225,16 @@ async def crear_unidad_medida(
 async def actualizar_unidad_medida(
     id: int,
     actualizar_dto: UnidadMedidaActualizarDTO,
-    usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
+    usuario_autenticado: dict = Depends(requiere_permiso("unidades_medida.editar")),
     es_admin: bool = Depends(es_super_admin),
-    service: UnidadMedidaService = Depends(obtener_unidad_medida_service)
+    service: UnidadMedidaService = Depends(obtener_unidad_medida_service),
 ):
     """
     Actualiza los datos de una unidad de medida existente.
-    
-    **Comportamiento multi-tenant:**
-    - Super admin: Puede actualizar cualquier unidad de medida
-    - Usuario normal: Solo puede actualizar unidades de medida de su empresa
-    
-    **Parámetros:**
-    - id: ID de la unidad de medida a actualizar
-    
-    **Body (todos los campos opcionales):**
-    - nombre: Nuevo nombre de la unidad de medida (1-100 caracteres)
-    - codigo: Nuevo código de la unidad de medida (1-50 caracteres)
-    - activo: Nuevo estado de la unidad de medida (booleano)
-    
-    **Respuesta:**
-    - Datos de la unidad de medida actualizada
-    
-    **Permisos:**
-    - Requiere autenticación JWT
-    - Usuario normal solo actualiza en su empresa
-    - Super admin puede actualizar en cualquier empresa
-    
-    **Validaciones:**
-    - Nombre único por empresa si se actualiza
-    - Unidad de medida debe existir
     """
     try:
         empresa_id = usuario_autenticado.get("empresa_id")
-        
-        # Si es super admin, obtener sin filtro de empresa para verificar existencia
-        unidad_medida_empresa_id = None if es_admin else empresa_id
-        
+
         unidad_medida_actualizada = await service.actualizar_unidad_medida(
             unidad_medida_id=id,
             empresa_id=empresa_id,
@@ -307,30 +280,12 @@ async def actualizar_unidad_medida(
 )
 async def eliminar_unidad_medida(
     id: int,
-    usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
+    usuario_autenticado: dict = Depends(requiere_permiso("unidades_medida.eliminar")),
     es_admin: bool = Depends(es_super_admin),
-    service: UnidadMedidaService = Depends(obtener_unidad_medida_service)
+    service: UnidadMedidaService = Depends(obtener_unidad_medida_service),
 ):
     """
     Elimina una unidad de medida.
-    
-    **Comportamiento multi-tenant:**
-    - Super admin: Puede eliminar cualquier unidad de medida
-    - Usuario normal: Solo puede eliminar unidades de medida de su empresa
-    
-    **Parámetros:**
-    - id: ID de la unidad de medida a eliminar
-    
-    **Respuesta:**
-    - Confirmación de eliminación
-    
-    **Permisos:**
-    - Requiere autenticación JWT
-    - Usuario normal solo elimina en su empresa
-    - Super admin puede eliminar en cualquier empresa
-    
-    **Validaciones:**
-    - Unidad de medida debe existir
     """
     try:
         empresa_id = usuario_autenticado.get("empresa_id")

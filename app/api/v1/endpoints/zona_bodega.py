@@ -4,8 +4,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.infrastructure.database import get_db_session
 from app.infrastructure.repositories.zona_bodega_crud_repository import ZonaBodegaCRUDRepository
 from app.domain.services.zona_bodega_service import ZonaBodegaService
-from app.api.v1.dependencies import obtener_usuario_autenticado, es_super_admin
-from app.api.v1.empresa_contexto import ContextoEmpresa, kwargs_listado, obtener_contexto_empresa
+from app.api.v1.dependencies import obtener_usuario_autenticado, requiere_permiso, es_super_admin
+from app.api.v1.empresa_contexto import ContextoEmpresa, kwargs_listado, obtener_contexto_empresa, contexto_requiere_permiso
 from app.schemas.zona_bodega import ZonaBodegaCrearDTO, ZonaBodegaActualizarDTO, RespuestaAPIDTO
 
 router = APIRouter(prefix="/api/v1/zonas-bodega", tags=["Zonas de Bodega"])
@@ -22,7 +22,7 @@ async def listar_zonas_bodega(
     bodega_id: int | None = None,
     buscar: str | None = None,
     ctx: ContextoEmpresa = Depends(obtener_contexto_empresa),
-    service: ZonaBodegaService = Depends(obtener_zona_bodega_service),
+    service: ZonaBodegaService = Depends(obtener_zona_bodega_service)
 ):
     try:
         resultado = await service.listar_zonas_bodega(
@@ -45,7 +45,7 @@ async def listar_zonas_bodega(
 @router.get("/{id}", response_model=RespuestaAPIDTO, status_code=status.HTTP_200_OK)
 async def obtener_zona_bodega(
     id: int,
-    usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
+    usuario_autenticado: dict = Depends(requiere_permiso("zonas_bodega.leer")),
     es_admin: bool = Depends(es_super_admin),
     service: ZonaBodegaService = Depends(obtener_zona_bodega_service),
 ):
@@ -66,7 +66,7 @@ async def obtener_zona_bodega(
 @router.post("", response_model=RespuestaAPIDTO, status_code=status.HTTP_201_CREATED)
 async def crear_zona_bodega(
     dto: ZonaBodegaCrearDTO,
-    usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
+    usuario_autenticado: dict = Depends(requiere_permiso("zonas_bodega.crear")),
     es_admin: bool = Depends(es_super_admin),
     service: ZonaBodegaService = Depends(obtener_zona_bodega_service),
 ):
@@ -90,7 +90,7 @@ async def crear_zona_bodega(
 async def actualizar_zona_bodega(
     id: int,
     dto: ZonaBodegaActualizarDTO,
-    usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
+    usuario_autenticado: dict = Depends(requiere_permiso("zonas_bodega.editar")),
     es_admin: bool = Depends(es_super_admin),
     service: ZonaBodegaService = Depends(obtener_zona_bodega_service),
 ):
@@ -116,7 +116,7 @@ async def actualizar_zona_bodega(
 @router.delete("/{id}", response_model=RespuestaAPIDTO, status_code=status.HTTP_200_OK)
 async def eliminar_zona_bodega(
     id: int,
-    usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
+    usuario_autenticado: dict = Depends(requiere_permiso("zonas_bodega.eliminar")),
     es_admin: bool = Depends(es_super_admin),
     service: ZonaBodegaService = Depends(obtener_zona_bodega_service),
 ):

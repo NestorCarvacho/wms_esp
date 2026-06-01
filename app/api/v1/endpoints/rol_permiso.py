@@ -2,7 +2,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.v1.dependencies import obtener_usuario_autenticado
+from app.api.v1.dependencies import obtener_usuario_autenticado, requiere_permiso
 from app.domain.services.rol_permiso_service import RolPermisoService
 from app.infrastructure.database import get_db_session
 from app.infrastructure.repositories.rol_permiso_crud_repository import RolPermisoCRUDRepository
@@ -19,7 +19,7 @@ async def obtener_rol_permiso_service(session: AsyncSession = Depends(get_db_ses
 @router.get("/{rol_id}/permisos", response_model=RespuestaAPIDTO)
 async def listar_permisos_rol(
     rol_id: int,
-    usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
+    usuario_autenticado: dict = Depends(requiere_permiso("roles.leer")),
     service: RolPermisoService = Depends(obtener_rol_permiso_service),
 ):
     try:
@@ -33,7 +33,7 @@ async def listar_permisos_rol(
 async def sincronizar_permisos_rol(
     rol_id: int,
     dto: RolPermisoSincronizarDTO,
-    usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
+    usuario_autenticado: dict = Depends(requiere_permiso("roles.editar")),
     service: RolPermisoService = Depends(obtener_rol_permiso_service),
 ):
     try:

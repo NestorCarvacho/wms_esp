@@ -4,11 +4,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.infrastructure.database import get_db_session
 from app.infrastructure.repositories.tipo_producto_crud_repository import TipoProductoCRUDRepository
 from app.domain.services.tipo_producto_service import TipoProductoService
-from app.api.v1.dependencies import obtener_usuario_autenticado, es_super_admin
+from app.api.v1.dependencies import obtener_usuario_autenticado, requiere_permiso, es_super_admin
 from app.api.v1.empresa_contexto import (
     ContextoEmpresa,
     kwargs_listado,
-    obtener_contexto_empresa,
+    obtener_contexto_empresa, contexto_requiere_permiso,
     resolver_empresa_creacion,
 )
 from app.schemas.tipo_producto import TipoProductoCrearDTO, TipoProductoActualizarDTO, RespuestaAPIDTO
@@ -28,7 +28,7 @@ async def listar_tipos_producto(
     por_pagina: int = 10,
     buscar: str | None = None,
     ctx: ContextoEmpresa = Depends(obtener_contexto_empresa),
-    service: TipoProductoService = Depends(obtener_tipo_producto_service),
+    service: TipoProductoService = Depends(obtener_tipo_producto_service)
 ):
     try:
         resultado = await service.listar_tipos_producto(
@@ -50,7 +50,7 @@ async def listar_tipos_producto(
 @router.get("/{id}", response_model=RespuestaAPIDTO, status_code=status.HTTP_200_OK)
 async def obtener_tipo_producto(
     id: int,
-    usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
+    usuario_autenticado: dict = Depends(requiere_permiso("tipos_producto.leer")),
     es_admin: bool = Depends(es_super_admin),
     service: TipoProductoService = Depends(obtener_tipo_producto_service),
 ):
@@ -73,7 +73,7 @@ async def crear_tipo_producto(
     dto: TipoProductoCrearDTO,
     usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
     session: AsyncSession = Depends(get_db_session),
-    service: TipoProductoService = Depends(obtener_tipo_producto_service),
+    service: TipoProductoService = Depends(obtener_tipo_producto_service)
 ):
     try:
         empresa_destino = await resolver_empresa_creacion(
@@ -97,7 +97,7 @@ async def crear_tipo_producto(
 async def actualizar_tipo_producto(
     id: int,
     dto: TipoProductoActualizarDTO,
-    usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
+    usuario_autenticado: dict = Depends(requiere_permiso("tipos_producto.editar")),
     service: TipoProductoService = Depends(obtener_tipo_producto_service),
 ):
     try:
@@ -119,7 +119,7 @@ async def actualizar_tipo_producto(
 @router.delete("/{id}", response_model=RespuestaAPIDTO, status_code=status.HTTP_200_OK)
 async def eliminar_tipo_producto(
     id: int,
-    usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
+    usuario_autenticado: dict = Depends(requiere_permiso("tipos_producto.eliminar")),
     service: TipoProductoService = Depends(obtener_tipo_producto_service),
 ):
     try:

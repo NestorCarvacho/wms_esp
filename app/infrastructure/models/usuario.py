@@ -60,6 +60,7 @@ class Usuario(Base):
     # Relaciones
     empresa = relationship("Empresa", back_populates="usuarios")
     cargo = relationship("Cargo")
+    roles = relationship("Rol", secondary="usuario_rol", viewonly=True)
     perfil = relationship("PerfilUsuario", back_populates="usuario", uselist=False, cascade="all, delete-orphan")
     
     def __repr__(self):
@@ -138,7 +139,7 @@ class RolPermiso(Base):
 
 
 class PermisoCargo(Base):
-    """Relación N:N cargo ↔ rol (cargo_rol)."""
+    """Relación N:N cargo ↔ rol (legacy; la seguridad usa usuario_rol)."""
     __tablename__ = "permisos_cargo"
     
     cargo_id = Column(BigInteger, ForeignKey("cargo.id"), primary_key=True)
@@ -147,6 +148,18 @@ class PermisoCargo(Base):
     
     def __repr__(self):
         return f"<PermisoCargo(cargo_id={self.cargo_id}, rol_id={self.rol_id})>"
+
+
+class UsuarioRol(Base):
+    """Asignación directa de roles de seguridad al usuario."""
+    __tablename__ = "usuario_rol"
+
+    usuario_id = Column(BigInteger, ForeignKey("usuario.id", ondelete="CASCADE"), primary_key=True)
+    rol_id = Column(BigInteger, ForeignKey("rol.id"), primary_key=True)
+    activo = Column(Boolean, default=True)
+
+    def __repr__(self):
+        return f"<UsuarioRol(usuario_id={self.usuario_id}, rol_id={self.rol_id})>"
     
 class Bodega(Base):
     """Tabla de bodegas por empresa."""

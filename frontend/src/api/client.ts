@@ -114,3 +114,24 @@ export function isTokenExpired(token: string): boolean {
   if (!expiry) return false;
   return expiry.getTime() <= Date.now();
 }
+
+export interface TokenClaims {
+  usuario_id?: number;
+  empresa_id?: number;
+  email?: string;
+  cargo_id?: number | null;
+  roles?: string[];
+  permisos?: string[];
+  es_empresa_maestra?: boolean;
+  exp?: number;
+}
+
+export function decodeTokenPayload(token: string): TokenClaims | null {
+  try {
+    const payload = token.split('.')[1];
+    if (!payload) return null;
+    return JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/'))) as TokenClaims;
+  } catch {
+    return null;
+  }
+}

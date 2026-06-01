@@ -8,41 +8,72 @@ import {
   type ReactNode,
 } from 'react';
 import { getStoredUser, login as apiLogin, logout as apiLogout, setStoredUser } from '@/api/auth';
-import { isTokenExpired, setToken, setUnauthorizedHandler } from '@/api/client';
+import { decodeTokenPayload, isTokenExpired, setToken, setUnauthorizedHandler } from '@/api/client';
 import { obtenerUsuario } from '@/api/usuarios';
 import type { Usuario } from '@/types/api';
 
 interface AuthContextValue {
   user: Usuario | null;
   token: string | null;
+  permisos: string[];
+  roles: string[];
   isAuthenticated: boolean;
   isSuperAdmin: boolean;
+  tienePermiso: (codigo: string) => boolean;
   login: (email: string, contrasena: string) => Promise<void>;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-function readInitialAuth(): { user: Usuario | null; token: string | null } {
+function claimsFromToken(token: string | null): { permisos: string[]; roles: string[] } {
+  if (!token) return { permisos: [], roles: [] };
+  const claims = decodeTokenPayload(token);
+  return {
+    permisos: claims?.permisos ?? [],
+    roles: claims?.roles ?? [],
+  };
+}
+
+function readInitialAuth(): {
+  user: Usuario | null;
+  token: string | null;
+  permisos: string[];
+  roles: string[];
+} {
   const token = localStorage.getItem('wms_token');
   const user = getStoredUser();
   if (token && isTokenExpired(token)) {
     apiLogout();
-    return { user: null, token: null };
+    return { user: null, token: null, permisos: [], roles: [] };
   }
-  return { user, token };
+  const fromUser = {
+    permisos: user?.permisos ?? [],
+    roles: user?.roles ?? [],
+  };
+  const fromToken = claimsFromToken(token);
+  return {
+    user,
+    token,
+    permisos: fromUser.permisos.length ? fromUser.permisos : fromToken.permisos,
+    roles: fromUser.roles.length ? fromUser.roles : fromToken.roles,
+  };
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const initial = readInitialAuth();
   const [user, setUser] = useState<Usuario | null>(initial.user);
   const [token, setAuthToken] = useState<string | null>(initial.token);
+  const [permisos, setPermisos] = useState<string[]>(initial.permisos);
+  const [roles, setRoles] = useState<string[]>(initial.roles);
 
   const logout = useCallback(() => {
     apiLogout();
     setToken(null);
     setAuthToken(null);
     setUser(null);
+    setPermisos([]);
+    setRoles([]);
   }, []);
 
   useEffect(() => {
@@ -74,19 +105,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     apiLogout();
     const data = await apiLogin(email, contrasena);
     setAuthToken(data.acceso_token);
-    setUser(data.usuario);
+    const userPermisos = data.usuario.permisos ?? claimsFromToken(data.acceso_token).permisos;
+    const userRoles = data.usuario.roles ?? claimsFromToken(data.acceso_token).roles;
+    const enrichedUser = { ...data.usuario, permisos: userPermisos, roles: userRoles };
+    setStoredUser(enrichedUser);
+    setUser(enrichedUser);
+    setPermisos(userPermisos);
+    setRoles(userRoles);
   }, []);
+
+  const tienePermiso = useCallback((codigo: string) => permisos.includes(codigo), [permisos]);
 
   const value = useMemo(
     () => ({
       user,
       token,
+      permisos,
+      roles,
       isAuthenticated: Boolean(token && user),
       isSuperAdmin: Boolean(user?.es_empresa_maestra ?? user?.empresa_id === 1),
+      tienePermiso,
       login,
       logout,
     }),
-    [user, token, login, logout],
+    [user, token, permisos, roles, tienePermiso, login, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

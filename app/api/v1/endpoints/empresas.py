@@ -10,7 +10,7 @@ from app.infrastructure.repositories.empresa_crud_repository import EmpresaCRUDR
 from app.domain.services.empresa_service import EmpresaService
 from app.domain.services.empresa_maestra_service import EmpresaMaestraService
 from app.infrastructure.repositories.empresa_administrada_repository import EmpresaAdministradaRepository
-from app.api.v1.dependencies import obtener_usuario_autenticado, es_super_admin
+from app.api.v1.dependencies import obtener_usuario_autenticado, requiere_permiso, es_super_admin
 from app.schemas.empresa import (
     EmpresaCrearDTO,
     EmpresaActualizarDTO,
@@ -87,6 +87,7 @@ async def listar_empresas(
     usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
     es_admin: bool = Depends(validar_super_admin),
     service: EmpresaService = Depends(obtener_empresa_service)
+
 ):
     """
     Obtiene la lista de empresas.
@@ -138,6 +139,7 @@ async def obtener_empresa(
     usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
     es_admin: bool = Depends(validar_super_admin),
     service: EmpresaService = Depends(obtener_empresa_service)
+
 ):
     """
     Obtiene los datos de una empresa específica.
@@ -191,6 +193,7 @@ async def crear_empresa(
     usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
     es_admin: bool = Depends(validar_super_admin),
     service: EmpresaService = Depends(obtener_empresa_service)
+
 ):
     """
     Crea una nueva empresa.
@@ -253,6 +256,7 @@ async def actualizar_empresa(
     usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
     es_admin: bool = Depends(validar_super_admin),
     service: EmpresaService = Depends(obtener_empresa_service)
+
 ):
     """
     Actualiza una empresa existente.
@@ -315,6 +319,7 @@ async def eliminar_empresa(
     usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
     es_admin: bool = Depends(validar_super_admin),
     service: EmpresaService = Depends(obtener_empresa_service)
+
 ):
     """
     Elimina (desactiva) una empresa.

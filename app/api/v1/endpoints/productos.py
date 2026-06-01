@@ -11,8 +11,8 @@ from app.infrastructure.database import get_db_session
 from app.infrastructure.repositories.producto_crud_repository import ProductoCRUDRepository
 from app.domain.services.producto_service import ProductoService
 from app.domain.services.producto_importacion_service import ProductoImportacionService
-from app.api.v1.dependencies import obtener_usuario_autenticado, es_super_admin
-from app.api.v1.empresa_contexto import ContextoEmpresa, kwargs_listado, obtener_contexto_empresa, resolver_empresa_creacion
+from app.api.v1.dependencies import obtener_usuario_autenticado, requiere_permiso, es_super_admin
+from app.api.v1.empresa_contexto import ContextoEmpresa, kwargs_listado, obtener_contexto_empresa, resolver_empresa_creacion, contexto_requiere_permiso
 from app.schemas.producto import (
     ProductoCrearDTO,
     ProductoActualizarDTO,
@@ -49,7 +49,7 @@ async def listar_Productos(
     buscar: str | None = None,
     unidad_medida_id: int | None = Query(None, description="Filtrar por unidad de medida"),
     tipo_producto_id: int | None = Query(None, description="Filtrar por tipo de producto"),
-    ctx: ContextoEmpresa = Depends(obtener_contexto_empresa),
+    ctx: ContextoEmpresa = Depends(contexto_requiere_permiso("productos.leer")),
     service: ProductoService = Depends(obtener_producto_service)
 ):
     """
@@ -99,8 +99,8 @@ async def listar_Productos(
     status_code=status.HTTP_200_OK,
 )
 async def descargar_plantilla_importacion(
-    usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
-    service: ProductoImportacionService = Depends(obtener_importacion_service),
+    usuario_autenticado: dict = Depends(requiere_permiso("productos.importar")),
+    service: ProductoImportacionService = Depends(obtener_importacion_service)
 ):
     """
     Genera un Excel con:
@@ -132,7 +132,7 @@ async def descargar_plantilla_importacion(
 )
 async def importar_productos(
     archivo: UploadFile = File(...),
-    usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
+    usuario_autenticado: dict = Depends(requiere_permiso("productos.importar")),
     service: ProductoImportacionService = Depends(obtener_importacion_service),
 ):
     """
@@ -181,9 +181,9 @@ async def importar_productos(
 )
 async def obtener_producto(
     id: int,
-    usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
+    usuario_autenticado: dict = Depends(requiere_permiso("productos.leer")),
     es_admin: bool = Depends(es_super_admin),
-    service: ProductoService = Depends(obtener_producto_service)
+    service: ProductoService = Depends(obtener_producto_service),
 ):
     """
     Obtiene los datos de una producto específica.
@@ -243,9 +243,9 @@ async def obtener_producto(
 )
 async def crear_producto(
     producto_dto: ProductoCrearDTO,
-    usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
+    usuario_autenticado: dict = Depends(requiere_permiso("productos.crear")),
     session: AsyncSession = Depends(get_db_session),
-    service: ProductoService = Depends(obtener_producto_service)
+    service: ProductoService = Depends(obtener_producto_service),
 ):
     """
     Crea un nueva producto en la empresa.
@@ -319,9 +319,9 @@ async def crear_producto(
 async def actualizar_producto(
     id: int,
     actualizar_dto: ProductoActualizarDTO,
-    usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
+    usuario_autenticado: dict = Depends(requiere_permiso("productos.editar")),
     es_admin: bool = Depends(es_super_admin),
-    service: ProductoService = Depends(obtener_producto_service)
+    service: ProductoService = Depends(obtener_producto_service),
 ):
     """
     Actualiza los datos de una producto existente.
@@ -404,9 +404,9 @@ async def actualizar_producto(
 )
 async def eliminar_producto(
     id: int,
-    usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
+    usuario_autenticado: dict = Depends(requiere_permiso("productos.eliminar")),
     es_admin: bool = Depends(es_super_admin),
-    service: ProductoService = Depends(obtener_producto_service)
+    service: ProductoService = Depends(obtener_producto_service),
 ):
     """
     Elimina una producto.

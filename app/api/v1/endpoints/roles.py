@@ -10,8 +10,8 @@ from sqlalchemy.orm import relationship
 from app.infrastructure.database import get_db_session
 from app.infrastructure.repositories.rol_crud_repository import RolCRUDRepository
 from app.domain.services.rol_service import RolService
-from app.api.v1.dependencies import obtener_usuario_autenticado, es_super_admin
-from app.api.v1.empresa_contexto import ContextoEmpresa, kwargs_listado, obtener_contexto_empresa, resolver_empresa_creacion
+from app.api.v1.dependencies import obtener_usuario_autenticado, requiere_permiso, es_super_admin
+from app.api.v1.empresa_contexto import ContextoEmpresa, kwargs_listado, obtener_contexto_empresa, resolver_empresa_creacion, contexto_requiere_permiso
 from app.schemas.rol import (
     RolCrearDTO,
     RolActualizarDTO,
@@ -43,6 +43,7 @@ async def listar_roles(
     buscar: str | None = None,
     ctx: ContextoEmpresa = Depends(obtener_contexto_empresa),
     service: RolService = Depends(obtener_rol_service)
+
 ):
 
     """
@@ -91,9 +92,9 @@ async def listar_roles(
 )
 async def obtener_rol(
     id: int,
-    usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
+    usuario_autenticado: dict = Depends(requiere_permiso("roles.leer")),
     es_admin: bool = Depends(es_super_admin),
-    service: RolService = Depends(obtener_rol_service)
+    service: RolService = Depends(obtener_rol_service),
 ):
     """
     Obtiene los datos de un rol específico.
@@ -156,6 +157,7 @@ async def crear_rol(
     usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
     session: AsyncSession = Depends(get_db_session),
     service: RolService = Depends(obtener_rol_service)
+
 ):
     """
     Crea un nuevo rol en la empresa.
@@ -224,9 +226,9 @@ async def crear_rol(
 async def actualizar_rol(
     id: int,
     actualizar_dto: RolActualizarDTO,
-    usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
+    usuario_autenticado: dict = Depends(requiere_permiso("roles.editar")),
     es_admin: bool = Depends(es_super_admin),
-    service: RolService = Depends(obtener_rol_service)
+    service: RolService = Depends(obtener_rol_service),
 ):
     """
     Actualiza los datos de un rol existente.
@@ -304,9 +306,9 @@ async def actualizar_rol(
 )
 async def eliminar_rol(
     id: int,
-    usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
+    usuario_autenticado: dict = Depends(requiere_permiso("roles.eliminar")),
     es_admin: bool = Depends(es_super_admin),
-    service: RolService = Depends(obtener_rol_service)
+    service: RolService = Depends(obtener_rol_service),
 ):
     """
     Elimina un rol.

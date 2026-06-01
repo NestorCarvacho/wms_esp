@@ -82,6 +82,16 @@ async def validar_permisos(
     return usuario
 
 
+def requiere_permiso(*permisos_requeridos: str):
+    """
+    Dependencia FastAPI: exige al menos uno de los permisos indicados.
+    Uso: _auth: dict = Depends(requiere_permiso("productos.leer"))
+    """
+    async def _validar(usuario: dict = Depends(obtener_usuario_autenticado)) -> dict:
+        return await validar_permisos(list(permisos_requeridos), usuario)
+    return _validar
+
+
 async def obtener_auth_service(
     session: AsyncSession = Depends(get_db_session)
 ) -> AuthService:

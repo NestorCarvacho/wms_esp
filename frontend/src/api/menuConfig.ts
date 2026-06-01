@@ -3,6 +3,8 @@ export interface MenuLinkNode {
   title: string;
   url?: string;
   icon?: string | null;
+  /** Permiso requerido para ver el enlace (ej. productos.leer). */
+  permission?: string;
   routeMetadata?: {
     iconName?: string;
     breadcrumbTitle?: string;
@@ -23,7 +25,48 @@ export interface MenuItem {
   children?: MenuSection[];
 }
 
-export function buildWmsMenu(isSuperAdmin: boolean): { mainMenu: MenuItem[]; configMenu: MenuItem | null } {
+const ROUTE_PERMISSIONS: Record<string, string> = {
+  '/productos': 'productos.leer',
+  '/tipos-producto': 'tipos_producto.leer',
+  '/unidades-medida': 'unidades_medida.leer',
+  '/bodegas': 'bodegas.leer',
+  '/tipos-zona': 'tipos_zona.leer',
+  '/zonas-bodega': 'zonas_bodega.leer',
+  '/usuarios': 'usuarios.leer',
+  '/cargos': 'cargos.leer',
+  '/roles': 'roles.leer',
+  '/permisos': 'permisos.leer',
+  '/empresas': 'empresas.leer',
+};
+
+function withPermissions(node: MenuLinkNode): MenuLinkNode {
+  if (!node.url || node.permission) return node;
+  const permission = ROUTE_PERMISSIONS[node.url];
+  return permission ? { ...node, permission } : node;
+}
+
+function filterByPermissions(items: MenuItem[], permisos: string[]): MenuItem[] {
+  const canSee = (permission?: string) => !permission || permisos.includes(permission);
+
+  return items
+    .map((item) => ({
+      ...item,
+      children: item.children
+        ?.map((section) => ({
+          ...section,
+          children: section.children
+            ?.map(withPermissions)
+            .filter((link) => canSee(link.permission)),
+        }))
+        .filter((section) => (section.children?.length ?? 0) > 0),
+    }))
+    .filter((item) => (item.children?.length ?? 0) > 0);
+}
+
+export function buildWmsMenu(
+  isSuperAdmin: boolean,
+  permisos: string[] = [],
+): { mainMenu: MenuItem[]; configMenu: MenuItem | null } {
   const mainMenu: MenuItem[] = [
     {
       id: 1,
@@ -61,7 +104,6 @@ export function buildWmsMenu(isSuperAdmin: boolean): { mainMenu: MenuItem[]; con
             { id: 'cargos', title: 'Cargos', url: '/cargos', routeMetadata: { iconName: 'user', breadcrumbTitle: 'Cargos' } },
             { id: 'roles', title: 'Roles', url: '/roles', routeMetadata: { iconName: 'lock', breadcrumbTitle: 'Roles' } },
             { id: 'permisos', title: 'Permisos', url: '/permisos', routeMetadata: { iconName: 'lock', breadcrumbTitle: 'Permisos' } },
-            { id: 'permisos-cargo', title: 'Roles por cargo', url: '/permisos-cargo', routeMetadata: { iconName: 'lock', breadcrumbTitle: 'Roles por cargo' } },
           ],
         },
       ],
@@ -93,7 +135,14 @@ export function buildWmsMenu(isSuperAdmin: boolean): { mainMenu: MenuItem[]; con
     ],
   };
 
-  return { mainMenu, configMenu };
+  if (permisos.length === 0) {
+    return { mainMenu, configMenu };
+  }
+
+  return {
+    mainMenu: filterByPermissions(mainMenu, permisos),
+    configMenu: filterByPermissions([configMenu], permisos)[0] ?? null,
+  };
 }
 
 export function flattenMenuLinks(items: MenuItem[]): { label: string; value: string; url: string }[] {
@@ -115,3 +164,5 @@ export function flattenMenuLinks(items: MenuItem[]): { label: string; value: str
 
   return links;
 }
+
+export { ROUTE_PERMISSIONS };

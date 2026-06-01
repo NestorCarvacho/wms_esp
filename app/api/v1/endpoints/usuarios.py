@@ -8,8 +8,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.infrastructure.database import get_db_session
 from app.infrastructure.repositories.usuario_crud_repository import UsuarioCRUDRepository
 from app.domain.services.usuario_service import UsuarioService
-from app.api.v1.dependencies import obtener_usuario_autenticado, es_super_admin
-from app.api.v1.empresa_contexto import ContextoEmpresa, kwargs_listado, obtener_contexto_empresa
+from app.api.v1.dependencies import obtener_usuario_autenticado, requiere_permiso, es_super_admin
+from app.api.v1.empresa_contexto import ContextoEmpresa, kwargs_listado, obtener_contexto_empresa, contexto_requiere_permiso
+from app.domain.services.usuario_rol_service import UsuarioRolService
+from app.infrastructure.repositories.usuario_rol_crud_repository import UsuarioRolCRUDRepository
+from app.schemas.permiso import UsuarioRolSincronizarDTO
 from app.schemas.usuario import (
     UsuarioCrearDTO,
     UsuarioActualizarDTO,
@@ -29,6 +32,10 @@ async def obtener_usuario_service(session: AsyncSession = Depends(get_db_session
     return UsuarioService(repository)
 
 
+async def obtener_usuario_rol_service(session: AsyncSession = Depends(get_db_session)) -> UsuarioRolService:
+    return UsuarioRolService(UsuarioRolCRUDRepository(session))
+
+
 # ============ GET: LISTAR USUARIOS (CON PAGINACIÓN) ============
 @router.get(
     "",
@@ -43,6 +50,7 @@ async def listar_usuarios(
     cargo_id: int | None = None,
     ctx: ContextoEmpresa = Depends(obtener_contexto_empresa),
     service: UsuarioService = Depends(obtener_usuario_service)
+
 ):
     """
     Obtiene la lista de usuarios.
@@ -92,9 +100,9 @@ async def listar_usuarios(
 )
 async def obtener_usuario(
     id: int,
-    usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
+    usuario_autenticado: dict = Depends(requiere_permiso("usuarios.leer")),
     es_admin: bool = Depends(es_super_admin),
-    service: UsuarioService = Depends(obtener_usuario_service)
+    service: UsuarioService = Depends(obtener_usuario_service),
 ):
     """
     Obtiene los datos de un usuario específico.
@@ -154,9 +162,9 @@ async def obtener_usuario(
 )
 async def crear_usuario(
     usuario_dto: UsuarioCrearDTO,
-    usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
+    usuario_autenticado: dict = Depends(requiere_permiso("usuarios.crear")),
     es_admin: bool = Depends(es_super_admin),
-    service: UsuarioService = Depends(obtener_usuario_service)
+    service: UsuarioService = Depends(obtener_usuario_service),
 ):
     """
     Crea un nuevo usuario en la empresa.
@@ -233,9 +241,9 @@ async def crear_usuario(
 async def actualizar_usuario(
     id: int,
     actualizar_dto: UsuarioActualizarDTO,
-    usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
+    usuario_autenticado: dict = Depends(requiere_permiso("usuarios.editar")),
     es_admin: bool = Depends(es_super_admin),
-    service: UsuarioService = Depends(obtener_usuario_service)
+    service: UsuarioService = Depends(obtener_usuario_service),
 ):
     """
     Actualiza los datos de un usuario existente.
@@ -298,9 +306,9 @@ async def actualizar_usuario(
 )
 async def eliminar_usuario(
     id: int,
-    usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
+    usuario_autenticado: dict = Depends(requiere_permiso("usuarios.eliminar")),
     es_admin: bool = Depends(es_super_admin),
-    service: UsuarioService = Depends(obtener_usuario_service)
+    service: UsuarioService = Depends(obtener_usuario_service),
 ):
     """
     Elimina (desactiva) un usuario.
@@ -355,9 +363,9 @@ async def eliminar_usuario(
 )
 async def reactivar_usuario(
     id: int,
-    usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
+    usuario_autenticado: dict = Depends(requiere_permiso("usuarios.editar")),
     es_admin: bool = Depends(es_super_admin),
-    service: UsuarioService = Depends(obtener_usuario_service)
+    service: UsuarioService = Depends(obtener_usuario_service),
 ):
     """
     Reactiva un usuario que fue desactivado.
@@ -398,3 +406,43 @@ async def reactivar_usuario(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e)
         )
+
+
+@router.get("/{id}/roles", response_model=RespuestaAPIDTO)
+async def listar_roles_usuario(
+    id: int,
+    usuario_autenticado: dict = Depends(requiere_permiso("usuarios.leer")),
+    service: UsuarioRolService = Depends(obtener_usuario_rol_service),
+):
+    try:
+        resultado = await service.listar_roles(
+            id,
+            usuario_autenticado.get("empresa_id"),
+            bool(usuario_autenticado.get("es_empresa_maestra")),
+        )
+        return RespuestaAPIDTO(exito=True, datos=resultado, mensaje="Roles del usuario obtenidos").dict()
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
+@router.put("/{id}/roles", response_model=RespuestaAPIDTO)
+async def sincronizar_roles_usuario(
+    id: int,
+    dto: UsuarioRolSincronizarDTO,
+    usuario_autenticado: dict = Depends(requiere_permiso("usuarios.editar")),
+    service: UsuarioRolService = Depends(obtener_usuario_rol_service),
+):
+    try:
+        resultado = await service.sincronizar(
+            id,
+            usuario_autenticado.get("empresa_id"),
+            dto.rol_ids,
+            bool(usuario_autenticado.get("es_empresa_maestra")),
+        )
+        return RespuestaAPIDTO(exito=True, datos=resultado, mensaje="Roles del usuario actualizados").dict()
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))

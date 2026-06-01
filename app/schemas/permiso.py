@@ -29,3 +29,7 @@ class PermisoRespuestaDTO(BaseModel):
 
 class RolPermisoSincronizarDTO(BaseModel):
     permiso_ids: list[int] = Field(default_factory=list)
+
+
+class UsuarioRolSincronizarDTO(BaseModel):
+    rol_ids: list[int] = Field(default_factory=list)

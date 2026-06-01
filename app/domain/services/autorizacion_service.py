@@ -1,35 +1,30 @@
 """
-Resolución de permisos efectivos: Usuario → Cargo → cargo_rol → Rol → rol_permiso → Permiso.
+Resolución de permisos efectivos: Usuario → usuario_rol → Rol → rol_permiso → Permiso.
 """
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.infrastructure.models.usuario import Permiso, PermisoCargo, Rol, RolPermiso
+from app.infrastructure.models.usuario import Permiso, Rol, RolPermiso, UsuarioRol
 
 
 class AutorizacionService:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def resolver_permisos_por_cargo(
+    async def resolver_permisos_por_usuario(
         self,
-        cargo_id: int | None,
+        usuario_id: int,
         empresa_id: int,
     ) -> tuple[list[str], list[str]]:
-        """
-        Retorna (códigos_permiso, nombres_rol) para un cargo en una empresa.
-        """
-        if not cargo_id:
-            return [], []
-
+        """Retorna (códigos_permiso, nombres_rol) para un usuario en su empresa."""
         permisos_stmt = (
             select(Permiso.codigo)
             .join(RolPermiso, RolPermiso.permiso_id == Permiso.id)
             .join(Rol, Rol.id == RolPermiso.rol_id)
-            .join(PermisoCargo, PermisoCargo.rol_id == Rol.id)
+            .join(UsuarioRol, UsuarioRol.rol_id == Rol.id)
             .where(
-                PermisoCargo.cargo_id == cargo_id,
-                PermisoCargo.activo == True,
+                UsuarioRol.usuario_id == usuario_id,
+                UsuarioRol.activo == True,
                 RolPermiso.activo == True,
                 Rol.activo == True,
                 Permiso.activo == True,
@@ -40,10 +35,10 @@ class AutorizacionService:
         )
         roles_stmt = (
             select(Rol.nombre)
-            .join(PermisoCargo, PermisoCargo.rol_id == Rol.id)
+            .join(UsuarioRol, UsuarioRol.rol_id == Rol.id)
             .where(
-                PermisoCargo.cargo_id == cargo_id,
-                PermisoCargo.activo == True,
+                UsuarioRol.usuario_id == usuario_id,
+                UsuarioRol.activo == True,
                 Rol.activo == True,
                 Rol.empresa_id == empresa_id,
             )

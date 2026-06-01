@@ -66,9 +66,9 @@ class AuthService:
 
         autorizacion = AutorizacionService(self.session)
 
-        permisos, roles = await autorizacion.resolver_permisos_por_cargo(
+        permisos, roles = await autorizacion.resolver_permisos_por_usuario(
 
-            usuario.cargo_id,
+            usuario.id,
 
             usuario.empresa_id,
 
@@ -109,6 +109,10 @@ class AuthService:
         usuario_data["cargo_nombre"] = usuario.cargo.nombre if usuario.cargo else None
 
         usuario_data["es_empresa_maestra"] = es_empresa_maestra
+
+        usuario_data["roles"] = roles
+
+        usuario_data["permisos"] = permisos
 
         
 

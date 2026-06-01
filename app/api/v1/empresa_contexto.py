@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from fastapi import Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.v1.dependencies import obtener_usuario_autenticado
+from app.api.v1.dependencies import obtener_usuario_autenticado, requiere_permiso
 from app.domain.services.empresa_maestra_service import EmpresaMaestraService
 from app.infrastructure.database import get_db_session
 from app.infrastructure.repositories.empresa_administrada_repository import EmpresaAdministradaRepository
@@ -111,3 +111,18 @@ async def obtener_contexto_empresa(
         empresa_id_filtro=filtro,
         empresas_administradas_ids=administradas_ids,
     )
+
+
+def contexto_requiere_permiso(*permisos_requeridos: str):
+    """
+    Combina contexto multi-tenant + validación de permiso(s).
+    Uso: ctx: ContextoEmpresa = Depends(contexto_requiere_permiso("productos.leer"))
+    """
+
+    async def _dep(
+        ctx: ContextoEmpresa = Depends(obtener_contexto_empresa),
+        _auth: dict = Depends(requiere_permiso(*permisos_requeridos)),
+    ) -> ContextoEmpresa:
+        return ctx
+
+    return _dep

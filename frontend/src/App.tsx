@@ -1,4 +1,5 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import type { ReactNode } from 'react';
 
 import { AuthProvider } from '@/context/AuthContext';
 import { UIProvider } from '@/context/UIContext';
@@ -7,6 +8,8 @@ import { registerCrudPanels } from './components/crud/registerCrudPanels';
 import MainLayout from '@/components/layout/MainLayout';
 
 import { ProtectedRoute } from '@/routing/ProtectedRoute';
+import { PermissionRoute } from '@/routing/PermissionRoute';
+import { ROUTE_PERMISSIONS } from '@/api/menuConfig';
 
 import { LoginPage } from '@/pages/LoginPage';
 
@@ -26,7 +29,6 @@ import { EmpresasPage } from '@/pages/EmpresasPage';
 import { UnidadesMedidaPage } from '@/pages/UnidadesMedidaPage';
 import { CargosPage } from '@/pages/CargosPage';
 import { RolesPage } from '@/pages/RolesPage';
-import { PermisosCargoPage } from '@/pages/PermisosCargoPage';
 import { PermisosPage } from '@/pages/PermisosPage';
 import { PerfilPage } from '@/pages/PerfilPage';
 import SidePanelContainer from '@/components/layout/SidePanelContainer';
@@ -34,6 +36,15 @@ import NotificationContainer from '@/components/layout/NotificationContainer';
 import { ConfirmModalHost } from '@/layout/ConfirmModalHost';
 
 registerCrudPanels();
+
+function guarded(path: keyof typeof ROUTE_PERMISSIONS, element: ReactNode) {
+  const permission = ROUTE_PERMISSIONS[path];
+  return (
+    <PermissionRoute permission={permission}>
+      {element}
+    </PermissionRoute>
+  );
+}
 
 export default function App() {
   return (
@@ -46,39 +57,34 @@ export default function App() {
           <Route path="/login" element={<LoginPage />} />
 
           <Route
-
             element={
-
               <ProtectedRoute>
-
                 <MainLayout />
-
               </ProtectedRoute>
-
             }
-
           >
 
             <Route index element={<DashboardPage />} />
 
-            <Route path="productos" element={<ProductosPage />} />
-            <Route path="tipos-producto" element={<TiposProductoPage />} />
+            <Route path="productos" element={guarded('/productos', <ProductosPage />)} />
+            <Route path="tipos-producto" element={guarded('/tipos-producto', <TiposProductoPage />)} />
 
-            <Route path="bodegas" element={<BodegasPage />} />
-            <Route path="tipos-zona" element={<TiposZonaPage />} />
-            <Route path="zonas-bodega" element={<ZonasBodegaPage />} />
+            <Route path="bodegas" element={guarded('/bodegas', <BodegasPage />)} />
+            <Route path="tipos-zona" element={guarded('/tipos-zona', <TiposZonaPage />)} />
+            <Route path="zonas-bodega" element={guarded('/zonas-bodega', <ZonasBodegaPage />)} />
 
-            <Route path="usuarios" element={<UsuariosPage />} />
+            <Route path="usuarios" element={guarded('/usuarios', <UsuariosPage />)} />
 
-            <Route path="cargos" element={<CargosPage />} />
-            <Route path="roles" element={<RolesPage />} />
-            <Route path="permisos" element={<PermisosPage />} />
-            <Route path="permisos-cargo" element={<PermisosCargoPage />} />
+            <Route path="cargos" element={guarded('/cargos', <CargosPage />)} />
+            <Route path="roles" element={guarded('/roles', <RolesPage />)} />
+            <Route path="permisos" element={guarded('/permisos', <PermisosPage />)} />
 
-            <Route path="empresas" element={<EmpresasPage />} />
+            <Route path="empresas" element={guarded('/empresas', <EmpresasPage />)} />
 
-            <Route path="unidades-medida" element={<UnidadesMedidaPage />} />
+            <Route path="unidades-medida" element={guarded('/unidades-medida', <UnidadesMedidaPage />)} />
             <Route path="perfil" element={<PerfilPage />} />
+
+            <Route path="permisos-cargo" element={<Navigate to="/usuarios" replace />} />
 
           </Route>
 
@@ -94,4 +100,3 @@ export default function App() {
     </AuthProvider>
   );
 }
-

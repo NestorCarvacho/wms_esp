@@ -8,8 +8,8 @@ from app.infrastructure.repositories.producto_presentacion_crud_repository impor
 from app.infrastructure.repositories.producto_crud_repository import ProductoCRUDRepository
 from app.infrastructure.repositories.unidadMedida_crud_repository import UnidadMedidaCRUDRepository
 from app.domain.services.producto_presentacion_service import ProductoPresentacionService
-from app.api.v1.dependencies import obtener_usuario_autenticado
-from app.api.v1.empresa_contexto import ContextoEmpresa, obtener_contexto_empresa
+from app.api.v1.dependencies import obtener_usuario_autenticado, requiere_permiso
+from app.api.v1.empresa_contexto import ContextoEmpresa, obtener_contexto_empresa, contexto_requiere_permiso
 from app.schemas.producto_presentacion import (
     ProductoPresentacionCrearDTO,
     ProductoPresentacionActualizarDTO,
@@ -45,7 +45,7 @@ async def listar_presentaciones(
     por_pagina: int = 50,
     buscar: str | None = None,
     ctx: ContextoEmpresa = Depends(obtener_contexto_empresa),
-    service: ProductoPresentacionService = Depends(obtener_presentacion_service),
+    service: ProductoPresentacionService = Depends(obtener_presentacion_service)
 ):
     try:
         resultado = await service.listar_presentaciones(
@@ -75,7 +75,7 @@ async def crear_presentacion(
     producto_id: int,
     dto: ProductoPresentacionCrearDTO,
     ctx: ContextoEmpresa = Depends(obtener_contexto_empresa),
-    service: ProductoPresentacionService = Depends(obtener_presentacion_service),
+    service: ProductoPresentacionService = Depends(obtener_presentacion_service)
 ):
     try:
         datos = await service.crear_presentacion(
@@ -105,7 +105,7 @@ async def actualizar_presentacion(
     presentacion_id: int,
     dto: ProductoPresentacionActualizarDTO,
     ctx: ContextoEmpresa = Depends(obtener_contexto_empresa),
-    service: ProductoPresentacionService = Depends(obtener_presentacion_service),
+    service: ProductoPresentacionService = Depends(obtener_presentacion_service)
 ):
     try:
         payload = dto.model_dump(exclude_unset=True)
@@ -131,7 +131,7 @@ async def actualizar_presentacion(
 async def eliminar_presentacion(
     presentacion_id: int,
     ctx: ContextoEmpresa = Depends(obtener_contexto_empresa),
-    service: ProductoPresentacionService = Depends(obtener_presentacion_service),
+    service: ProductoPresentacionService = Depends(obtener_presentacion_service)
 ):
     try:
         resultado = await service.eliminar_presentacion(
@@ -152,7 +152,7 @@ async def eliminar_presentacion(
 async def calcular_descuento_inventario(
     dto: VentaDescuentoDTO,
     ctx: ContextoEmpresa = Depends(obtener_contexto_empresa),
-    service: ProductoPresentacionService = Depends(obtener_presentacion_service),
+    service: ProductoPresentacionService = Depends(obtener_presentacion_service)
 ):
     """Calcula unidades base a descontar según tipo de venta (unidad o empaque)."""
     try:

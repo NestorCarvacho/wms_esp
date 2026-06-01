@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.infrastructure.database import get_db_session
 from app.infrastructure.repositories.permiso_cargo_crud_repository import PermisoCargoCRUDRepository
 from app.domain.services.permiso_cargo_service import PermisoCargoService
-from app.api.v1.dependencies import obtener_usuario_autenticado, es_super_admin
+from app.api.v1.dependencies import obtener_usuario_autenticado, requiere_permiso, es_super_admin
 from app.schemas.permiso_cargo import (
     PermisoCargoCrearDTO,
     PermisoCargoActualizarDTO,
@@ -27,7 +27,7 @@ async def obtener_permiso_cargo_service(session: AsyncSession = Depends(get_db_s
 async def listar_permisos_cargo(
     pagina: int = 1,
     por_pagina: int = 20,
-    usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
+    usuario_autenticado: dict = Depends(requiere_permiso("roles.leer")),
     es_admin: bool = Depends(es_super_admin),
     service: PermisoCargoService = Depends(obtener_permiso_cargo_service),
 ):
@@ -51,7 +51,7 @@ async def listar_permisos_cargo(
 @router.post("", response_model=RespuestaAPIDTO, summary="Crear permiso cargo", status_code=status.HTTP_201_CREATED)
 async def crear_permiso_cargo(
     dto: PermisoCargoCrearDTO,
-    usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
+    usuario_autenticado: dict = Depends(requiere_permiso("roles.editar")),
     es_admin: bool = Depends(es_super_admin),
     service: PermisoCargoService = Depends(obtener_permiso_cargo_service),
 ):
@@ -76,7 +76,7 @@ async def actualizar_permiso_cargo(
     cargo_id: int,
     rol_id: int,
     dto: PermisoCargoActualizarDTO,
-    usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
+    usuario_autenticado: dict = Depends(requiere_permiso("roles.editar")),
     es_admin: bool = Depends(es_super_admin),
     service: PermisoCargoService = Depends(obtener_permiso_cargo_service),
 ):
@@ -104,7 +104,7 @@ async def actualizar_permiso_cargo(
 async def eliminar_permiso_cargo(
     cargo_id: int,
     rol_id: int,
-    usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
+    usuario_autenticado: dict = Depends(requiere_permiso("roles.editar")),
     es_admin: bool = Depends(es_super_admin),
     service: PermisoCargoService = Depends(obtener_permiso_cargo_service),
 ):
@@ -128,7 +128,7 @@ async def eliminar_permiso_cargo(
 @router.get("/cargo/{cargo_id}/roles", response_model=RespuestaAPIDTO, summary="Roles asignados a un cargo")
 async def listar_roles_cargo(
     cargo_id: int,
-    usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
+    usuario_autenticado: dict = Depends(requiere_permiso("roles.leer")),
     es_admin: bool = Depends(es_super_admin),
     service: PermisoCargoService = Depends(obtener_permiso_cargo_service),
 ):
@@ -147,7 +147,7 @@ async def listar_roles_cargo(
 async def sincronizar_roles_cargo(
     cargo_id: int,
     dto: CargoRolSincronizarDTO,
-    usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
+    usuario_autenticado: dict = Depends(requiere_permiso("roles.editar")),
     es_admin: bool = Depends(es_super_admin),
     service: PermisoCargoService = Depends(obtener_permiso_cargo_service),
 ):

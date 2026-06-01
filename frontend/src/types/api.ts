@@ -18,6 +18,8 @@ export interface Usuario {
   empresa_nombre?: string | null;
   cargo_nombre?: string | null;
   es_empresa_maestra?: boolean;
+  roles?: string[];
+  permisos?: string[];
 }
 
 export interface PerfilUsuario {

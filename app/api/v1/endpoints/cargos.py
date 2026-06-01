@@ -8,8 +8,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.infrastructure.database import get_db_session
 from app.infrastructure.repositories.cargo_crud_repository import CargoCRUDRepository
 from app.domain.services.cargo_service import CargoService
-from app.api.v1.dependencies import obtener_usuario_autenticado, es_super_admin
-from app.api.v1.empresa_contexto import ContextoEmpresa, kwargs_listado, obtener_contexto_empresa, resolver_empresa_creacion
+from app.api.v1.dependencies import obtener_usuario_autenticado, requiere_permiso, es_super_admin
+from app.api.v1.empresa_contexto import ContextoEmpresa, kwargs_listado, obtener_contexto_empresa, resolver_empresa_creacion, contexto_requiere_permiso
 from app.schemas.cargo import (
     CargoCrearDTO,
     CargoActualizarDTO,
@@ -42,6 +42,7 @@ async def listar_cargos(
     buscar: str | None = None,
     ctx: ContextoEmpresa = Depends(obtener_contexto_empresa),
     service: CargoService = Depends(obtener_cargo_service)
+
 ):
     """
     Obtiene la lista de cargos.
@@ -90,9 +91,9 @@ async def listar_cargos(
 )
 async def obtener_cargo(
     id: int,
-    usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
+    usuario_autenticado: dict = Depends(requiere_permiso("cargos.leer")),
     es_admin: bool = Depends(es_super_admin),
-    service: CargoService = Depends(obtener_cargo_service)
+    service: CargoService = Depends(obtener_cargo_service),
 ):
     """
     Obtiene los datos de un cargo específico.
@@ -155,6 +156,7 @@ async def crear_cargo(
     usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
     session: AsyncSession = Depends(get_db_session),
     service: CargoService = Depends(obtener_cargo_service)
+
 ):
     """
     Crea un nuevo cargo en la empresa.
@@ -221,9 +223,9 @@ async def crear_cargo(
 async def actualizar_cargo(
     id: int,
     actualizar_dto: CargoActualizarDTO,
-    usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
+    usuario_autenticado: dict = Depends(requiere_permiso("cargos.editar")),
     es_admin: bool = Depends(es_super_admin),
-    service: CargoService = Depends(obtener_cargo_service)
+    service: CargoService = Depends(obtener_cargo_service),
 ):
     """
     Actualiza los datos de un cargo existente.
@@ -299,9 +301,9 @@ async def actualizar_cargo(
 )
 async def eliminar_cargo(
     id: int,
-    usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
+    usuario_autenticado: dict = Depends(requiere_permiso("cargos.eliminar")),
     es_admin: bool = Depends(es_super_admin),
-    service: CargoService = Depends(obtener_cargo_service)
+    service: CargoService = Depends(obtener_cargo_service),
 ):
     """
     Elimina un cargo.
