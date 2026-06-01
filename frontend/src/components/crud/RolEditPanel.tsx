@@ -2,12 +2,11 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { actualizarRol } from '@/api/roles';
 import { sincronizarPermisosRol, listarPermisosRol } from '@/api/permisos';
 import { LabelInput } from '@/components/ui/inputs';
-import { Selector } from '@/components/ui/inputs/Selector';
 import { PrimaryButton } from '@/components/ui/buttons';
 import { useUI } from '@/hooks/ui';
 import { ApiError } from '@/api/client';
 import type { Permiso, Rol } from '@/types/api';
-import { ACTIVO_OPTIONS, boolToActivoValue } from './formOptions';
+import { preserveActivoBoolean } from './preserveActivo';
 
 export interface RolEditPanelProps {
   rol: Rol;
@@ -19,7 +18,6 @@ export function RolEditPanel({ rol, permisos, onSaved }: RolEditPanelProps) {
   const { closeSidePanel, showNotification } = useUI();
   const [nombre, setNombre] = useState(rol.nombre);
   const [descripcion, setDescripcion] = useState(rol.descripcion ?? '');
-  const [activo, setActivo] = useState(boolToActivoValue(rol.activo));
   const [permisoIds, setPermisoIds] = useState<number[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
@@ -40,7 +38,7 @@ export function RolEditPanel({ rol, permisos, onSaved }: RolEditPanelProps) {
       await actualizarRol(rol.id, {
         nombre: nombre.trim(),
         descripcion: descripcion.trim(),
-        activo: activo === '1',
+        activo: preserveActivoBoolean(rol.activo),
       });
       await sincronizarPermisosRol(rol.id, permisoIds);
       showNotification({ type: 'success', message: 'Rol actualizado correctamente' });
@@ -60,7 +58,6 @@ export function RolEditPanel({ rol, permisos, onSaved }: RolEditPanelProps) {
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <LabelInput id="edit-nombre" label="Nombre" value={nombre} onChange={setNombre} required />
       <LabelInput id="edit-descripcion" label="Descripción" value={descripcion} onChange={setDescripcion} required />
-      <Selector id="edit-activo" label="Estado" options={ACTIVO_OPTIONS} value={activo} onChange={(v) => setActivo(String(v))} />
       <div>
         <p className="text-sm font-medium mb-2">Permisos del rol</p>
         <div className="flex flex-col gap-2 max-h-48 overflow-y-auto border rounded p-3">

@@ -7,7 +7,7 @@ from sqlalchemy import select, update, and_, func
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import selectinload
 from app.infrastructure.models.usuario import Rol
-from app.infrastructure.repositories.listado_helpers import condicion_buscar
+from app.infrastructure.repositories.listado_helpers import condicion_buscar, filtro_empresa
 
 
 class RolCRUDRepository:
@@ -22,14 +22,16 @@ class RolCRUDRepository:
         pagina: int = 1,
         por_pagina: int = 10,
         es_super_admin: bool = False,
+        empresa_id_filtro: int | None = None,
         buscar: str | None = None,
     ) -> tuple[list[Rol], int]:
 
         try:
             stmt_base = select(Rol).options(selectinload(Rol.empresa))
 
-            if not es_super_admin:
-                stmt_base = stmt_base.where(Rol.empresa_id == empresa_id)
+            empresa_cond = filtro_empresa(Rol, empresa_id, es_super_admin, empresa_id_filtro)
+            if empresa_cond is not None:
+                stmt_base = stmt_base.where(empresa_cond)
 
             stmt_base = stmt_base.where(Rol.activo == True)
             buscar_cond = condicion_buscar(Rol, buscar, "nombre", "descripcion")
@@ -37,8 +39,8 @@ class RolCRUDRepository:
                 stmt_base = stmt_base.where(buscar_cond)
 
             count_stmt = select(func.count(Rol.id)).where(Rol.activo == True)
-            if not es_super_admin:
-                count_stmt = count_stmt.where(Rol.empresa_id == empresa_id)
+            if empresa_cond is not None:
+                count_stmt = count_stmt.where(empresa_cond)
             if buscar_cond is not None:
                 count_stmt = count_stmt.where(buscar_cond)
 

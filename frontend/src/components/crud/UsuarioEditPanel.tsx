@@ -7,11 +7,7 @@ import { PrimaryButton } from '@/components/ui/buttons';
 import { useUI } from '@/hooks/ui';
 import { ApiError } from '@/api/client';
 import type { Cargo, UsuarioLista } from '@/types/api';
-
-const ESTADO_USUARIO_OPTIONS = [
-  { label: 'Activo', value: '1' },
-  { label: 'Inactivo', value: '0' },
-];
+import { preserveActivoBoolean } from './preserveActivo';
 
 export interface UsuarioEditPanelProps {
   usuario: UsuarioLista;
@@ -22,7 +18,6 @@ export function UsuarioEditPanel({ usuario, onSaved }: UsuarioEditPanelProps) {
   const { closeSidePanel, showNotification } = useUI();
   const [email, setEmail] = useState(usuario.email);
   const [cargoId, setCargoId] = useState(usuario.cargo_id != null ? String(usuario.cargo_id) : '');
-  const [activo, setActivo] = useState(usuario.activo ? '1' : '0');
   const [cargos, setCargos] = useState<Cargo[]>([]);
   const [loadingCargos, setLoadingCargos] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -58,7 +53,7 @@ export function UsuarioEditPanel({ usuario, onSaved }: UsuarioEditPanelProps) {
       await actualizarUsuario(usuario.id, {
         email: email.trim(),
         cargo_id: cargoId ? Number(cargoId) : null,
-        activo: activo === '1',
+        activo: preserveActivoBoolean(usuario.activo),
       });
       showNotification({ type: 'success', message: 'Usuario actualizado correctamente' });
       onSaved?.();
@@ -88,13 +83,6 @@ export function UsuarioEditPanel({ usuario, onSaved }: UsuarioEditPanelProps) {
       <p className="text-sm text-gray-600 -mt-2">
         Los permisos se heredan del cargo según los roles asignados en &quot;Roles por cargo&quot;.
       </p>
-      <Selector
-        id="edit-activo"
-        label="Estado"
-        options={ESTADO_USUARIO_OPTIONS}
-        value={activo}
-        onChange={(v) => setActivo(String(v))}
-      />
       <div className="flex gap-3 pt-2">
         <PrimaryButton type="button" variant="outline" onClick={closeSidePanel}>
           Cancelar

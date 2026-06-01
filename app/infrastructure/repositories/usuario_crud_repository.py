@@ -9,7 +9,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from datetime import datetime
 from app.infrastructure.models.usuario import Usuario
 from app.core.security import hash_password
-from app.infrastructure.repositories.listado_helpers import condicion_buscar
+from app.infrastructure.repositories.listado_helpers import condicion_buscar, filtro_empresa
 
 
 class UsuarioCRUDRepository:
@@ -25,6 +25,7 @@ class UsuarioCRUDRepository:
         por_pagina: int = 10,
         solo_activos: bool = True,
         es_super_admin: bool = False,
+        empresa_id_filtro: int | None = None,
         buscar: str | None = None,
     ) -> tuple[list[Usuario], int]:
         """
@@ -48,11 +49,10 @@ class UsuarioCRUDRepository:
                 selectinload(Usuario.cargo),
             )
             
-            # Agregar filtro de empresa si no es super admin
-            if not es_super_admin:
-                stmt_base = stmt_base.where(Usuario.empresa_id == empresa_id)
-            
-            # Agregar filtro de activos si es necesario
+            empresa_cond = filtro_empresa(Usuario, empresa_id, es_super_admin, empresa_id_filtro)
+            if empresa_cond is not None:
+                stmt_base = stmt_base.where(empresa_cond)
+
             if solo_activos:
                 stmt_base = stmt_base.where(Usuario.activo == True)
             buscar_cond = condicion_buscar(Usuario, buscar, "email")
@@ -60,8 +60,8 @@ class UsuarioCRUDRepository:
                 stmt_base = stmt_base.where(buscar_cond)
 
             count_stmt = select(func.count(Usuario.id))
-            if not es_super_admin:
-                count_stmt = count_stmt.where(Usuario.empresa_id == empresa_id)
+            if empresa_cond is not None:
+                count_stmt = count_stmt.where(empresa_cond)
             if solo_activos:
                 count_stmt = count_stmt.where(Usuario.activo == True)
             if buscar_cond is not None:

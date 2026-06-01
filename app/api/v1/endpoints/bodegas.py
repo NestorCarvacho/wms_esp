@@ -3,7 +3,7 @@ Endpoints CRUD de Bodegas (Capa de Presentación).
 5 endpoints: GET (listar), GET (detalle), POST (crear), PUT (actualizar), DELETE (eliminar).
 Multi-tenant con soporte para super admin.
 """
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.infrastructure.database import get_db_session
 from app.infrastructure.repositories.bodega_crud_repository import BodegaCRUDRepository
@@ -39,6 +39,7 @@ async def listar_Bodegas(
     pagina: int = 1,
     por_pagina: int = 10,
     buscar: str | None = None,
+    empresa_id: int | None = Query(None, description="Filtrar por empresa (solo super admin)"),
     usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
     es_admin: bool = Depends(es_super_admin),
     service: BodegaService = Depends(obtener_bodega_service)
@@ -61,13 +62,14 @@ async def listar_Bodegas(
     - Requiere autenticación JWT
     """
     try:
-        empresa_id = usuario_autenticado.get("empresa_id")
+        empresa_id_usuario = usuario_autenticado.get("empresa_id")
         
         resultado = await service.listar_bodegas(
-            empresa_id=empresa_id,
+            empresa_id=empresa_id_usuario,
             pagina=pagina,
             por_pagina=por_pagina,
             es_super_admin=es_admin,
+            empresa_id_filtro=empresa_id if es_admin else None,
             buscar=buscar,
         )
         
@@ -266,7 +268,8 @@ async def actualizar_bodega(
             bodega_id=id,
             empresa_id=empresa_id,
             nombre=actualizar_dto.nombre,
-            codigo=actualizar_dto.codigo
+            codigo=actualizar_dto.codigo,
+            activo=bool(actualizar_dto.activo) if actualizar_dto.activo is not None else None,
         )
         
         return RespuestaAPIDTO(

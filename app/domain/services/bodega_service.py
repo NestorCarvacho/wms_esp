@@ -19,6 +19,7 @@ class BodegaService:
         pagina: int = 1,
         por_pagina: int = 10,
         es_super_admin: bool = False,
+        empresa_id_filtro: int | None = None,
         buscar: str | None = None,
     ) -> Dict[str, Any]:
         """
@@ -38,6 +39,7 @@ class BodegaService:
             pagina=pagina,
             por_pagina=por_pagina,
             es_super_admin=es_super_admin,
+            empresa_id_filtro=empresa_id_filtro,
             buscar=buscar,
         )
         
@@ -134,8 +136,8 @@ class BodegaService:
         bodega_id: int,
         empresa_id: int,
         nombre: str = None,
-        codigo: str = None
-
+        codigo: str = None,
+        activo: bool | None = None,
     ) -> Dict[str, Any]:
         """
         Actualiza una bodega existente.
@@ -175,8 +177,11 @@ class BodegaService:
             if bodega_con_nombre and bodega_con_nombre.id != bodega_id:
                 raise ValueError(f"Ya existe una bodega con el nombre '{nombre}' en esta empresa")
         
-        # Actualizar bodega
-        bodega_actualizada = await self.repository.actualizar(bodega_id, empresa_id, nombre, codigo)
+        # Actualizar bodega (preservar activo si no se envía)
+        activo_efectivo = bodega_existente.activo if activo is None else activo
+        bodega_actualizada = await self.repository.actualizar(
+            bodega_id, empresa_id, nombre, codigo, activo_efectivo
+        )
 
         if not bodega_actualizada:
             raise ValueError("Error al actualizar la bodega")
@@ -185,7 +190,8 @@ class BodegaService:
             "id": bodega_actualizada.id,
             "empresa_id": bodega_actualizada.empresa_id,
             "nombre": bodega_actualizada.nombre,
-            "codigo": bodega_actualizada.codigo
+            "codigo": bodega_actualizada.codigo,
+            "activo": bodega_actualizada.activo,
         }
     
     async def eliminar_bodega(self, bodega_id: int, empresa_id: int) -> Dict[str, Any]:

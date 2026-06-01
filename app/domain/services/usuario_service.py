@@ -34,6 +34,8 @@ class UsuarioService:
 
         es_super_admin: bool = False,
 
+        empresa_id_filtro: int | None = None,
+
         buscar: str | None = None,
 
     ) -> Dict[str, Any]:
@@ -49,6 +51,8 @@ class UsuarioService:
             solo_activos=True,
 
             es_super_admin=es_super_admin,
+
+            empresa_id_filtro=empresa_id_filtro,
 
             buscar=buscar,
 

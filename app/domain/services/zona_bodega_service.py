@@ -57,6 +57,7 @@ class ZonaBodegaService:
         pagina: int = 1,
         por_pagina: int = 10,
         es_super_admin: bool = False,
+        empresa_id_filtro: int | None = None,
         bodega_id: int | None = None,
         buscar: str | None = None,
     ) -> Dict[str, Any]:
@@ -65,6 +66,7 @@ class ZonaBodegaService:
             pagina=pagina,
             por_pagina=por_pagina,
             es_super_admin=es_super_admin,
+            empresa_id_filtro=empresa_id_filtro,
             bodega_id=bodega_id,
             buscar=buscar,
         )

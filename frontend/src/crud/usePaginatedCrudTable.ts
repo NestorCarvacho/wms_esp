@@ -12,12 +12,15 @@ interface UsePaginatedCrudTableOptions<T> {
   fetchPage: (params: PaginatedListParams) => Promise<PaginatedFetchResult<T>>;
   onError?: (err: unknown) => void;
   initialPageSize?: number;
+  /** Al cambiar, reinicia a la página 1 y recarga (p. ej. filtro de empresa). */
+  empresaFilterId?: number;
 }
 
 export function usePaginatedCrudTable<T>({
   fetchPage,
   onError,
   initialPageSize = DEFAULT_PAGE_SIZE,
+  empresaFilterId,
 }: UsePaginatedCrudTableOptions<T>) {
   const fetchPageRef = useRef(fetchPage);
   fetchPageRef.current = fetchPage;
@@ -40,6 +43,10 @@ export function usePaginatedCrudTable<T>({
     return () => window.clearTimeout(timer);
   }, [search]);
 
+  useEffect(() => {
+    setPage(DEFAULT_PAGE);
+  }, [empresaFilterId]);
+
   const reload = useCallback(async () => {
     setLoading(true);
     try {
@@ -47,6 +54,7 @@ export function usePaginatedCrudTable<T>({
         pagina: page,
         porPagina: pageSize,
         buscar: debouncedSearch.trim() || undefined,
+        ...(empresaFilterId != null ? { empresaId: empresaFilterId } : {}),
       });
       setItems(result.items);
       setTotal(result.total);
@@ -55,7 +63,7 @@ export function usePaginatedCrudTable<T>({
     } finally {
       setLoading(false);
     }
-  }, [page, pageSize, debouncedSearch]);
+  }, [page, pageSize, debouncedSearch, empresaFilterId]);
 
   useEffect(() => {
     void reload();

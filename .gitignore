@@ -32,3 +32,35 @@ venv/Lib/
 frontend/node_modules/
 frontend/dist/
 
+#cache de la aplicación
+app/__pycache__/
+app/infrastructure/__pycache__/
+app/domain/__pycache__/
+app/api/__pycache__/
+app/core/__pycache__/
+app/schemas/__pycache__/
+app/api/v1/endpoints/__pycache__/
+app/api/v1/dependencies/__pycache__/
+app/api/v1/schemas/__pycache__/
+app/api/v1/models/__pycache__/
+app/api/v1/repositories/__pycache__/
+app/api/v1/services/__pycache__/
+app/api/v1/utils/__pycache__/
+app/api/v1/middlewares/__pycache__/
+app/api/v1/exceptions/__pycache__/
+app/api/v1/responses/__pycache__/
+app/api/v1/requests/__pycache__/
+app/api/v1/schemas/__pycache__/
+app/api/v1/models/__pycache__/
+app/domain/services/__pycache__/
+app/infrastructure/models/__pycache__/
+app/infrastructure/repositories/__pycache__/
+app/infrastructure/database/__pycache__/
+app/infrastructure/database/models/__pycache__/
+app/infrastructure/database/repositories/__pycache__/
+app/infrastructure/database/services/__pycache__/
+app/infrastructure/database/utils/__pycache__/
+app/infrastructure/database/middlewares/__pycache__/
+app/infrastructure/database/exceptions/__pycache__/
+app/infrastructure/database/responses/__pycache__/
+app/infrastructure/database/requests/__pycache__/

@@ -1,5 +1,5 @@
 """Endpoints CRUD de Zonas de Bodega."""
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.infrastructure.database import get_db_session
 from app.infrastructure.repositories.zona_bodega_crud_repository import ZonaBodegaCRUDRepository
@@ -20,6 +20,7 @@ async def listar_zonas_bodega(
     por_pagina: int = 10,
     bodega_id: int | None = None,
     buscar: str | None = None,
+    empresa_id: int | None = Query(None, description="Filtrar por empresa (solo super admin)"),
     usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
     es_admin: bool = Depends(es_super_admin),
     service: ZonaBodegaService = Depends(obtener_zona_bodega_service),
@@ -30,6 +31,7 @@ async def listar_zonas_bodega(
             pagina=pagina,
             por_pagina=por_pagina,
             es_super_admin=es_admin,
+            empresa_id_filtro=empresa_id if es_admin else None,
             bodega_id=bodega_id,
             buscar=buscar,
         )

@@ -4,7 +4,7 @@ Endpoints CRUD de rols (Capa de Presentación).
 Multi-tenant con soporte para super admin.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import relationship
 from app.infrastructure.database import get_db_session
@@ -40,6 +40,7 @@ async def listar_roles(
     pagina: int = 1,
     por_pagina: int = 10,
     buscar: str | None = None,
+    empresa_id: int | None = Query(None, description="Filtrar por empresa (solo super admin)"),
     usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
     es_admin: bool = Depends(es_super_admin),
     service: RolService = Depends(obtener_rol_service)
@@ -63,13 +64,14 @@ async def listar_roles(
     """
 
     try:
-        empresa_id = usuario_autenticado.get("empresa_id")
+        empresa_id_usuario = usuario_autenticado.get("empresa_id")
 
         resultado = await service.listar_roles(
-            empresa_id=empresa_id,
+            empresa_id=empresa_id_usuario,
             pagina=pagina,
             por_pagina=por_pagina,
             es_super_admin=es_admin,
+            empresa_id_filtro=empresa_id if es_admin else None,
             buscar=buscar,
         )
         

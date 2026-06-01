@@ -5,11 +5,14 @@ import { listarRolesCargo, sincronizarRolesCargo } from '@/api/permisos';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { Selector } from '@/components/ui/inputs/Selector';
 import { PrimaryButton } from '@/components/ui/buttons';
+import { EmpresaMaestraFilter } from '@/components/crud/EmpresaMaestraFilter';
 import { useCrudUi } from '@/crud/useCrudUi';
+import { useEmpresaMaestraFilter } from '@/crud/useEmpresaMaestraFilter';
 import type { Cargo, Rol } from '@/types/api';
 
 export function PermisosCargoPage() {
   const { notifySuccess, notifyApiError } = useCrudUi();
+  const empresaFilter = useEmpresaMaestraFilter();
   const [cargos, setCargos] = useState<Cargo[]>([]);
   const [roles, setRoles] = useState<Rol[]>([]);
   const [cargoId, setCargoId] = useState('');
@@ -20,24 +23,33 @@ export function PermisosCargoPage() {
   const loadCatalogos = useCallback(async () => {
     setLoading(true);
     try {
+      const listParams = {
+        pagina: 1,
+        porPagina: 200,
+        ...(empresaFilter.empresaIdParam != null ? { empresaId: empresaFilter.empresaIdParam } : {}),
+      };
       const [cargosRes, rolesRes] = await Promise.all([
-        listarCargos({ pagina: 1, porPagina: 200 }),
-        listarRoles({ pagina: 1, porPagina: 200 }),
+        listarCargos(listParams),
+        listarRoles(listParams),
       ]);
       setCargos(cargosRes.cargos);
       setRoles(rolesRes.roles);
-      if (cargosRes.cargos.length) {
-        setCargoId(String(cargosRes.cargos[0].id));
-      }
+      setCargoId((prev) => {
+        if (prev && cargosRes.cargos.some((c) => String(c.id) === prev)) return prev;
+        return cargosRes.cargos.length ? String(cargosRes.cargos[0].id) : '';
+      });
     } catch (err) {
       notifyApiError(err, 'Error al cargar datos');
+      setCargos([]);
+      setRoles([]);
+      setCargoId('');
     } finally {
       setLoading(false);
     }
-  }, [notifyApiError]);
+  }, [empresaFilter.empresaIdParam, notifyApiError]);
 
   useEffect(() => {
-    loadCatalogos();
+    void loadCatalogos();
   }, [loadCatalogos]);
 
   useEffect(() => {
@@ -82,6 +94,15 @@ export function PermisosCargoPage() {
       supportingText="Asigna roles reutilizables a cada cargo"
     >
       <div className="max-w-xl flex flex-col gap-4">
+        <EmpresaMaestraFilter
+          show={empresaFilter.showFilter}
+          value={empresaFilter.empresaFilterId}
+          onChange={empresaFilter.setEmpresaFilterId}
+          options={empresaFilter.filterOptions}
+          loading={empresaFilter.loading}
+          className="max-w-md"
+        />
+
         <Selector
           id="cargoId"
           label="Cargo"

@@ -1,5 +1,5 @@
 """Endpoints CRUD de permisos atómicos."""
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.dependencies import es_super_admin, obtener_usuario_autenticado
@@ -21,6 +21,7 @@ async def listar_permisos(
     pagina: int = 1,
     por_pagina: int = 10,
     buscar: str | None = None,
+    empresa_id: int | None = Query(None, description="Filtrar por empresa (solo super admin)"),
     usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
     es_admin: bool = Depends(es_super_admin),
     service: PermisoService = Depends(obtener_permiso_service),
@@ -31,6 +32,7 @@ async def listar_permisos(
             pagina=pagina,
             por_pagina=por_pagina,
             es_super_admin=es_admin,
+            empresa_id_filtro=empresa_id if es_admin else None,
             buscar=buscar,
         )
         return RespuestaAPIDTO(exito=True, datos=resultado, mensaje=f"Se encontraron {resultado['total']} permisos").dict()

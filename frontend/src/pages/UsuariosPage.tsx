@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { crearUsuario, eliminarUsuario, listarUsuarios } from '@/api/usuarios';
-import { listarEmpresas } from '@/api/empresas';
 import { listarCargos } from '@/api/cargos';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { FormLayout } from '@/components/layout/FormLayout';
@@ -9,27 +8,29 @@ import { Selector } from '@/components/ui/inputs/Selector';
 import { PrimaryButton } from '@/components/ui/buttons';
 import { Table } from '@/components/ui/tables';
 import { StatusPill } from '@/app/Feedback';
+import { EmpresaMaestraFilter } from '@/components/crud/EmpresaMaestraFilter';
 import { useAuthContext } from '@/context/AuthContext';
 import { createCrudTableActions } from '@/crud/crudTableActions';
 import { useCrudUi } from '@/crud/useCrudUi';
+import { useEmpresaMaestraFilter } from '@/crud/useEmpresaMaestraFilter';
 import { usePaginatedCrudTable } from '@/crud/usePaginatedCrudTable';
-import type { Cargo, Empresa, UsuarioLista } from '@/types/api';
+import type { Cargo, UsuarioLista } from '@/types/api';
 import { displayCargo, displayEmpresa } from '@/utils/displayLabels';
 
 export function UsuariosPage() {
   const { isSuperAdmin, user } = useAuthContext();
   const { notifySuccess, notifyApiError, confirmDelete, openSidePanel } = useCrudUi();
+  const empresaFilter = useEmpresaMaestraFilter();
   const defaultEmpresaId = user?.empresa_id ? String(user.empresa_id) : '';
   const table = usePaginatedCrudTable<UsuarioLista>({
+    empresaFilterId: empresaFilter.empresaIdParam,
     fetchPage: async (params) => {
       const res = await listarUsuarios(params);
       return { total: res.total, items: res.usuarios };
     },
     onError: (err) => notifyApiError(err, 'Error al cargar usuarios'),
   });
-  const [empresas, setEmpresas] = useState<Empresa[]>([]);
   const [cargos, setCargos] = useState<Cargo[]>([]);
-  const [loadingEmpresas, setLoadingEmpresas] = useState(false);
   const [loadingCargos, setLoadingCargos] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [email, setEmail] = useState('');
@@ -38,28 +39,13 @@ export function UsuariosPage() {
   const [cargoId, setCargoId] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  const loadEmpresas = useCallback(async () => {
-    if (!isSuperAdmin) return;
-    setLoadingEmpresas(true);
-    try {
-      const res = await listarEmpresas({ pagina: 1, porPagina: 100 });
-      setEmpresas(res.empresas.filter((e) => e.esta_activa));
-    } catch (err) {
-      notifyApiError(err, 'Error al cargar empresas');
-    } finally {
-      setLoadingEmpresas(false);
-    }
-  }, [isSuperAdmin, notifyApiError]);
-
-  useEffect(() => {
-    if (isSuperAdmin) loadEmpresas();
-  }, [isSuperAdmin, loadEmpresas]);
-
   useEffect(() => {
     if (defaultEmpresaId) setEmpresaId(defaultEmpresaId);
   }, [defaultEmpresaId]);
 
-  const empresaIdParaCargos = isSuperAdmin ? empresaId : defaultEmpresaId;
+  const empresaIdParaCargos = isSuperAdmin
+    ? empresaFilter.empresaFilterId || empresaId
+    : defaultEmpresaId;
 
   useEffect(() => {
     if (!empresaIdParaCargos) {
@@ -68,7 +54,11 @@ export function UsuariosPage() {
     }
     let cancelled = false;
     setLoadingCargos(true);
-    listarCargos({ pagina: 1, porPagina: 200 })
+    listarCargos({
+      pagina: 1,
+      porPagina: 200,
+      empresaId: empresaFilter.empresaIdParam,
+    })
       .then((res) => {
         if (cancelled) return;
         setCargos(res.cargos.filter((c) => c.empresa_id === Number(empresaIdParaCargos)));
@@ -82,7 +72,7 @@ export function UsuariosPage() {
     return () => {
       cancelled = true;
     };
-  }, [empresaIdParaCargos]);
+  }, [empresaIdParaCargos, empresaFilter.empresaIdParam]);
 
   const cargoOptions = useMemo(
     () => [
@@ -92,10 +82,14 @@ export function UsuariosPage() {
     [cargos],
   );
 
-  const empresaOptions = empresas.map((e) => ({
-    label: `${e.codigo} — ${e.nombre}`,
-    value: String(e.id),
-  }));
+  const empresaOptions = useMemo(
+    () =>
+      empresaFilter.empresas.map((e) => ({
+        label: `${e.codigo} — ${e.nombre}`,
+        value: String(e.id),
+      })),
+    [empresaFilter.empresas],
+  );
 
   async function handleCreate(e: FormEvent) {
     e.preventDefault();
@@ -110,7 +104,7 @@ export function UsuariosPage() {
       setEmail('');
       setContrasena('');
       setCargoId('');
-      setEmpresaId(defaultEmpresaId);
+      setEmpresaId(empresaFilter.empresaFilterId || defaultEmpresaId);
       setShowForm(false);
       notifySuccess('Usuario creado correctamente');
       await table.reload();
@@ -152,7 +146,7 @@ export function UsuariosPage() {
         <PrimaryButton
           onClick={() => {
             if (!showForm) {
-              setEmpresaId(defaultEmpresaId);
+              setEmpresaId(empresaFilter.empresaFilterId || defaultEmpresaId);
               setCargoId('');
             }
             setShowForm((v) => !v);
@@ -161,6 +155,14 @@ export function UsuariosPage() {
           {showForm ? 'Cancelar' : 'Nuevo usuario'}
         </PrimaryButton>
       </div>
+
+      <EmpresaMaestraFilter
+        show={empresaFilter.showFilter}
+        value={empresaFilter.empresaFilterId}
+        onChange={empresaFilter.setEmpresaFilterId}
+        options={empresaFilter.filterOptions}
+        loading={empresaFilter.loading}
+      />
 
       {showForm && (
         <FormLayout onSubmit={handleCreate} columns={2} className="mb-6">
@@ -179,7 +181,7 @@ export function UsuariosPage() {
                 }}
                 searchable
                 required
-                disabled={loadingEmpresas || empresaOptions.length === 0}
+                disabled={empresaFilter.loading || empresaOptions.length === 0}
               />
             )}
             <Selector

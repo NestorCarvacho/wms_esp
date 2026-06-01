@@ -7,7 +7,7 @@ from sqlalchemy import select, update, and_, func
 from sqlalchemy.orm import selectinload
 from sqlalchemy.exc import SQLAlchemyError
 from app.infrastructure.models.usuario import Producto
-from app.infrastructure.repositories.listado_helpers import condicion_buscar
+from app.infrastructure.repositories.listado_helpers import condicion_buscar, filtro_empresa
 
 
 class ProductoCRUDRepository:
@@ -22,6 +22,7 @@ class ProductoCRUDRepository:
         pagina: int = 1,
         por_pagina: int = 10,
         es_super_admin: bool = False,
+        empresa_id_filtro: int | None = None,
         buscar: str | None = None,
     ) -> tuple[list[Producto], int]:
         """
@@ -43,19 +44,18 @@ class ProductoCRUDRepository:
                 selectinload(Producto.unidad_medida),
             )
             
-            # Agregar filtro de empresa si no es super admin
-            if not es_super_admin:
-                stmt_base = stmt_base.where(Producto.empresa_id == empresa_id)
-            
-            # Filtrar solo activos
+            empresa_cond = filtro_empresa(Producto, empresa_id, es_super_admin, empresa_id_filtro)
+            if empresa_cond is not None:
+                stmt_base = stmt_base.where(empresa_cond)
+
             stmt_base = stmt_base.where(Producto.activo == True)
             buscar_cond = condicion_buscar(Producto, buscar, "nombre", "sku")
             if buscar_cond is not None:
                 stmt_base = stmt_base.where(buscar_cond)
 
             count_stmt = select(func.count(Producto.id)).where(Producto.activo == True)
-            if not es_super_admin:
-                count_stmt = count_stmt.where(Producto.empresa_id == empresa_id)
+            if empresa_cond is not None:
+                count_stmt = count_stmt.where(empresa_cond)
             if buscar_cond is not None:
                 count_stmt = count_stmt.where(buscar_cond)
             

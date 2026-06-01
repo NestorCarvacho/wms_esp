@@ -3,7 +3,7 @@ Endpoints CRUD de Productos (Capa de Presentación).
 5 endpoints: GET (listar), GET (detalle), POST (crear), PUT (actualizar), DELETE (eliminar).
 Multi-tenant con soporte para super admin.
 """
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile, File
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from io import BytesIO
@@ -46,6 +46,7 @@ async def listar_Productos(
     pagina: int = 1,
     por_pagina: int = 10,
     buscar: str | None = None,
+    empresa_id: int | None = Query(None, description="Filtrar por empresa (solo super admin)"),
     usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
     es_admin: bool = Depends(es_super_admin),
     service: ProductoService = Depends(obtener_producto_service)
@@ -68,13 +69,14 @@ async def listar_Productos(
     - Requiere autenticación JWT
     """
     try:
-        empresa_id = usuario_autenticado.get("empresa_id")
-        
+        empresa_id_usuario = usuario_autenticado.get("empresa_id")
+
         resultado = await service.listar_productos(
-            empresa_id=empresa_id,
+            empresa_id=empresa_id_usuario,
             pagina=pagina,
             por_pagina=por_pagina,
             es_super_admin=es_admin,
+            empresa_id_filtro=empresa_id if es_admin else None,
             buscar=buscar,
         )
         
@@ -356,7 +358,7 @@ async def actualizar_producto(
             empresa_id=empresa_id,
             nombre=actualizar_dto.nombre,
             sku=actualizar_dto.sku,
-            activo=actualizar_dto.activo,
+            activo=bool(actualizar_dto.activo) if actualizar_dto.activo is not None else None,
             unidad_medida_id=actualizar_dto.unidad_medida_id,
             precio_costo=actualizar_dto.precio_costo
         )

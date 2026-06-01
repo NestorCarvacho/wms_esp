@@ -3,10 +3,11 @@ Repositorio CRUD de Permisos.
 """
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update, func, and_
+from sqlalchemy.orm import selectinload
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.infrastructure.models.usuario import Permiso
-from app.infrastructure.repositories.listado_helpers import condicion_buscar
+from app.infrastructure.repositories.listado_helpers import condicion_buscar, filtro_empresa
 
 
 class PermisoCRUDRepository:
@@ -19,19 +20,21 @@ class PermisoCRUDRepository:
         pagina: int = 1,
         por_pagina: int = 100,
         es_super_admin: bool = False,
+        empresa_id_filtro: int | None = None,
         buscar: str | None = None,
     ) -> tuple[list[Permiso], int]:
         try:
-            stmt_base = select(Permiso).where(Permiso.activo == True)
-            if not es_super_admin:
-                stmt_base = stmt_base.where(Permiso.empresa_id == empresa_id)
+            stmt_base = select(Permiso).options(selectinload(Permiso.empresa)).where(Permiso.activo == True)
+            empresa_cond = filtro_empresa(Permiso, empresa_id, es_super_admin, empresa_id_filtro)
+            if empresa_cond is not None:
+                stmt_base = stmt_base.where(empresa_cond)
             buscar_cond = condicion_buscar(Permiso, buscar, "codigo", "descripcion")
             if buscar_cond is not None:
                 stmt_base = stmt_base.where(buscar_cond)
 
             count_stmt = select(func.count(Permiso.id)).select_from(Permiso).where(Permiso.activo == True)
-            if not es_super_admin:
-                count_stmt = count_stmt.where(Permiso.empresa_id == empresa_id)
+            if empresa_cond is not None:
+                count_stmt = count_stmt.where(empresa_cond)
             if buscar_cond is not None:
                 count_stmt = count_stmt.where(buscar_cond)
 

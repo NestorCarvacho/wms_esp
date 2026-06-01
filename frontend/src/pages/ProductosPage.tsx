@@ -18,13 +18,17 @@ import { StatusPill } from '@/app/Feedback';
 import { Text } from '@/components/ui/text/Text';
 import { createCrudTableActions } from '@/crud/crudTableActions';
 import { useCrudUi } from '@/crud/useCrudUi';
+import { useEmpresaMaestraFilter } from '@/crud/useEmpresaMaestraFilter';
 import { usePaginatedCrudTable } from '@/crud/usePaginatedCrudTable';
+import { EmpresaMaestraFilter } from '@/components/crud/EmpresaMaestraFilter';
 import type { Producto, ProductoImportacionResultado, UnidadMedida } from '@/types/api';
 import { displayEmpresa, displayUnidadMedida } from '@/utils/displayLabels';
 
 export function ProductosPage() {
   const { notifySuccess, notifyApiError, confirmDelete, openSidePanel } = useCrudUi();
+  const empresaFilter = useEmpresaMaestraFilter();
   const table = usePaginatedCrudTable<Producto>({
+    empresaFilterId: empresaFilter.empresaIdParam,
     fetchPage: async (params) => {
       const res = await listarProductos(params);
       return { total: res.total, items: res.productos };
@@ -45,14 +49,18 @@ export function ProductosPage() {
 
   useEffect(() => {
     let cancelled = false;
-    listarUnidadesMedida({ pagina: 1, porPagina: 500 })
+    listarUnidadesMedida({
+      pagina: 1,
+      porPagina: 500,
+      ...(empresaFilter.empresaIdParam != null ? { empresaId: empresaFilter.empresaIdParam } : {}),
+    })
       .then((res) => {
         if (cancelled) return;
         const items = res.productos ?? [];
         setUnidades(items);
-        if (items.length) {
-          setUnidadMedidaId(String(items[0].id));
-        }
+        setUnidadMedidaId((prev) =>
+          prev && items.some((u) => String(u.id) === prev) ? prev : items.length ? String(items[0].id) : '',
+        );
       })
       .catch((err) => {
         if (!cancelled) notifyApiError(err, 'Error al cargar unidades de medida');
@@ -60,7 +68,7 @@ export function ProductosPage() {
     return () => {
       cancelled = true;
     };
-  }, [notifyApiError]);
+  }, [empresaFilter.empresaIdParam, notifyApiError]);
 
   async function handleDownloadTemplate() {
     setDownloadingTemplate(true);
@@ -159,6 +167,14 @@ export function ProductosPage() {
       icon="table"
       supportingText={`${table.total} registrados`}
     >
+      <EmpresaMaestraFilter
+        show={empresaFilter.showFilter}
+        value={empresaFilter.empresaFilterId}
+        onChange={empresaFilter.setEmpresaFilterId}
+        options={empresaFilter.filterOptions}
+        loading={empresaFilter.loading}
+      />
+
       <div className="flex flex-wrap justify-end gap-2 mb-4">
         <PrimaryButton
           variant="outline"

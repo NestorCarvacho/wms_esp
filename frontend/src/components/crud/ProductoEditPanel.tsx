@@ -6,7 +6,7 @@ import { PrimaryButton } from '@/components/ui/buttons';
 import { useUI } from '@/hooks/ui';
 import { ApiError } from '@/api/client';
 import type { Producto, UnidadMedida } from '@/types/api';
-import { ACTIVO_OPTIONS, activoValueToNumber } from './formOptions';
+import { preserveActivoNumber } from './preserveActivo';
 
 export interface ProductoEditPanelProps {
   producto: Producto;
@@ -20,7 +20,6 @@ export function ProductoEditPanel({ producto, unidades, onSaved }: ProductoEditP
   const [sku, setSku] = useState(producto.sku);
   const [unidadMedidaId, setUnidadMedidaId] = useState(String(producto.unidad_medida_id ?? ''));
   const [precioCosto, setPrecioCosto] = useState(producto.precio_costo != null ? String(producto.precio_costo) : '');
-  const [activo, setActivo] = useState(String(producto.activo ?? 1));
   const [submitting, setSubmitting] = useState(false);
 
   const unidadOptions = unidades.map((u) => ({
@@ -37,7 +36,7 @@ export function ProductoEditPanel({ producto, unidades, onSaved }: ProductoEditP
         sku: sku.trim(),
         unidad_medida_id: Number(unidadMedidaId),
         precio_costo: precioCosto ? Number(precioCosto) : null,
-        activo: activoValueToNumber(activo),
+        activo: preserveActivoNumber(producto.activo),
       });
       showNotification({ type: 'success', message: 'Producto actualizado correctamente' });
       onSaved?.();
@@ -69,13 +68,6 @@ export function ProductoEditPanel({ producto, unidades, onSaved }: ProductoEditP
         type="number"
         value={precioCosto}
         onChange={setPrecioCosto}
-      />
-      <Selector
-        id="edit-activo"
-        label="Estado"
-        options={ACTIVO_OPTIONS}
-        value={activo}
-        onChange={(v) => setActivo(String(v))}
       />
       <div className="flex gap-3 pt-2">
         <PrimaryButton type="button" variant="outline" onClick={closeSidePanel}>

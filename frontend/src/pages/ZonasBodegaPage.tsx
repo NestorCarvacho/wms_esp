@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { listarBodegas } from '@/api/bodegas';
 import { listarTiposZona } from '@/api/tiposZona';
 import { crearZonaBodega, eliminarZonaBodega, listarZonasBodega } from '@/api/zonasBodega';
@@ -9,15 +9,19 @@ import { Selector } from '@/components/ui/inputs/Selector';
 import { PrimaryButton } from '@/components/ui/buttons';
 import { Table } from '@/components/ui/tables';
 import { StatusPill } from '@/app/Feedback';
+import { EmpresaMaestraFilter } from '@/components/crud/EmpresaMaestraFilter';
 import { createCrudTableActions } from '@/crud/crudTableActions';
 import { useCrudUi } from '@/crud/useCrudUi';
+import { useEmpresaMaestraFilter } from '@/crud/useEmpresaMaestraFilter';
 import { usePaginatedCrudTable } from '@/crud/usePaginatedCrudTable';
 import type { Bodega, TipoZona, ZonaBodega } from '@/types/api';
 import { displayBodega, displayEmpresa, displayTipoZona } from '@/utils/displayLabels';
 
 export function ZonasBodegaPage() {
   const { notifySuccess, notifyApiError, confirmDelete, openSidePanel } = useCrudUi();
+  const empresaFilter = useEmpresaMaestraFilter();
   const table = usePaginatedCrudTable<ZonaBodega>({
+    empresaFilterId: empresaFilter.empresaIdParam,
     fetchPage: async (params) => {
       const res = await listarZonasBodega(params);
       return { total: res.total, items: res.zonas_bodega };
@@ -33,30 +37,42 @@ export function ZonasBodegaPage() {
   const [tipoZonaId, setTipoZonaId] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    let cancelled = false;
+  const loadFormOptions = useCallback(async () => {
     setFormOptionsLoading(true);
-    Promise.all([
-      listarBodegas({ pagina: 1, porPagina: 500 }),
-      listarTiposZona({ pagina: 1, porPagina: 500 }),
-    ])
-      .then(([bodegasRes, tiposRes]) => {
-        if (cancelled) return;
-        setBodegas(bodegasRes.bodegas);
-        setTiposZona(tiposRes.tipos_zona);
-        setBodegaId((prev) => prev || (bodegasRes.bodegas[0] ? String(bodegasRes.bodegas[0].id) : ''));
-        setTipoZonaId((prev) => prev || (tiposRes.tipos_zona[0] ? String(tiposRes.tipos_zona[0].id) : ''));
-      })
-      .catch((err) => {
-        if (!cancelled) notifyApiError(err, 'Error al cargar datos del formulario');
-      })
-      .finally(() => {
-        if (!cancelled) setFormOptionsLoading(false);
+    try {
+      const listParams = {
+        pagina: 1,
+        porPagina: 500,
+        ...(empresaFilter.empresaIdParam != null ? { empresaId: empresaFilter.empresaIdParam } : {}),
+      };
+      const [bodegasRes, tiposRes] = await Promise.all([
+        listarBodegas(listParams),
+        listarTiposZona(listParams),
+      ]);
+      setBodegas(bodegasRes.bodegas);
+      setTiposZona(tiposRes.tipos_zona);
+      setBodegaId((prev) => {
+        if (prev && bodegasRes.bodegas.some((b) => String(b.id) === prev)) return prev;
+        return bodegasRes.bodegas.length ? String(bodegasRes.bodegas[0].id) : '';
       });
-    return () => {
-      cancelled = true;
-    };
-  }, [notifyApiError]);
+      setTipoZonaId((prev) => {
+        if (prev && tiposRes.tipos_zona.some((t) => String(t.id) === prev)) return prev;
+        return tiposRes.tipos_zona.length ? String(tiposRes.tipos_zona[0].id) : '';
+      });
+    } catch (err) {
+      notifyApiError(err, 'Error al cargar datos del formulario');
+      setBodegas([]);
+      setTiposZona([]);
+      setBodegaId('');
+      setTipoZonaId('');
+    } finally {
+      setFormOptionsLoading(false);
+    }
+  }, [empresaFilter.empresaIdParam, notifyApiError]);
+
+  useEffect(() => {
+    void loadFormOptions();
+  }, [loadFormOptions]);
 
   async function handleCreate(e: FormEvent) {
     e.preventDefault();
@@ -123,6 +139,14 @@ export function ZonasBodegaPage() {
       icon="layers"
       supportingText={`${table.total} registradas`}
     >
+      <EmpresaMaestraFilter
+        show={empresaFilter.showFilter}
+        value={empresaFilter.empresaFilterId}
+        onChange={empresaFilter.setEmpresaFilterId}
+        options={empresaFilter.filterOptions}
+        loading={empresaFilter.loading}
+      />
+
       <div className="flex justify-end mb-4">
         <PrimaryButton onClick={() => setShowForm((v) => !v)} disabled={!canCreate && !showForm}>
           {showForm ? 'Cancelar' : 'Nueva zona'}

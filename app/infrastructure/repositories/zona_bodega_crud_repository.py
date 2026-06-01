@@ -4,7 +4,7 @@ from sqlalchemy import select, update, and_, func
 from sqlalchemy.orm import selectinload
 from sqlalchemy.exc import SQLAlchemyError
 from app.infrastructure.models.usuario import ZonaBodega, Bodega
-from app.infrastructure.repositories.listado_helpers import condicion_buscar
+from app.infrastructure.repositories.listado_helpers import condicion_buscar, filtro_empresa
 
 
 class ZonaBodegaCRUDRepository:
@@ -23,13 +23,15 @@ class ZonaBodegaCRUDRepository:
         pagina: int = 1,
         por_pagina: int = 10,
         es_super_admin: bool = False,
+        empresa_id_filtro: int | None = None,
         bodega_id: int | None = None,
         buscar: str | None = None,
     ) -> tuple[list[ZonaBodega], int]:
         try:
             stmt_base = self._base_query().join(Bodega, ZonaBodega.bodega_id == Bodega.id)
-            if not es_super_admin:
-                stmt_base = stmt_base.where(Bodega.empresa_id == empresa_id)
+            empresa_cond = filtro_empresa(Bodega, empresa_id, es_super_admin, empresa_id_filtro)
+            if empresa_cond is not None:
+                stmt_base = stmt_base.where(empresa_cond)
             if bodega_id is not None:
                 stmt_base = stmt_base.where(ZonaBodega.bodega_id == bodega_id)
             stmt_base = stmt_base.where(ZonaBodega.activo == True)
@@ -43,8 +45,8 @@ class ZonaBodegaCRUDRepository:
                 .join(Bodega, ZonaBodega.bodega_id == Bodega.id)
                 .where(ZonaBodega.activo == True)
             )
-            if not es_super_admin:
-                count_stmt = count_stmt.where(Bodega.empresa_id == empresa_id)
+            if empresa_cond is not None:
+                count_stmt = count_stmt.where(empresa_cond)
             if bodega_id is not None:
                 count_stmt = count_stmt.where(ZonaBodega.bodega_id == bodega_id)
             if buscar_cond is not None:

@@ -6,7 +6,6 @@ import { EmpresaEditPanel } from './EmpresaEditPanel';
 import { UsuarioEditPanel } from './UsuarioEditPanel';
 import { CargoEditPanel } from './CargoEditPanel';
 import { RolEditPanel } from './RolEditPanel';
-import { PermisoCargoEditPanel } from './PermisoCargoEditPanel';
 import { TipoZonaEditPanel } from './TipoZonaEditPanel';
 import { ZonaBodegaEditPanel } from './ZonaBodegaEditPanel';
 
@@ -21,7 +20,6 @@ export function registerCrudPanels() {
   registerSidePanelComponent('UsuarioEditPanel', UsuarioEditPanel);
   registerSidePanelComponent('CargoEditPanel', CargoEditPanel);
   registerSidePanelComponent('RolEditPanel', RolEditPanel);
-  registerSidePanelComponent('PermisoCargoEditPanel', PermisoCargoEditPanel);
   registerSidePanelComponent('TipoZonaEditPanel', TipoZonaEditPanel);
   registerSidePanelComponent('ZonaBodegaEditPanel', ZonaBodegaEditPanel);
   registered = true;

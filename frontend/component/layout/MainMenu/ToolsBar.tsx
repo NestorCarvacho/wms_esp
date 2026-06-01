@@ -54,14 +54,6 @@ const ToolsBar: React.FC<ToolsBarProps> = ({
       <SearchBar searchTerm={searchTerm} onSearchChange={handleSearchChange} />
 
       <div className="flex items-center space-x-2">
-        <NavIcon icon={<IconScout name="fileInfo" size="lg" color={colors.primary.general} />}/>
-
-        <NavIcon
-          icon={<IconScout name="bell" size="lg" color={colors.primary.general} />}
-          showNotification={true}
-          notificationCount={100}
-        />
-
         <div className="relative">
           <NavIcon
             icon={

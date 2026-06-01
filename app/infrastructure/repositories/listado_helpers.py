@@ -2,6 +2,25 @@
 from sqlalchemy import or_
 
 
+def filtro_empresa(
+    model,
+    empresa_id: int,
+    es_super_admin: bool,
+    empresa_id_filtro: int | None = None,
+):
+    """
+    Condición WHERE multi-tenant.
+    Super admin sin filtro: None (sin restricción).
+    Super admin con empresa_id_filtro: solo esa empresa.
+    Usuario normal: siempre su empresa_id.
+    """
+    if es_super_admin:
+        if empresa_id_filtro is not None:
+            return model.empresa_id == empresa_id_filtro
+        return None
+    return model.empresa_id == empresa_id
+
+
 def condicion_buscar(model, buscar: str | None, *fields: str):
     """Genera OR de columnas LIKE %buscar% (MySQL utf8mb4_ci)."""
     if not buscar or not str(buscar).strip():

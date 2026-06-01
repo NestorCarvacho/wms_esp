@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { crearRol, eliminarRol, listarRoles } from '@/api/roles';
 import { listarPermisos } from '@/api/permisos';
 import { PageLayout } from '@/components/layout/PageLayout';
@@ -7,15 +7,19 @@ import { LabelInput } from '@/components/ui/inputs';
 import { PrimaryButton } from '@/components/ui/buttons';
 import { Table } from '@/components/ui/tables';
 import { StatusPill } from '@/app/Feedback';
+import { EmpresaMaestraFilter } from '@/components/crud/EmpresaMaestraFilter';
 import { createCrudTableActions } from '@/crud/crudTableActions';
 import { useCrudUi } from '@/crud/useCrudUi';
+import { useEmpresaMaestraFilter } from '@/crud/useEmpresaMaestraFilter';
 import { usePaginatedCrudTable } from '@/crud/usePaginatedCrudTable';
 import type { Permiso, Rol } from '@/types/api';
 import { displayEmpresa } from '@/utils/displayLabels';
 
 export function RolesPage() {
   const { notifySuccess, notifyApiError, confirmDelete, openSidePanel } = useCrudUi();
+  const empresaFilter = useEmpresaMaestraFilter();
   const table = usePaginatedCrudTable<Rol>({
+    empresaFilterId: empresaFilter.empresaIdParam,
     fetchPage: async (params) => {
       const res = await listarRoles(params);
       return { total: res.total, items: res.roles };
@@ -28,19 +32,22 @@ export function RolesPage() {
   const [descripcion, setDescripcion] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    let cancelled = false;
-    listarPermisos({ pagina: 1, porPagina: 500 })
-      .then((res) => {
-        if (!cancelled) setPermisos(res.permisos);
-      })
-      .catch((err) => {
-        if (!cancelled) notifyApiError(err, 'Error al cargar permisos');
+  const loadPermisos = useCallback(async () => {
+    try {
+      const res = await listarPermisos({
+        pagina: 1,
+        porPagina: 500,
+        empresaId: empresaFilter.empresaIdParam,
       });
-    return () => {
-      cancelled = true;
-    };
-  }, [notifyApiError]);
+      setPermisos(res.permisos);
+    } catch (err) {
+      notifyApiError(err, 'Error al cargar permisos');
+    }
+  }, [empresaFilter.empresaIdParam, notifyApiError]);
+
+  useEffect(() => {
+    void loadPermisos();
+  }, [loadPermisos]);
 
   async function handleCreate(e: FormEvent) {
     e.preventDefault();
@@ -95,6 +102,14 @@ export function RolesPage() {
           {showForm ? 'Cancelar' : 'Nuevo rol'}
         </PrimaryButton>
       </div>
+
+      <EmpresaMaestraFilter
+        show={empresaFilter.showFilter}
+        value={empresaFilter.empresaFilterId}
+        onChange={empresaFilter.setEmpresaFilterId}
+        options={empresaFilter.filterOptions}
+        loading={empresaFilter.loading}
+      />
 
       {showForm && (
         <FormLayout onSubmit={handleCreate} columns={2} className="mb-6">

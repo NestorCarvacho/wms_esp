@@ -285,6 +285,7 @@ export interface RolActualizar {
 export interface Permiso {
   id: number;
   empresa_id: number;
+  empresa_nombre?: string | null;
   codigo: string;
   descripcion?: string | null;
   activo: boolean;

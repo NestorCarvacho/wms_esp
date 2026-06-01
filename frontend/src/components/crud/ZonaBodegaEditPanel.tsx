@@ -6,7 +6,7 @@ import { PrimaryButton } from '@/components/ui/buttons';
 import { useUI } from '@/hooks/ui';
 import { ApiError } from '@/api/client';
 import type { Bodega, TipoZona, ZonaBodega } from '@/types/api';
-import { ACTIVO_OPTIONS, activoValueToNumber } from './formOptions';
+import { preserveActivoNumber } from './preserveActivo';
 
 export interface ZonaBodegaEditPanelProps {
   zona: ZonaBodega;
@@ -20,7 +20,6 @@ export function ZonaBodegaEditPanel({ zona, bodegas, tiposZona, onSaved }: ZonaB
   const [nombre, setNombre] = useState(zona.nombre ?? '');
   const [bodegaId, setBodegaId] = useState(String(zona.bodega_id));
   const [tipoZonaId, setTipoZonaId] = useState(String(zona.tipo_zona_id));
-  const [activo, setActivo] = useState(String(zona.activo ?? 1));
   const [submitting, setSubmitting] = useState(false);
 
   const bodegaOptions = bodegas.map((b) => ({
@@ -41,7 +40,7 @@ export function ZonaBodegaEditPanel({ zona, bodegas, tiposZona, onSaved }: ZonaB
         bodega_id: Number(bodegaId),
         tipo_zona_id: Number(tipoZonaId),
         nombre: nombre.trim() || null,
-        activo: activoValueToNumber(activo),
+        activo: preserveActivoNumber(zona.activo),
       });
       showNotification({ type: 'success', message: 'Zona actualizada correctamente' });
       onSaved?.();
@@ -73,13 +72,6 @@ export function ZonaBodegaEditPanel({ zona, bodegas, tiposZona, onSaved }: ZonaB
         onChange={(v) => setTipoZonaId(String(v))}
       />
       <LabelInput id="edit-nombre" label="Nombre (opcional)" value={nombre} onChange={setNombre} />
-      <Selector
-        id="edit-activo"
-        label="Estado"
-        options={ACTIVO_OPTIONS}
-        value={activo}
-        onChange={(v) => setActivo(String(v))}
-      />
       <div className="flex gap-3 pt-2">
         <PrimaryButton type="button" variant="outline" onClick={closeSidePanel}>
           Cancelar

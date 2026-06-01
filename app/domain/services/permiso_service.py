@@ -2,6 +2,7 @@
 from typing import Any, Dict
 
 from app.infrastructure.repositories.permiso_crud_repository import PermisoCRUDRepository
+from app.domain.services.display_helpers import format_empresa_nombre
 
 
 class PermisoService:
@@ -14,10 +15,11 @@ class PermisoService:
         pagina: int = 1,
         por_pagina: int = 10,
         es_super_admin: bool = False,
+        empresa_id_filtro: int | None = None,
         buscar: str | None = None,
     ) -> Dict[str, Any]:
         permisos, total = await self.repository.listar(
-            empresa_id, pagina, por_pagina, es_super_admin, buscar
+            empresa_id, pagina, por_pagina, es_super_admin, empresa_id_filtro, buscar
         )
         return {
             "total": total,
@@ -27,6 +29,7 @@ class PermisoService:
                 {
                     "id": p.id,
                     "empresa_id": p.empresa_id,
+                    "empresa_nombre": format_empresa_nombre(p.empresa),
                     "codigo": p.codigo,
                     "descripcion": p.descripcion,
                     "activo": p.activo,

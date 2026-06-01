@@ -6,15 +6,19 @@ import { LabelInput } from '@/components/ui/inputs';
 import { PrimaryButton } from '@/components/ui/buttons';
 import { Table } from '@/components/ui/tables';
 import { StatusPill } from '@/app/Feedback';
+import { EmpresaMaestraFilter } from '@/components/crud/EmpresaMaestraFilter';
 import { createCrudTableActions } from '@/crud/crudTableActions';
 import { useCrudUi } from '@/crud/useCrudUi';
+import { useEmpresaMaestraFilter } from '@/crud/useEmpresaMaestraFilter';
 import { usePaginatedCrudTable } from '@/crud/usePaginatedCrudTable';
 import type { TipoZona } from '@/types/api';
 import { displayEmpresa } from '@/utils/displayLabels';
 
 export function TiposZonaPage() {
   const { notifySuccess, notifyApiError, confirmDelete, openSidePanel } = useCrudUi();
+  const empresaFilter = useEmpresaMaestraFilter();
   const table = usePaginatedCrudTable<TipoZona>({
+    empresaFilterId: empresaFilter.empresaIdParam,
     fetchPage: async (params) => {
       const res = await listarTiposZona(params);
       return { total: res.total, items: res.tipos_zona };
@@ -73,6 +77,14 @@ export function TiposZonaPage() {
           {showForm ? 'Cancelar' : 'Nuevo tipo de zona'}
         </PrimaryButton>
       </div>
+
+      <EmpresaMaestraFilter
+        show={empresaFilter.showFilter}
+        value={empresaFilter.empresaFilterId}
+        onChange={empresaFilter.setEmpresaFilterId}
+        options={empresaFilter.filterOptions}
+        loading={empresaFilter.loading}
+      />
 
       {showForm && (
         <FormLayout onSubmit={handleCreate} columns={1} className="mb-6">

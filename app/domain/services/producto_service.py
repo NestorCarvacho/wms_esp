@@ -19,6 +19,7 @@ class ProductoService:
         pagina: int = 1,
         por_pagina: int = 10,
         es_super_admin: bool = False,
+        empresa_id_filtro: int | None = None,
         buscar: str | None = None,
     ) -> Dict[str, Any]:
         """
@@ -38,6 +39,7 @@ class ProductoService:
             pagina=pagina,
             por_pagina=por_pagina,
             es_super_admin=es_super_admin,
+            empresa_id_filtro=empresa_id_filtro,
             buscar=buscar,
         )
         
@@ -145,8 +147,8 @@ class ProductoService:
         nombre: str = None,
         sku: str = None,
         unidad_medida_id: int = None,
-        precio_costo: float = None
-
+        precio_costo: float = None,
+        activo: bool | None = None,
     ) -> Dict[str, Any]:
         """
         Actualiza una producto existente.
@@ -188,8 +190,17 @@ class ProductoService:
             if producto_con_nombre and producto_con_nombre.id != producto_id:
                 raise ValueError(f"Ya existe una producto con el nombre '{nombre}' en esta empresa")
         
-        # Actualizar producto
-        producto_actualizada = await self.repository.actualizar(producto_id, empresa_id, nombre, sku, unidad_medida_id, precio_costo)
+        # Actualizar producto (preservar activo si no se envía)
+        activo_efectivo = producto_existente.activo if activo is None else activo
+        producto_actualizada = await self.repository.actualizar(
+            producto_id,
+            empresa_id,
+            nombre,
+            sku,
+            activo_efectivo,
+            unidad_medida_id,
+            precio_costo,
+        )
 
         if not producto_actualizada:
             raise ValueError("Error al actualizar el producto")
@@ -199,6 +210,7 @@ class ProductoService:
             "empresa_id": producto_actualizada.empresa_id,
             "nombre": producto_actualizada.nombre,
             "sku": producto_actualizada.sku,
+            "activo": producto_actualizada.activo,
             "unidad_medida_id": producto_actualizada.unidad_medida_id,
             "precio_costo": producto_actualizada.precio_costo
         }

@@ -1,5 +1,5 @@
 """Endpoints CRUD de Tipos de Zona."""
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.infrastructure.database import get_db_session
 from app.infrastructure.repositories.tipo_zona_crud_repository import TipoZonaCRUDRepository
@@ -19,6 +19,7 @@ async def listar_tipos_zona(
     pagina: int = 1,
     por_pagina: int = 10,
     buscar: str | None = None,
+    empresa_id: int | None = Query(None, description="Filtrar por empresa (solo super admin)"),
     usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
     es_admin: bool = Depends(es_super_admin),
     service: TipoZonaService = Depends(obtener_tipo_zona_service),
@@ -29,6 +30,7 @@ async def listar_tipos_zona(
             pagina=pagina,
             por_pagina=por_pagina,
             es_super_admin=es_admin,
+            empresa_id_filtro=empresa_id if es_admin else None,
             buscar=buscar,
         )
         return RespuestaAPIDTO(
