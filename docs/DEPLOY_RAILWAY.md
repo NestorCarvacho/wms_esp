@@ -38,6 +38,7 @@ Este proyecto es un **monorepo** con dos servicios independientes:
    mysql -h HOST -P PORT -u USER -p < mysql-init/03_rbac_hierarchy.sql
    ```
 
+
 ## 3. Servicio Backend (API)
 
 1. **Add Service → GitHub Repo** (mismo repo).
