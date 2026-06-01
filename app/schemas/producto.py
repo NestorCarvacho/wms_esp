@@ -42,13 +42,15 @@ class ProductoCrearDTO(BaseModel):
     )
     unidad_medida_id: int = Field(
         ...,
-        description="ID de la unidad de medida asociada"
+        description="Unidad base de control de stock (UN, KG, etc.)"
     )
+    tipo_producto_id: Optional[int] = Field(None, description="Clasificación del producto")
     precio_costo: Optional[float] = Field(
         None,
         ge=0,
         description="Precio de costo del producto (opcional, debe ser positivo)"
     )
+    empresa_id: Optional[int] = Field(None, description="Empresa destino (solo empresa maestra)")
 
     @validator("nombre")
     def validar_nombre(cls, v):
@@ -89,8 +91,9 @@ class ProductoActualizarDTO(BaseModel):
     )
     unidad_medida_id: Optional[int] = Field(
         None,
-        description="ID de la unidad de medida asociada"
+        description="Unidad base de control de stock"
     )
+    tipo_producto_id: Optional[int] = Field(None, description="Clasificación del producto")
     precio_costo: Optional[float] = Field(
         None,
         ge=0,
@@ -138,6 +141,7 @@ class ProductoRespuestaDTO(BaseModel):
     sku: str
     activo: int
     unidad_medida_id: int
+    tipo_producto_id: Optional[int] = None
     precio_costo: Optional[float]
 
     class Config:
@@ -162,6 +166,7 @@ class ProductoListaDTO(BaseModel):
     sku: str
     activo: int
     unidad_medida_id: int
+    tipo_producto_id: Optional[int] = None
     precio_costo: Optional[float]
 
     class Config:

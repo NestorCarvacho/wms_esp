@@ -22,7 +22,11 @@ export async function listarPermisos(params: PaginatedListParams = {}) {
   return response.datos!;
 }
 
-export async function crearPermiso(data: { codigo: string; descripcion?: string | null }) {
+export async function crearPermiso(data: {
+  codigo: string;
+  descripcion?: string | null;
+  empresa_id?: number;
+}) {
   const response = await apiRequest<Permiso>('/api/v1/permisos', {
     method: 'POST',
     body: JSON.stringify({ ...data, activo: 1 }),

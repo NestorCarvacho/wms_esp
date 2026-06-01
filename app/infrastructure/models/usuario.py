@@ -18,6 +18,7 @@ class Empresa(Base):
     nombre = Column(String(255), nullable=False)
     rut = Column(String(50), nullable=True)
     esta_activa = Column(Boolean, default=True)
+    es_empresa_maestra = Column(Boolean, default=False)
     activo = Column(Boolean, default=True)
     creado_at = Column(DateTime, default=datetime.utcnow)
     
@@ -196,6 +197,22 @@ class ZonaBodega(Base):
     def __repr__(self):
         return f"<ZonaBodega(id={self.id}, nombre='{self.nombre}', bodega_id={self.bodega_id})>"
 
+class TipoProducto(Base):
+    """Clasificación de productos por empresa (clavos, tornillos, etc.)."""
+    __tablename__ = "tipo_producto"
+
+    id = Column(BigInteger, primary_key=True, index=True)
+    empresa_id = Column(BigInteger, ForeignKey("empresa.id"), nullable=False, index=True)
+    nombre = Column(String(100), nullable=False)
+    activo = Column(Boolean, default=True)
+
+    empresa = relationship("Empresa")
+    productos = relationship("Producto", back_populates="tipo_producto")
+
+    def __repr__(self):
+        return f"<TipoProducto(id={self.id}, nombre='{self.nombre}')>"
+
+
 class Producto(Base):
     """Tabla de productos por empresa."""
     __tablename__ = "producto"
@@ -205,13 +222,38 @@ class Producto(Base):
     sku = Column(String(100), nullable=False)
     nombre = Column(String(255), nullable=False)
     unidad_medida_id = Column(BigInteger, ForeignKey("unidad_medida.id"), nullable=False)
+    tipo_producto_id = Column(BigInteger, ForeignKey("tipo_producto.id"), nullable=True)
     precio_costo = Column(Numeric(12, 2), nullable=True)
     activo = Column(Boolean, default=True)
     empresa = relationship("Empresa")
     unidad_medida = relationship("UnidadMedida")
+    tipo_producto = relationship("TipoProducto", back_populates="productos")
+    presentaciones = relationship("ProductoPresentacion", back_populates="producto")
 
     def __repr__(self):
         return f"<Producto(id={self.id}, nombre='{self.nombre}', empresa_id={self.empresa_id}, sku='{self.sku}')>"
+
+
+class ProductoPresentacion(Base):
+    """Presentación comercial de un producto (caja, pack, etc.)."""
+    __tablename__ = "producto_presentacion"
+
+    id = Column(BigInteger, primary_key=True, index=True)
+    producto_id = Column(BigInteger, ForeignKey("producto.id"), nullable=False, index=True)
+    nombre = Column(String(255), nullable=False)
+    cantidad_contenida = Column(Numeric(18, 6), nullable=False)
+    unidad_medida_id = Column(BigInteger, ForeignKey("unidad_medida.id"), nullable=False)
+    precio_costo = Column(Numeric(12, 2), nullable=True)
+    precio_venta = Column(Numeric(12, 2), nullable=True)
+    permite_venta_unidad = Column(Boolean, default=True)
+    permite_venta_presentacion = Column(Boolean, default=True)
+    activo = Column(Boolean, default=True)
+
+    producto = relationship("Producto", back_populates="presentaciones")
+    unidad_medida = relationship("UnidadMedida")
+
+    def __repr__(self):
+        return f"<ProductoPresentacion(id={self.id}, nombre='{self.nombre}', producto_id={self.producto_id})>"
     
 class UnidadMedida(Base):
     """Tabla de unidades de medida por empresa."""

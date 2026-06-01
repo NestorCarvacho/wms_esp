@@ -16,10 +16,17 @@ class PermisoService:
         por_pagina: int = 10,
         es_super_admin: bool = False,
         empresa_id_filtro: int | None = None,
+        empresas_scope_ids: list[int] | None = None,
         buscar: str | None = None,
     ) -> Dict[str, Any]:
         permisos, total = await self.repository.listar(
-            empresa_id, pagina, por_pagina, es_super_admin, empresa_id_filtro, buscar
+            empresa_id,
+            pagina,
+            por_pagina,
+            es_super_admin,
+            empresa_id_filtro,
+            empresas_scope_ids,
+            buscar,
         )
         return {
             "total": total,

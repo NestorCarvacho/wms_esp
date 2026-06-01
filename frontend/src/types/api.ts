@@ -17,6 +17,7 @@ export interface Usuario {
   perfil?: PerfilUsuario | null;
   empresa_nombre?: string | null;
   cargo_nombre?: string | null;
+  es_empresa_maestra?: boolean;
 }
 
 export interface PerfilUsuario {
@@ -83,6 +84,8 @@ export interface Producto {
   empresa_nombre?: string | null;
   unidad_medida_id?: number;
   unidad_medida_nombre?: string | null;
+  tipo_producto_id?: number | null;
+  tipo_producto_nombre?: string | null;
   precio_costo?: number | null;
 }
 
@@ -91,7 +94,9 @@ export interface ProductoCrear {
   sku: string;
   activo: number;
   unidad_medida_id: number;
+  tipo_producto_id?: number | null;
   precio_costo?: number | null;
+  empresa_id?: number;
 }
 
 export interface ProductoActualizar {
@@ -99,7 +104,90 @@ export interface ProductoActualizar {
   sku?: string;
   activo?: number;
   unidad_medida_id?: number;
+  tipo_producto_id?: number | null;
   precio_costo?: number | null;
+}
+
+export interface TipoProducto {
+  id: number;
+  nombre: string;
+  activo?: number | boolean;
+  empresa_id?: number;
+  empresa_nombre?: string | null;
+}
+
+export interface TipoProductoCrear {
+  nombre: string;
+  empresa_id?: number;
+}
+
+export interface TipoProductoActualizar {
+  nombre?: string;
+  activo?: number;
+}
+
+export interface PaginatedTiposProducto {
+  total: number;
+  pagina: number;
+  por_pagina: number;
+  tipos_producto: TipoProducto[];
+}
+
+export interface ProductoPresentacion {
+  id: number;
+  producto_id: number;
+  nombre: string;
+  cantidad_contenida: number;
+  unidad_medida_id: number;
+  unidad_medida_nombre?: string | null;
+  precio_costo?: number | null;
+  precio_venta?: number | null;
+  permite_venta_unidad: boolean | number;
+  permite_venta_presentacion: boolean | number;
+  activo?: boolean | number;
+}
+
+export interface ProductoPresentacionCrear {
+  nombre: string;
+  cantidad_contenida: number;
+  unidad_medida_id: number;
+  precio_costo?: number | null;
+  precio_venta?: number | null;
+  permite_venta_unidad?: number;
+  permite_venta_presentacion?: number;
+}
+
+export interface ProductoPresentacionActualizar {
+  nombre?: string;
+  cantidad_contenida?: number;
+  unidad_medida_id?: number;
+  precio_costo?: number | null;
+  precio_venta?: number | null;
+  permite_venta_unidad?: number;
+  permite_venta_presentacion?: number;
+  activo?: number;
+}
+
+export interface PaginatedProductoPresentaciones {
+  total: number;
+  pagina: number;
+  por_pagina: number;
+  presentaciones: ProductoPresentacion[];
+}
+
+export interface VentaDescuentoRequest {
+  presentacion_id: number;
+  cantidad: number;
+  venta_por_presentacion: boolean;
+}
+
+export interface VentaDescuentoResultado {
+  presentacion_id: number;
+  producto_id: number;
+  cantidad_vendida: number;
+  venta_por_presentacion: boolean;
+  descuento_unidades_base: number;
+  unidad_base_producto_id: number;
 }
 
 export interface ProductoImportacionError {
@@ -199,7 +287,9 @@ export interface Empresa {
   nombre: string;
   rut: string | null;
   esta_activa: boolean;
+  es_empresa_maestra?: boolean;
   creado_at: string;
+  empresa_nombre?: string | null;
 }
 
 export interface EmpresaCrear {
@@ -218,6 +308,7 @@ export interface UnidadMedidaCrear {
   codigo: string;
   nombre: string;
   activo: number;
+  empresa_id?: number;
 }
 
 export interface UnidadMedidaActualizar {
@@ -248,6 +339,7 @@ export interface Cargo {
 
 export interface CargoCrear {
   nombre: string;
+  empresa_id?: number;
 }
 
 export interface CargoActualizar {
@@ -274,6 +366,7 @@ export interface RolCrear {
   nombre: string;
   descripcion: string;
   activo?: number;
+  empresa_id?: number;
 }
 
 export interface RolActualizar {

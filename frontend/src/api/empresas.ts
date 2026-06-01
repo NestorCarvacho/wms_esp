@@ -2,6 +2,13 @@ import { apiRequest } from '@/api/client';
 import { buildListQuery, type PaginatedListParams } from '@/api/listQuery';
 import type { Empresa, EmpresaActualizar, EmpresaCrear, PaginatedEmpresas } from '@/types/api';
 
+export async function listarEmpresasAdministradas() {
+  const response = await apiRequest<{ total: number; empresas: Empresa[] }>(
+    '/api/v1/empresas/administradas',
+  );
+  return response.datos!;
+}
+
 export async function listarEmpresas(params: PaginatedListParams = {}) {
   const response = await apiRequest<PaginatedEmpresas>(
     `/api/v1/empresas?${buildListQuery(params)}`,

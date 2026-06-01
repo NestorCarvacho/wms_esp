@@ -1,74 +1,163 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  crearProducto,
   descargarPlantillaProductos,
   eliminarProducto,
   importarProductos,
   listarProductos,
 } from '@/api/productos';
+import { listarTiposProducto } from '@/api/tiposProducto';
 import { listarUnidadesMedida } from '@/api/unidadesMedida';
 import { PageLayout } from '@/components/layout/PageLayout';
-import { FormLayout } from '@/components/layout/FormLayout';
-import { LabelInput } from '@/components/ui/inputs';
-import { Selector } from '@/components/ui/inputs/Selector';
 import { Card } from '@/components/ui/cards/Card';
 import { PrimaryButton } from '@/components/ui/buttons';
 import { Table } from '@/components/ui/tables';
 import { StatusPill } from '@/app/Feedback';
 import { Text } from '@/components/ui/text/Text';
+import { CrudDynamicFiltersCard } from '@/components/crud/CrudDynamicFiltersCard';
 import { createCrudTableActions } from '@/crud/crudTableActions';
 import { useCrudUi } from '@/crud/useCrudUi';
-import { useEmpresaMaestraFilter } from '@/crud/useEmpresaMaestraFilter';
+import { useCrudEmpresaFilterCard } from '@/crud/useCrudEmpresaFilterCard';
+import { useCrudTableFilters } from '@/crud/useCrudTableFilters';
+import { dependentSelectOptions } from '@/crud/crudFilterHelpers';
 import { usePaginatedCrudTable } from '@/crud/usePaginatedCrudTable';
-import { EmpresaMaestraFilter } from '@/components/crud/EmpresaMaestraFilter';
-import type { Producto, ProductoImportacionResultado, UnidadMedida } from '@/types/api';
-import { displayEmpresa, displayUnidadMedida } from '@/utils/displayLabels';
+import type { Producto, ProductoImportacionResultado, TipoProducto, UnidadMedida } from '@/types/api';
+import { displayEmpresa, displayTipoProducto, displayUnidadMedida } from '@/utils/displayLabels';
+import type { TableAction } from '@/components/ui/tables';
+
+const PRODUCTO_FILTER_INITIAL = { unidad: '', tipo: '' } as const;
 
 export function ProductosPage() {
   const { notifySuccess, notifyApiError, confirmDelete, openSidePanel } = useCrudUi();
-  const empresaFilter = useEmpresaMaestraFilter();
+  const listFilter = useCrudEmpresaFilterCard();
+  const tableFilters = useCrudTableFilters({ ...PRODUCTO_FILTER_INITIAL });
+
+  const [unidadesFiltro, setUnidadesFiltro] = useState<UnidadMedida[]>([]);
+  const [tiposFiltro, setTiposFiltro] = useState<TipoProducto[]>([]);
+  const puedeFiltrarUnidad = listFilter.puedeFiltrarDependientes;
+
+  useEffect(() => {
+    if (!puedeFiltrarUnidad) {
+      setUnidadesFiltro([]);
+      setTiposFiltro([]);
+      return;
+    }
+    let cancelled = false;
+    const listParams = {
+      pagina: 1,
+      porPagina: 500,
+      ...(listFilter.empresaIdParam != null ? { empresaId: listFilter.empresaIdParam } : {}),
+    };
+    Promise.all([listarUnidadesMedida(listParams), listarTiposProducto(listParams)])
+      .then(([uniRes, tiposRes]) => {
+        if (cancelled) return;
+        setUnidadesFiltro(uniRes.productos ?? []);
+        setTiposFiltro(tiposRes.tipos_producto);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setUnidadesFiltro([]);
+          setTiposFiltro([]);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [puedeFiltrarUnidad, listFilter.empresaIdParam]);
+
+  useEffect(() => {
+    tableFilters.setFilter('unidad', '');
+    tableFilters.setFilter('tipo', '');
+  }, [listFilter.empresaIdParam]);
+
+  const unidadFilterOptions = useMemo(
+    () =>
+      dependentSelectOptions(
+        puedeFiltrarUnidad,
+        unidadesFiltro.map((u) => ({
+          label: `${u.nombre}${u.codigo ? ` (${u.codigo})` : ''}`,
+          value: String(u.id),
+        })),
+        { allLabel: 'Todas las unidades' },
+      ),
+    [puedeFiltrarUnidad, unidadesFiltro],
+  );
+
+  const tipoFilterOptions = useMemo(
+    () =>
+      dependentSelectOptions(
+        puedeFiltrarUnidad,
+        tiposFiltro.map((t) => ({ label: t.nombre, value: String(t.id) })),
+        { allLabel: 'Todos los tipos' },
+      ),
+    [puedeFiltrarUnidad, tiposFiltro],
+  );
+
+  const listFilterFields = useMemo(
+    () => [
+      listFilter.empresaField,
+      {
+        id: 'tipo',
+        label: 'Tipo de producto',
+        type: 'selector' as const,
+        options: tipoFilterOptions,
+        searchable: true,
+        disabled: !puedeFiltrarUnidad || tiposFiltro.length === 0,
+      },
+      {
+        id: 'unidad',
+        label: 'Unidad base de stock',
+        type: 'selector' as const,
+        options: unidadFilterOptions,
+        searchable: true,
+        disabled: !puedeFiltrarUnidad || unidadesFiltro.length === 0,
+      },
+    ],
+    [
+      listFilter.empresaField,
+      tipoFilterOptions,
+      unidadFilterOptions,
+      puedeFiltrarUnidad,
+      tiposFiltro.length,
+      unidadesFiltro.length,
+    ],
+  );
+
+  const tableFilterValues = useMemo(
+    () => ({
+      ...listFilter.filterValues,
+      tipo: tableFilters.values.tipo,
+      unidad: tableFilters.values.unidad,
+    }),
+    [listFilter.filterValues, tableFilters.values.tipo, tableFilters.values.unidad],
+  );
+
+  const mapProductoFiltersToParams = useCallback(
+    (filters: Record<string, string | number | undefined>) => {
+      const unidad = (filters.unidad as string | undefined)?.trim();
+      const tipo = (filters.tipo as string | undefined)?.trim();
+      const extra: Record<string, string> = {};
+      if (unidad) extra.unidad_medida_id = unidad;
+      if (tipo) extra.tipo_producto_id = tipo;
+      return Object.keys(extra).length > 0 ? extra : undefined;
+    },
+    [],
+  );
+
   const table = usePaginatedCrudTable<Producto>({
-    empresaFilterId: empresaFilter.empresaIdParam,
+    empresaFilterId: listFilter.empresaIdParam,
+    filterValues: tableFilters.debouncedValues,
+    mapFiltersToParams: mapProductoFiltersToParams,
     fetchPage: async (params) => {
       const res = await listarProductos(params);
       return { total: res.total, items: res.productos };
     },
     onError: (err) => notifyApiError(err, 'Error al cargar productos'),
   });
-  const [unidades, setUnidades] = useState<UnidadMedida[]>([]);
-  const [showForm, setShowForm] = useState(false);
-  const [nombre, setNombre] = useState('');
-  const [sku, setSku] = useState('');
-  const [unidadMedidaId, setUnidadMedidaId] = useState('');
-  const [precioCosto, setPrecioCosto] = useState('');
-  const [submitting, setSubmitting] = useState(false);
+
   const [importing, setImporting] = useState(false);
   const [downloadingTemplate, setDownloadingTemplate] = useState(false);
   const [importResult, setImportResult] = useState<ProductoImportacionResultado | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    listarUnidadesMedida({
-      pagina: 1,
-      porPagina: 500,
-      ...(empresaFilter.empresaIdParam != null ? { empresaId: empresaFilter.empresaIdParam } : {}),
-    })
-      .then((res) => {
-        if (cancelled) return;
-        const items = res.productos ?? [];
-        setUnidades(items);
-        setUnidadMedidaId((prev) =>
-          prev && items.some((u) => String(u.id) === prev) ? prev : items.length ? String(items[0].id) : '',
-        );
-      })
-      .catch((err) => {
-        if (!cancelled) notifyApiError(err, 'Error al cargar unidades de medida');
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [empresaFilter.empresaIdParam, notifyApiError]);
 
   async function handleDownloadTemplate() {
     setDownloadingTemplate(true);
@@ -111,55 +200,48 @@ export function ProductosPage() {
     }
   }
 
-  async function handleCreate(e: FormEvent) {
-    e.preventDefault();
-    setSubmitting(true);
-    try {
-      await crearProducto({
-        nombre: nombre.trim(),
-        sku: sku.trim(),
-        activo: 1,
-        unidad_medida_id: Number(unidadMedidaId),
-        precio_costo: precioCosto ? Number(precioCosto) : null,
-      });
-      setNombre('');
-      setSku('');
-      setPrecioCosto('');
-      setShowForm(false);
-      notifySuccess('Producto creado correctamente');
-      await table.reload();
-    } catch (err) {
-      notifyApiError(err, 'Error al crear producto');
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
-  const tableActions = createCrudTableActions<Producto>({
-    onEdit: (row) => {
-      openSidePanel({
-        component: 'ProductoEditPanel',
-        title: 'Editar producto',
-        props: { producto: row, unidades, onSaved: table.reload },
-      });
+  const tableActions: TableAction<Producto>[] = [
+    {
+      id: 'presentaciones',
+      label: 'Presentaciones',
+      icon: 'layers',
+      onClick: (row) => {
+        openSidePanel({
+          component: 'ProductoPresentacionesPanel',
+          title: 'Presentaciones del producto',
+          props: { producto: row, onSaved: table.reload },
+        });
+      },
     },
-    onDelete: (row) => {
-      confirmDelete({
-        title: 'Eliminar producto',
-        bodyText: `¿Confirma eliminar el producto "${row.nombre}"?`,
-        successMessage: 'Producto eliminado',
-        onConfirm: async () => {
-          await eliminarProducto(row.id);
-          await table.reload();
-        },
-      });
-    },
-  });
-
-  const unidadOptions = unidades.map((u) => ({
-    label: `${u.nombre}${u.codigo ? ` (${u.codigo})` : ''}`,
-    value: String(u.id),
-  }));
+    ...createCrudTableActions<Producto>({
+      onEdit: (row) => {
+        void listarUnidadesMedida({
+          pagina: 1,
+          porPagina: 500,
+          ...(row.empresa_id != null ? { empresaId: row.empresa_id } : {}),
+        })
+          .then((res) => {
+            openSidePanel({
+              component: 'ProductoEditPanel',
+              title: 'Editar producto',
+              props: { producto: row, unidades: res.productos ?? [], onSaved: table.reload },
+            });
+          })
+          .catch((err) => notifyApiError(err, 'Error al cargar unidades de medida'));
+      },
+      onDelete: (row) => {
+        confirmDelete({
+          title: 'Eliminar producto',
+          bodyText: `¿Confirma eliminar el producto "${row.nombre}"?`,
+          successMessage: 'Producto eliminado',
+          onConfirm: async () => {
+            await eliminarProducto(row.id);
+            await table.reload();
+          },
+        });
+      },
+    }),
+  ];
 
   return (
     <PageLayout
@@ -167,14 +249,6 @@ export function ProductosPage() {
       icon="table"
       supportingText={`${table.total} registrados`}
     >
-      <EmpresaMaestraFilter
-        show={empresaFilter.showFilter}
-        value={empresaFilter.empresaFilterId}
-        onChange={empresaFilter.setEmpresaFilterId}
-        options={empresaFilter.filterOptions}
-        loading={empresaFilter.loading}
-      />
-
       <div className="flex flex-wrap justify-end gap-2 mb-4">
         <PrimaryButton
           variant="outline"
@@ -197,8 +271,16 @@ export function ProductosPage() {
           className="hidden"
           onChange={handleFileChange}
         />
-        <PrimaryButton onClick={() => setShowForm((v) => !v)}>
-          {showForm ? 'Cancelar' : 'Nuevo producto'}
+        <PrimaryButton
+          onClick={() =>
+            openSidePanel({
+              component: 'ProductoCreatePanel',
+              title: 'Nuevo producto',
+              props: { onSaved: table.reload },
+            })
+          }
+        >
+          Nuevo producto
         </PrimaryButton>
       </div>
 
@@ -221,35 +303,17 @@ export function ProductosPage() {
         </Card>
       )}
 
-      {showForm && (
-        <FormLayout onSubmit={handleCreate} columns={2} className="mb-6">
-          <FormLayout.Section title="Datos del producto">
-            <LabelInput id="nombre" label="Nombre" value={nombre} onChange={setNombre} required />
-            <LabelInput id="sku" label="SKU" value={sku} onChange={setSku} required />
-            <Selector
-              id="unidad"
-              label="Unidad de medida"
-              options={unidadOptions.length ? unidadOptions : [{ label: 'Sin unidades', value: '' }]}
-              value={unidadMedidaId}
-              onChange={(v) => setUnidadMedidaId(String(v))}
-            />
-            <LabelInput
-              id="precio"
-              label="Precio costo (opcional)"
-              type="number"
-              value={precioCosto}
-              onChange={setPrecioCosto}
-            />
-          </FormLayout.Section>
-          <FormLayout.Footer
-            primaryButton={
-              <PrimaryButton type="submit" colorVariant="success" isLoading={submitting} disabled={!unidades.length}>
-                Guardar producto
-              </PrimaryButton>
-            }
-          />
-        </FormLayout>
-      )}
+      <CrudDynamicFiltersCard
+        fields={listFilterFields}
+        values={tableFilterValues}
+        onChange={(id, value) => {
+          if (id === 'empresa') {
+            listFilter.handleEmpresaChange(value);
+            return;
+          }
+          tableFilters.setFilter(id, value);
+        }}
+      />
 
       <Table
         data={table.items}
@@ -258,8 +322,13 @@ export function ProductosPage() {
           { key: 'nombre', header: 'Nombre', sortable: true },
           { key: 'sku', header: 'SKU', render: (row) => <code>{row.sku}</code> },
           {
+            key: 'tipo_producto_id',
+            header: 'Tipo',
+            render: (row) => displayTipoProducto(row),
+          },
+          {
             key: 'unidad_medida_id',
-            header: 'Unidad',
+            header: 'Unidad base',
             render: (row) => displayUnidadMedida(row),
           },
           {
@@ -273,7 +342,7 @@ export function ProductosPage() {
         isLoading={table.loading}
         pagination={table.pagination}
         onSearch={table.handleSearch}
-        searchPlaceholder="Buscar producto..."
+        searchPlaceholder="Buscar nombre o SKU…"
         serverSideSort
         emptyMessage="No hay productos."
         actions={tableActions}

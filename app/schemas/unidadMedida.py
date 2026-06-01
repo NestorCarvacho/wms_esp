@@ -37,6 +37,7 @@ class UnidadMedidaCrearDTO(BaseModel):
         1,
         description="Indica si la unidad de medida está activa (1) o no (0)"
     )
+    empresa_id: Optional[int] = Field(None, description="Empresa destino (solo empresa maestra)")
 
     @validator("codigo")
     def validar_codigo(cls, v):

@@ -9,6 +9,7 @@ from app.infrastructure.database import get_db_session
 from app.infrastructure.repositories.bodega_crud_repository import BodegaCRUDRepository
 from app.domain.services.bodega_service import BodegaService
 from app.api.v1.dependencies import obtener_usuario_autenticado, es_super_admin
+from app.api.v1.empresa_contexto import ContextoEmpresa, kwargs_listado, obtener_contexto_empresa
 from app.schemas.bodega import (
     BodegaCrearDTO,
     BodegaActualizarDTO,
@@ -39,9 +40,7 @@ async def listar_Bodegas(
     pagina: int = 1,
     por_pagina: int = 10,
     buscar: str | None = None,
-    empresa_id: int | None = Query(None, description="Filtrar por empresa (solo super admin)"),
-    usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
-    es_admin: bool = Depends(es_super_admin),
+    ctx: ContextoEmpresa = Depends(obtener_contexto_empresa),
     service: BodegaService = Depends(obtener_bodega_service)
 ):
     """
@@ -62,15 +61,12 @@ async def listar_Bodegas(
     - Requiere autenticación JWT
     """
     try:
-        empresa_id_usuario = usuario_autenticado.get("empresa_id")
-        
         resultado = await service.listar_bodegas(
-            empresa_id=empresa_id_usuario,
+            empresa_id=ctx.empresa_usuario_id,
             pagina=pagina,
             por_pagina=por_pagina,
-            es_super_admin=es_admin,
-            empresa_id_filtro=empresa_id if es_admin else None,
             buscar=buscar,
+            **kwargs_listado(ctx),
         )
         
         return RespuestaAPIDTO(

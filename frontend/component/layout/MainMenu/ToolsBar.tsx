@@ -57,10 +57,10 @@ const ToolsBar: React.FC<ToolsBarProps> = ({
         <div className="relative">
           <NavIcon
             icon={
-              <div className="flex items-center space-x-1">
+              <span className="inline-flex items-center gap-1">
                 <IconScout name="user" size="lg" color={colors.primary.general} />
                 <IconScout name="angleDown" size="lg" color={colors.primary.general} />
-              </div>
+              </span>
             }
             onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
           />

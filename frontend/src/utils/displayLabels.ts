@@ -30,3 +30,20 @@ export function displayBodega(row: { bodega_nombre?: string | null; bodega_id?: 
 export function displayTipoZona(row: { tipo_zona_nombre?: string | null; tipo_zona_id?: number | null }): string {
   return displayLabel(row.tipo_zona_nombre, row.tipo_zona_id);
 }
+
+export function displayTipoProducto(row: {
+  tipo_producto_nombre?: string | null;
+  tipo_producto_id?: number | null;
+}): string {
+  return displayLabel(row.tipo_producto_nombre, row.tipo_producto_id);
+}
+
+/** Etiqueta estándar para combos de empresa (búsqueda con texto completo). */
+export function empresaSelectorOption(empresa: { codigo: string; nombre: string; id?: number }) {
+  const label = `${empresa.codigo} — ${empresa.nombre}`;
+  return {
+    label,
+    value: empresa.id != null ? String(empresa.id) : '',
+    searchTokens: `${empresa.codigo} ${empresa.nombre}`,
+  };
+}

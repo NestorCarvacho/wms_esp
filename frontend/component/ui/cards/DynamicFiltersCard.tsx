@@ -116,7 +116,7 @@ export const DynamicFiltersCard: React.FC<DynamicFiltersCardProps> = ({
           {visibleFields.map((field) => (
             <div
               key={field.id}
-              className={getColSpanClass(field.colSpan)}
+              className={`min-w-0 ${getColSpanClass(field.colSpan)}`}
               data-testid={`filter-field-${field.id}`}
             >
               {field.component}

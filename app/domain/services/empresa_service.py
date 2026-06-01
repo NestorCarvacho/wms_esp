@@ -49,6 +49,7 @@ class EmpresaService:
                         "nombre": e.nombre,
                         "rut": e.rut,
                         "esta_activa": e.esta_activa,
+                        "es_empresa_maestra": bool(getattr(e, "es_empresa_maestra", False)),
                         "creado_at": e.creado_at
                     }
                     for e in empresas

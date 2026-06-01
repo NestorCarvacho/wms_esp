@@ -36,7 +36,11 @@ class UsuarioService:
 
         empresa_id_filtro: int | None = None,
 
+        empresas_scope_ids: list[int] | None = None,
+
         buscar: str | None = None,
+
+        cargo_id: int | None = None,
 
     ) -> Dict[str, Any]:
 
@@ -54,7 +58,11 @@ class UsuarioService:
 
             empresa_id_filtro=empresa_id_filtro,
 
+            empresas_scope_ids=empresas_scope_ids,
+
             buscar=buscar,
+
+            cargo_id=cargo_id,
 
         )
 

@@ -18,11 +18,12 @@ class TipoZonaCRUDRepository:
         por_pagina: int = 10,
         es_super_admin: bool = False,
         empresa_id_filtro: int | None = None,
+        empresas_scope_ids: list[int] | None = None,
         buscar: str | None = None,
     ) -> tuple[list[TipoZona], int]:
         try:
             stmt_base = select(TipoZona).options(selectinload(TipoZona.empresa))
-            empresa_cond = filtro_empresa(TipoZona, empresa_id, es_super_admin, empresa_id_filtro)
+            empresa_cond = filtro_empresa(TipoZona, empresa_id, es_super_admin, empresa_id_filtro, empresas_scope_ids)
             if empresa_cond is not None:
                 stmt_base = stmt_base.where(empresa_cond)
             stmt_base = stmt_base.where(TipoZona.activo == True)

@@ -7,6 +7,7 @@ class PermisoCrearDTO(BaseModel):
     codigo: str = Field(..., min_length=1, max_length=100)
     descripcion: Optional[str] = Field(None, max_length=255)
     activo: Optional[int] = 1
+    empresa_id: Optional[int] = Field(None, description="Empresa destino (solo empresa maestra)")
 
 
 class PermisoActualizarDTO(BaseModel):

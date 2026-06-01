@@ -16,6 +16,7 @@ class CargoCrearDTO(BaseModel):
         max_length=100,
         description="Nombre del cargo (1-100 caracteres)"
     )
+    empresa_id: Optional[int] = Field(None, description="Empresa destino (solo empresa maestra)")
     
     @validator("nombre")
     def validar_nombre(cls, v):

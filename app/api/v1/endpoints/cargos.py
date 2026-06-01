@@ -9,6 +9,7 @@ from app.infrastructure.database import get_db_session
 from app.infrastructure.repositories.cargo_crud_repository import CargoCRUDRepository
 from app.domain.services.cargo_service import CargoService
 from app.api.v1.dependencies import obtener_usuario_autenticado, es_super_admin
+from app.api.v1.empresa_contexto import ContextoEmpresa, kwargs_listado, obtener_contexto_empresa, resolver_empresa_creacion
 from app.schemas.cargo import (
     CargoCrearDTO,
     CargoActualizarDTO,
@@ -39,9 +40,7 @@ async def listar_cargos(
     pagina: int = 1,
     por_pagina: int = 10,
     buscar: str | None = None,
-    empresa_id: int | None = Query(None, description="Filtrar por empresa (solo super admin)"),
-    usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
-    es_admin: bool = Depends(es_super_admin),
+    ctx: ContextoEmpresa = Depends(obtener_contexto_empresa),
     service: CargoService = Depends(obtener_cargo_service)
 ):
     """
@@ -62,15 +61,12 @@ async def listar_cargos(
     - Requiere autenticación JWT
     """
     try:
-        empresa_id_usuario = usuario_autenticado.get("empresa_id")
-        
         resultado = await service.listar_cargos(
-            empresa_id=empresa_id_usuario,
+            empresa_id=ctx.empresa_usuario_id,
             pagina=pagina,
             por_pagina=por_pagina,
-            es_super_admin=es_admin,
-            empresa_id_filtro=empresa_id if es_admin else None,
             buscar=buscar,
+            **kwargs_listado(ctx),
         )
         
         return RespuestaAPIDTO(
@@ -157,7 +153,7 @@ async def obtener_cargo(
 async def crear_cargo(
     cargo_dto: CargoCrearDTO,
     usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
-    es_admin: bool = Depends(es_super_admin),
+    session: AsyncSession = Depends(get_db_session),
     service: CargoService = Depends(obtener_cargo_service)
 ):
     """
@@ -183,7 +179,9 @@ async def crear_cargo(
     - Nombre único por empresa
     """
     try:
-        empresa_id = usuario_autenticado.get("empresa_id")
+        empresa_id = await resolver_empresa_creacion(
+            usuario_autenticado, cargo_dto.empresa_id, session
+        )
         
         nuevo_cargo = await service.crear_cargo(
             empresa_id=empresa_id,

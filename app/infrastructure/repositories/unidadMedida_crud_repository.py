@@ -23,6 +23,7 @@ class UnidadMedidaCRUDRepository:
         por_pagina: int = 10,
         es_super_admin: bool = False,
         empresa_id_filtro: int | None = None,
+        empresas_scope_ids: list[int] | None = None,
         buscar: str | None = None,
     ) -> tuple[list[UnidadMedida], int]:
         """
@@ -41,7 +42,7 @@ class UnidadMedidaCRUDRepository:
             # Construir statement base
             stmt_base = select(UnidadMedida).options(selectinload(UnidadMedida.empresa))
             
-            empresa_cond = filtro_empresa(UnidadMedida, empresa_id, es_super_admin, empresa_id_filtro)
+            empresa_cond = filtro_empresa(UnidadMedida, empresa_id, es_super_admin, empresa_id_filtro, empresas_scope_ids)
             if empresa_cond is not None:
                 stmt_base = stmt_base.where(empresa_cond)
 

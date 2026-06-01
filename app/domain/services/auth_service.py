@@ -76,6 +76,8 @@ class AuthService:
 
 
 
+        es_empresa_maestra = bool(getattr(usuario.empresa, "es_empresa_maestra", False))
+
         token_data = {
 
             "usuario_id": usuario.id,
@@ -90,6 +92,8 @@ class AuthService:
 
             "permisos": permisos,
 
+            "es_empresa_maestra": es_empresa_maestra,
+
         }
 
         access_token = create_access_token(data=token_data)
@@ -103,6 +107,8 @@ class AuthService:
         usuario_data["empresa_nombre"] = format_empresa_nombre(usuario.empresa)
 
         usuario_data["cargo_nombre"] = usuario.cargo.nombre if usuario.cargo else None
+
+        usuario_data["es_empresa_maestra"] = es_empresa_maestra
 
         
 

@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import type { OverflowStrategy } from '@/components/ui/tables/Table.types';
 
-export function useTruncatedTooltip(strategy: OverflowStrategy, children: ReactNode, width: number) {
+export function useTruncatedTooltip(strategy: OverflowStrategy, _children: ReactNode, width: number) {
   const ref = useRef<HTMLDivElement>(null);
   const [showTooltip, setShowTooltip] = useState(false);
   const [isTruncated, setIsTruncated] = useState(false);
@@ -9,16 +9,27 @@ export function useTruncatedTooltip(strategy: OverflowStrategy, children: ReactN
   const tooltipId = useId();
 
   useEffect(() => {
-    if (strategy !== 'truncate' || !ref.current) {
+    if (strategy !== 'truncate') {
       setIsTruncated(false);
       setMeasured(true);
       return;
     }
 
     const element = ref.current;
-    setIsTruncated(element.scrollWidth > element.clientWidth);
-    setMeasured(true);
-  }, [strategy, children, width]);
+    if (!element) return;
+
+    const measure = () => {
+      setIsTruncated(element.scrollWidth > element.clientWidth);
+      setMeasured(true);
+    };
+
+    measure();
+
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+
+    return () => observer.disconnect();
+  }, [strategy, width]);
 
   return {
     ref,

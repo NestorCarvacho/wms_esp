@@ -21,11 +21,12 @@ class PermisoCRUDRepository:
         por_pagina: int = 100,
         es_super_admin: bool = False,
         empresa_id_filtro: int | None = None,
+        empresas_scope_ids: list[int] | None = None,
         buscar: str | None = None,
     ) -> tuple[list[Permiso], int]:
         try:
             stmt_base = select(Permiso).options(selectinload(Permiso.empresa)).where(Permiso.activo == True)
-            empresa_cond = filtro_empresa(Permiso, empresa_id, es_super_admin, empresa_id_filtro)
+            empresa_cond = filtro_empresa(Permiso, empresa_id, es_super_admin, empresa_id_filtro, empresas_scope_ids)
             if empresa_cond is not None:
                 stmt_base = stmt_base.where(empresa_cond)
             buscar_cond = condicion_buscar(Permiso, buscar, "codigo", "descripcion")

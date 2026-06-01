@@ -289,6 +289,14 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
   const hasLeftIcon = !!iconLeft;
   const hasRightIcon = !!iconRight;
   const hasAnyIcon = hasLeftIcon || hasRightIcon;
+  const isPlainTextChild =
+    typeof children === 'string' || typeof children === 'number';
+  const isIconOnly =
+    !hasLeftIcon &&
+    !hasRightIcon &&
+    children != null &&
+    children !== '' &&
+    !isPlainTextChild;
 
   // Event handlers centralizados
   const handleMouseEnter = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -421,39 +429,51 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
         </div>
       )}
       
-      <div className={`flex items-center ${hasAnyIcon ? 'gap-2' : ''} transition-opacity duration-200 ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
-        {hasLeftIcon && (
-          <div
-            className="flex items-center justify-center flex-shrink-0"
-            style={{
-              width: currentIconSize,
-              height: currentIconSize,
-            }}
-            aria-hidden={(!iconLeft).toString() as any}
-          >
-            {iconLeft && renderIcon(iconLeft)}
-          </div>
-        )}
-        <div className="flex-1 text-center">
-          <Text
-            variant={textVariant ?? sizeConfig[size].text.variant}
-            color="inherit"
-            lineHeight="20px"
-          >
-            {children}
-          </Text>
-        </div>
-        {hasRightIcon && (
-          <div
-            className="flex items-center justify-center flex-shrink-0"
-            style={{
-              width: currentIconSize,
-              height: currentIconSize,
-            }}
-            aria-hidden={(!iconRight).toString() as any}
-          >
-            {iconRight && renderIcon(iconRight)}
-          </div>
+      <div className={`flex items-center ${hasAnyIcon && !isIconOnly ? 'gap-2' : ''} transition-opacity duration-200 ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
+        {isIconOnly ? (
+          children
+        ) : (
+          <>
+            {hasLeftIcon && (
+              <div
+                className="flex items-center justify-center flex-shrink-0"
+                style={{
+                  width: currentIconSize,
+                  height: currentIconSize,
+                }}
+                aria-hidden={(!iconLeft).toString() as any}
+              >
+                {iconLeft && renderIcon(iconLeft)}
+              </div>
+            )}
+            {children != null && children !== '' && (
+              isPlainTextChild ? (
+                <div className="flex-1 text-center">
+                  <Text
+                    variant={textVariant ?? sizeConfig[size].text.variant}
+                    color="inherit"
+                    lineHeight="20px"
+                  >
+                    {children}
+                  </Text>
+                </div>
+              ) : (
+                <span className="flex items-center justify-center flex-1">{children}</span>
+              )
+            )}
+            {hasRightIcon && (
+              <div
+                className="flex items-center justify-center flex-shrink-0"
+                style={{
+                  width: currentIconSize,
+                  height: currentIconSize,
+                }}
+                aria-hidden={(!iconRight).toString() as any}
+              >
+                {iconRight && renderIcon(iconRight)}
+              </div>
+            )}
+          </>
         )}
       </div>
     </button>

@@ -58,9 +58,11 @@ async def obtener_id(
 
 def es_super_admin(usuario: dict = Depends(obtener_usuario_autenticado)) -> bool:
     """
-    Verifica si el usuario es super admin (empresa_id == 1).
-    Los super admins pueden ver TODOS los usuarios de todas las empresas.
+    Usuario de empresa maestra (puede administrar empresas vinculadas).
+    Compatibilidad: si el token no trae el flag, empresa_id == 1.
     """
+    if "es_empresa_maestra" in usuario:
+        return bool(usuario.get("es_empresa_maestra"))
     return usuario.get("empresa_id") == 1
 
 

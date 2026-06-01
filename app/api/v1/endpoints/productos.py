@@ -12,6 +12,7 @@ from app.infrastructure.repositories.producto_crud_repository import ProductoCRU
 from app.domain.services.producto_service import ProductoService
 from app.domain.services.producto_importacion_service import ProductoImportacionService
 from app.api.v1.dependencies import obtener_usuario_autenticado, es_super_admin
+from app.api.v1.empresa_contexto import ContextoEmpresa, kwargs_listado, obtener_contexto_empresa, resolver_empresa_creacion
 from app.schemas.producto import (
     ProductoCrearDTO,
     ProductoActualizarDTO,
@@ -46,9 +47,9 @@ async def listar_Productos(
     pagina: int = 1,
     por_pagina: int = 10,
     buscar: str | None = None,
-    empresa_id: int | None = Query(None, description="Filtrar por empresa (solo super admin)"),
-    usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
-    es_admin: bool = Depends(es_super_admin),
+    unidad_medida_id: int | None = Query(None, description="Filtrar por unidad de medida"),
+    tipo_producto_id: int | None = Query(None, description="Filtrar por tipo de producto"),
+    ctx: ContextoEmpresa = Depends(obtener_contexto_empresa),
     service: ProductoService = Depends(obtener_producto_service)
 ):
     """
@@ -69,15 +70,14 @@ async def listar_Productos(
     - Requiere autenticación JWT
     """
     try:
-        empresa_id_usuario = usuario_autenticado.get("empresa_id")
-
         resultado = await service.listar_productos(
-            empresa_id=empresa_id_usuario,
+            empresa_id=ctx.empresa_usuario_id,
             pagina=pagina,
             por_pagina=por_pagina,
-            es_super_admin=es_admin,
-            empresa_id_filtro=empresa_id if es_admin else None,
             buscar=buscar,
+            unidad_medida_id=unidad_medida_id,
+            tipo_producto_id=tipo_producto_id,
+            **kwargs_listado(ctx),
         )
         
         return RespuestaAPIDTO(
@@ -244,7 +244,7 @@ async def obtener_producto(
 async def crear_producto(
     producto_dto: ProductoCrearDTO,
     usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
-    es_admin: bool = Depends(es_super_admin),
+    session: AsyncSession = Depends(get_db_session),
     service: ProductoService = Depends(obtener_producto_service)
 ):
     """
@@ -272,7 +272,9 @@ async def crear_producto(
     - Nombre único por empresa
     """
     try:
-        empresa_id = usuario_autenticado.get("empresa_id")
+        empresa_id = await resolver_empresa_creacion(
+            usuario_autenticado, producto_dto.empresa_id, session
+        )
         
         nueva_producto = await service.crear_producto(
             empresa_id=empresa_id,
@@ -280,6 +282,7 @@ async def crear_producto(
             sku=producto_dto.sku,
             activo=producto_dto.activo,
             unidad_medida_id=producto_dto.unidad_medida_id,
+            tipo_producto_id=producto_dto.tipo_producto_id,
             precio_costo=producto_dto.precio_costo
         )
         
@@ -360,6 +363,7 @@ async def actualizar_producto(
             sku=actualizar_dto.sku,
             activo=bool(actualizar_dto.activo) if actualizar_dto.activo is not None else None,
             unidad_medida_id=actualizar_dto.unidad_medida_id,
+            tipo_producto_id=actualizar_dto.tipo_producto_id,
             precio_costo=actualizar_dto.precio_costo
         )
         

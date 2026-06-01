@@ -47,6 +47,7 @@ class EmpresaRespuestaDTO(BaseModel):
     nombre: str
     rut: Optional[str] = None
     esta_activa: bool
+    es_empresa_maestra: bool = False
     creado_at: datetime
     
     class Config:
@@ -70,6 +71,7 @@ class EmpresaListaDTO(BaseModel):
     nombre: str
     rut: Optional[str] = None
     esta_activa: bool
+    es_empresa_maestra: bool = False
     creado_at: datetime
     
     class Config:

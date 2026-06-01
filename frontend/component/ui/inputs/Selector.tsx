@@ -591,7 +591,7 @@ export const Selector: React.FC<SelectorProps> = ({
           disabled={disabled}
           onClick={() => (open ? closeMenu() : openMenu())}
           onKeyDown={handleTriggerKey}
-          className={`w-full text-left pr-8 pb-[7px] pt-[6px] bg-transparent outline-none border-b ${
+          className={`w-full min-w-0 text-left pr-8 pb-[7px] pt-[6px] bg-transparent outline-none border-b ${
             disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
           } transition-colors ${selectClassName}`}
           style={{
@@ -615,7 +615,11 @@ export const Selector: React.FC<SelectorProps> = ({
             }
             if (currentValue) {
               const match = options.find(option => option.value === currentValue);
-              return match ? match.label : (
+              return match ? (
+                <span className="block truncate pr-1 min-w-0" title={match.label}>
+                  {match.label}
+                </span>
+              ) : (
                 <span style={{ color: colors.grays.neutral99 }}>
                   {placeholder}
                 </span>

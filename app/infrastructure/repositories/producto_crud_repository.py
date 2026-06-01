@@ -23,7 +23,10 @@ class ProductoCRUDRepository:
         por_pagina: int = 10,
         es_super_admin: bool = False,
         empresa_id_filtro: int | None = None,
+        empresas_scope_ids: list[int] | None = None,
         buscar: str | None = None,
+        unidad_medida_id: int | None = None,
+        tipo_producto_id: int | None = None,
     ) -> tuple[list[Producto], int]:
         """
         Lista productos de una empresa con paginación.
@@ -42,9 +45,12 @@ class ProductoCRUDRepository:
             stmt_base = select(Producto).options(
                 selectinload(Producto.empresa),
                 selectinload(Producto.unidad_medida),
+                selectinload(Producto.tipo_producto),
             )
             
-            empresa_cond = filtro_empresa(Producto, empresa_id, es_super_admin, empresa_id_filtro)
+            empresa_cond = filtro_empresa(
+                Producto, empresa_id, es_super_admin, empresa_id_filtro, empresas_scope_ids
+            )
             if empresa_cond is not None:
                 stmt_base = stmt_base.where(empresa_cond)
 
@@ -52,12 +58,20 @@ class ProductoCRUDRepository:
             buscar_cond = condicion_buscar(Producto, buscar, "nombre", "sku")
             if buscar_cond is not None:
                 stmt_base = stmt_base.where(buscar_cond)
+            if unidad_medida_id is not None:
+                stmt_base = stmt_base.where(Producto.unidad_medida_id == unidad_medida_id)
+            if tipo_producto_id is not None:
+                stmt_base = stmt_base.where(Producto.tipo_producto_id == tipo_producto_id)
 
             count_stmt = select(func.count(Producto.id)).where(Producto.activo == True)
             if empresa_cond is not None:
                 count_stmt = count_stmt.where(empresa_cond)
             if buscar_cond is not None:
                 count_stmt = count_stmt.where(buscar_cond)
+            if unidad_medida_id is not None:
+                count_stmt = count_stmt.where(Producto.unidad_medida_id == unidad_medida_id)
+            if tipo_producto_id is not None:
+                count_stmt = count_stmt.where(Producto.tipo_producto_id == tipo_producto_id)
             
             count_result = await self.session.execute(count_stmt)
             total = count_result.scalar() or 0
@@ -139,6 +153,7 @@ class ProductoCRUDRepository:
         sku: str,
         activo: bool = True,
         unidad_medida_id: int = None,
+        tipo_producto_id: int | None = None,
         precio_costo: float = None
     ) -> Producto:
         """
@@ -151,6 +166,7 @@ class ProductoCRUDRepository:
                 sku=sku,
                 activo=activo,
                 unidad_medida_id=unidad_medida_id,
+                tipo_producto_id=tipo_producto_id,
                 precio_costo=precio_costo
             )
             self.session.add(nuevo_producto)
@@ -181,6 +197,7 @@ class ProductoCRUDRepository:
                          sku: str, 
                          activo: bool= True,
                          unidad_medida_id: int = None,
+                         tipo_producto_id: int | None = None,
                          precio_costo: float = None ) -> Producto | None:
         """
         Actualiza un producto existente.
@@ -211,6 +228,8 @@ class ProductoCRUDRepository:
                 datos_actualizar["activo"] = activo
             if unidad_medida_id is not None:
                 datos_actualizar["unidad_medida_id"] = unidad_medida_id
+            if tipo_producto_id is not None:
+                datos_actualizar["tipo_producto_id"] = tipo_producto_id
             if precio_costo is not None:
                 datos_actualizar["precio_costo"] = precio_costo
             if not datos_actualizar:

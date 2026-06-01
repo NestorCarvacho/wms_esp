@@ -7,16 +7,19 @@ def filtro_empresa(
     empresa_id: int,
     es_super_admin: bool,
     empresa_id_filtro: int | None = None,
+    empresas_scope_ids: list[int] | None = None,
 ):
     """
     Condición WHERE multi-tenant.
-    Super admin sin filtro: None (sin restricción).
-    Super admin con empresa_id_filtro: solo esa empresa.
+    Empresa maestra con filtro: solo esa empresa.
+    Empresa maestra sin filtro: empresas administradas (IN).
     Usuario normal: siempre su empresa_id.
     """
     if es_super_admin:
         if empresa_id_filtro is not None:
             return model.empresa_id == empresa_id_filtro
+        if empresas_scope_ids:
+            return model.empresa_id.in_(empresas_scope_ids)
         return None
     return model.empresa_id == empresa_id
 

@@ -1,18 +1,19 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { listarCargos } from '@/api/cargos';
 import { listarRoles } from '@/api/roles';
 import { listarRolesCargo, sincronizarRolesCargo } from '@/api/permisos';
 import { PageLayout } from '@/components/layout/PageLayout';
-import { Selector } from '@/components/ui/inputs/Selector';
+import { Card } from '@/components/ui/cards/Card';
 import { PrimaryButton } from '@/components/ui/buttons';
-import { EmpresaMaestraFilter } from '@/components/crud/EmpresaMaestraFilter';
+import { CrudDynamicFiltersCard } from '@/components/crud/CrudDynamicFiltersCard';
+import { dependentSelectOptions } from '@/crud/crudFilterHelpers';
 import { useCrudUi } from '@/crud/useCrudUi';
-import { useEmpresaMaestraFilter } from '@/crud/useEmpresaMaestraFilter';
+import { useCrudEmpresaFilterCard } from '@/crud/useCrudEmpresaFilterCard';
 import type { Cargo, Rol } from '@/types/api';
 
 export function PermisosCargoPage() {
   const { notifySuccess, notifyApiError } = useCrudUi();
-  const empresaFilter = useEmpresaMaestraFilter();
+  const listFilter = useCrudEmpresaFilterCard();
   const [cargos, setCargos] = useState<Cargo[]>([]);
   const [roles, setRoles] = useState<Rol[]>([]);
   const [cargoId, setCargoId] = useState('');
@@ -20,13 +21,22 @@ export function PermisosCargoPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
+  const puedeFiltrarCargo = listFilter.puedeFiltrarDependientes;
+
   const loadCatalogos = useCallback(async () => {
+    if (!puedeFiltrarCargo) {
+      setCargos([]);
+      setRoles([]);
+      setCargoId('');
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
       const listParams = {
         pagina: 1,
         porPagina: 200,
-        ...(empresaFilter.empresaIdParam != null ? { empresaId: empresaFilter.empresaIdParam } : {}),
+        ...(listFilter.empresaIdParam != null ? { empresaId: listFilter.empresaIdParam } : {}),
       };
       const [cargosRes, rolesRes] = await Promise.all([
         listarCargos(listParams),
@@ -36,7 +46,7 @@ export function PermisosCargoPage() {
       setRoles(rolesRes.roles);
       setCargoId((prev) => {
         if (prev && cargosRes.cargos.some((c) => String(c.id) === prev)) return prev;
-        return cargosRes.cargos.length ? String(cargosRes.cargos[0].id) : '';
+        return '';
       });
     } catch (err) {
       notifyApiError(err, 'Error al cargar datos');
@@ -46,11 +56,51 @@ export function PermisosCargoPage() {
     } finally {
       setLoading(false);
     }
-  }, [empresaFilter.empresaIdParam, notifyApiError]);
+  }, [listFilter.empresaIdParam, notifyApiError, puedeFiltrarCargo]);
 
   useEffect(() => {
     void loadCatalogos();
   }, [loadCatalogos]);
+
+  useEffect(() => {
+    setCargoId('');
+  }, [listFilter.empresaIdParam]);
+
+  const cargoFilterOptions = useMemo(
+    () =>
+      dependentSelectOptions(
+        puedeFiltrarCargo,
+        cargos.map((c) => ({
+          label: c.empresa_nombre ? `${c.nombre} (${c.empresa_nombre})` : c.nombre,
+          value: String(c.id),
+        })),
+        { allLabel: 'Seleccione un cargo', placeholder: 'Seleccione una empresa' },
+      ),
+    [puedeFiltrarCargo, cargos],
+  );
+
+  const listFilterFields = useMemo(
+    () => [
+      listFilter.empresaField,
+      {
+        id: 'cargo',
+        label: 'Cargo',
+        type: 'selector' as const,
+        options: cargoFilterOptions,
+        searchable: true,
+        disabled: !puedeFiltrarCargo || cargos.length === 0 || loading,
+      },
+    ],
+    [listFilter.empresaField, cargoFilterOptions, puedeFiltrarCargo, cargos.length, loading],
+  );
+
+  const filterValues = useMemo(
+    () => ({
+      ...listFilter.filterValues,
+      cargo: cargoId,
+    }),
+    [listFilter.filterValues, cargoId],
+  );
 
   useEffect(() => {
     if (!cargoId) {
@@ -82,41 +132,33 @@ export function PermisosCargoPage() {
     }
   }
 
-  const cargoOptions = cargos.map((c) => ({
-    label: c.empresa_nombre ? `${c.nombre} (${c.empresa_nombre})` : c.nombre,
-    value: String(c.id),
-  }));
-
   return (
     <PageLayout
       routes={[{ text: 'Administración' }, { text: 'Roles por cargo' }]}
       icon="lock"
       supportingText="Asigna roles reutilizables a cada cargo"
     >
-      <div className="max-w-xl flex flex-col gap-4">
-        <EmpresaMaestraFilter
-          show={empresaFilter.showFilter}
-          value={empresaFilter.empresaFilterId}
-          onChange={empresaFilter.setEmpresaFilterId}
-          options={empresaFilter.filterOptions}
-          loading={empresaFilter.loading}
-          className="max-w-md"
+      <div className="flex w-full flex-col gap-4">
+        <CrudDynamicFiltersCard
+          columns={2}
+          fields={listFilterFields}
+          values={filterValues}
+          onChange={(id, value) => {
+            if (id === 'empresa') {
+              listFilter.handleEmpresaChange(value);
+              return;
+            }
+            if (id === 'cargo') setCargoId(value);
+          }}
         />
 
-        <Selector
-          id="cargoId"
-          label="Cargo"
-          options={cargoOptions.length ? cargoOptions : [{ label: 'Sin cargos', value: '' }]}
-          value={cargoId}
-          onChange={(v) => setCargoId(String(v))}
-          searchable
-          disabled={loading}
-        />
-
-        <div className="border rounded-lg p-4">
+        <Card padding="2rem">
           <p className="text-sm font-medium mb-3">Roles asignados al cargo</p>
           {loading && <p className="text-sm text-gray-500">Cargando…</p>}
-          {!loading && rolesEmpresa.length === 0 && (
+          {!loading && !cargoId && (
+            <p className="text-sm text-gray-500">Seleccione un cargo para ver y editar sus roles.</p>
+          )}
+          {!loading && cargoId && rolesEmpresa.length === 0 && (
             <p className="text-sm text-gray-500">No hay roles para esta empresa.</p>
           )}
           <div className="flex flex-col gap-2">
@@ -126,15 +168,17 @@ export function PermisosCargoPage() {
                   type="checkbox"
                   checked={rolIds.includes(rol.id)}
                   onChange={() => toggleRol(rol.id)}
+                  disabled={!cargoId}
                 />
                 <span className="font-medium">{rol.nombre}</span>
                 {rol.descripcion && <span className="text-gray-500">— {rol.descripcion}</span>}
               </label>
             ))}
           </div>
-        </div>
+        </Card>
 
         <PrimaryButton
+          className="self-start"
           onClick={handleSave}
           colorVariant="success"
           isLoading={submitting}

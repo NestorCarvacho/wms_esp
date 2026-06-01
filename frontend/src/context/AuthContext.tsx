@@ -82,7 +82,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       token,
       isAuthenticated: Boolean(token && user),
-      isSuperAdmin: user?.empresa_id === 1,
+      isSuperAdmin: Boolean(user?.es_empresa_maestra ?? user?.empresa_id === 1),
       login,
       logout,
     }),

@@ -20,6 +20,7 @@ class CargoService:
         por_pagina: int = 10,
         es_super_admin: bool = False,
         empresa_id_filtro: int | None = None,
+        empresas_scope_ids: list[int] | None = None,
         buscar: str | None = None,
     ) -> Dict[str, Any]:
         """
@@ -40,6 +41,7 @@ class CargoService:
             por_pagina=por_pagina,
             es_super_admin=es_super_admin,
             empresa_id_filtro=empresa_id_filtro,
+            empresas_scope_ids=empresas_scope_ids,
             buscar=buscar,
         )
         

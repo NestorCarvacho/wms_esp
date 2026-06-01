@@ -49,6 +49,7 @@ class UsuarioRespuestaDTO(BaseModel):
     perfil: Optional["PerfilUsuarioRespuestaDTO"] = None
     empresa_nombre: Optional[str] = None
     cargo_nombre: Optional[str] = None
+    es_empresa_maestra: bool = False
     
     class Config:
         from_attributes = True
@@ -273,6 +274,7 @@ class TokenPayload(BaseModel):
     exp: int
     roles: List[str] = Field(default_factory=list)
     permisos: List[str] = Field(default_factory=list)
+    es_empresa_maestra: bool = False
 
 
 # ============ EMPRESA ============

@@ -5,6 +5,7 @@ from app.infrastructure.database import get_db_session
 from app.infrastructure.repositories.tipo_zona_crud_repository import TipoZonaCRUDRepository
 from app.domain.services.tipo_zona_service import TipoZonaService
 from app.api.v1.dependencies import obtener_usuario_autenticado, es_super_admin
+from app.api.v1.empresa_contexto import ContextoEmpresa, kwargs_listado, obtener_contexto_empresa
 from app.schemas.tipo_zona import TipoZonaCrearDTO, TipoZonaActualizarDTO, RespuestaAPIDTO
 
 router = APIRouter(prefix="/api/v1/tipos-zona", tags=["Tipos de Zona"])
@@ -19,19 +20,16 @@ async def listar_tipos_zona(
     pagina: int = 1,
     por_pagina: int = 10,
     buscar: str | None = None,
-    empresa_id: int | None = Query(None, description="Filtrar por empresa (solo super admin)"),
-    usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
-    es_admin: bool = Depends(es_super_admin),
+    ctx: ContextoEmpresa = Depends(obtener_contexto_empresa),
     service: TipoZonaService = Depends(obtener_tipo_zona_service),
 ):
     try:
         resultado = await service.listar_tipos_zona(
-            empresa_id=usuario_autenticado.get("empresa_id"),
+            empresa_id=ctx.empresa_usuario_id,
             pagina=pagina,
             por_pagina=por_pagina,
-            es_super_admin=es_admin,
-            empresa_id_filtro=empresa_id if es_admin else None,
             buscar=buscar,
+            **kwargs_listado(ctx),
         )
         return RespuestaAPIDTO(
             exito=True,

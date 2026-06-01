@@ -1,11 +1,12 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { actualizarProducto } from '@/api/productos';
+import { listarTiposProducto } from '@/api/tiposProducto';
 import { LabelInput } from '@/components/ui/inputs';
 import { Selector } from '@/components/ui/inputs/Selector';
 import { PrimaryButton } from '@/components/ui/buttons';
 import { useUI } from '@/hooks/ui';
 import { ApiError } from '@/api/client';
-import type { Producto, UnidadMedida } from '@/types/api';
+import type { Producto, TipoProducto, UnidadMedida } from '@/types/api';
 import { preserveActivoNumber } from './preserveActivo';
 
 export interface ProductoEditPanelProps {
@@ -16,16 +17,34 @@ export interface ProductoEditPanelProps {
 
 export function ProductoEditPanel({ producto, unidades, onSaved }: ProductoEditPanelProps) {
   const { closeSidePanel, showNotification } = useUI();
+  const [tipos, setTipos] = useState<TipoProducto[]>([]);
   const [nombre, setNombre] = useState(producto.nombre);
   const [sku, setSku] = useState(producto.sku);
   const [unidadMedidaId, setUnidadMedidaId] = useState(String(producto.unidad_medida_id ?? ''));
-  const [precioCosto, setPrecioCosto] = useState(producto.precio_costo != null ? String(producto.precio_costo) : '');
+  const [tipoProductoId, setTipoProductoId] = useState(
+    producto.tipo_producto_id != null ? String(producto.tipo_producto_id) : '',
+  );
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    listarTiposProducto({
+      pagina: 1,
+      porPagina: 500,
+      ...(producto.empresa_id != null ? { empresaId: producto.empresa_id } : {}),
+    })
+      .then((res) => setTipos(res.tipos_producto))
+      .catch(() => setTipos([]));
+  }, [producto.empresa_id]);
 
   const unidadOptions = unidades.map((u) => ({
     label: `${u.nombre}${u.codigo ? ` (${u.codigo})` : ''}`,
     value: String(u.id),
   }));
+
+  const tipoOptions = [
+    { label: 'Sin clasificación', value: '' },
+    ...tipos.map((t) => ({ label: t.nombre, value: String(t.id) })),
+  ];
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -35,7 +54,7 @@ export function ProductoEditPanel({ producto, unidades, onSaved }: ProductoEditP
         nombre: nombre.trim(),
         sku: sku.trim(),
         unidad_medida_id: Number(unidadMedidaId),
-        precio_costo: precioCosto ? Number(precioCosto) : null,
+        tipo_producto_id: tipoProductoId ? Number(tipoProductoId) : null,
         activo: preserveActivoNumber(producto.activo),
       });
       showNotification({ type: 'success', message: 'Producto actualizado correctamente' });
@@ -56,18 +75,19 @@ export function ProductoEditPanel({ producto, unidades, onSaved }: ProductoEditP
       <LabelInput id="edit-nombre" label="Nombre" value={nombre} onChange={setNombre} required />
       <LabelInput id="edit-sku" label="SKU" value={sku} onChange={setSku} required />
       <Selector
+        id="edit-tipo"
+        label="Tipo de producto"
+        options={tipoOptions}
+        value={tipoProductoId}
+        onChange={(v) => setTipoProductoId(String(v))}
+        searchable
+      />
+      <Selector
         id="edit-unidad"
-        label="Unidad de medida"
+        label="Unidad base de stock"
         options={unidadOptions.length ? unidadOptions : [{ label: 'Sin unidades', value: '' }]}
         value={unidadMedidaId}
         onChange={(v) => setUnidadMedidaId(String(v))}
-      />
-      <LabelInput
-        id="edit-precio"
-        label="Precio costo (opcional)"
-        type="number"
-        value={precioCosto}
-        onChange={setPrecioCosto}
       />
       <div className="flex gap-3 pt-2">
         <PrimaryButton type="button" variant="outline" onClick={closeSidePanel}>

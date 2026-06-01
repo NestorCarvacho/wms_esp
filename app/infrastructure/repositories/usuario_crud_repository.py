@@ -26,7 +26,9 @@ class UsuarioCRUDRepository:
         solo_activos: bool = True,
         es_super_admin: bool = False,
         empresa_id_filtro: int | None = None,
+        empresas_scope_ids: list[int] | None = None,
         buscar: str | None = None,
+        cargo_id: int | None = None,
     ) -> tuple[list[Usuario], int]:
         """
         Lista usuarios de una empresa con paginación.
@@ -49,7 +51,7 @@ class UsuarioCRUDRepository:
                 selectinload(Usuario.cargo),
             )
             
-            empresa_cond = filtro_empresa(Usuario, empresa_id, es_super_admin, empresa_id_filtro)
+            empresa_cond = filtro_empresa(Usuario, empresa_id, es_super_admin, empresa_id_filtro, empresas_scope_ids)
             if empresa_cond is not None:
                 stmt_base = stmt_base.where(empresa_cond)
 
@@ -58,6 +60,8 @@ class UsuarioCRUDRepository:
             buscar_cond = condicion_buscar(Usuario, buscar, "email")
             if buscar_cond is not None:
                 stmt_base = stmt_base.where(buscar_cond)
+            if cargo_id is not None:
+                stmt_base = stmt_base.where(Usuario.cargo_id == cargo_id)
 
             count_stmt = select(func.count(Usuario.id))
             if empresa_cond is not None:
@@ -66,6 +70,8 @@ class UsuarioCRUDRepository:
                 count_stmt = count_stmt.where(Usuario.activo == True)
             if buscar_cond is not None:
                 count_stmt = count_stmt.where(buscar_cond)
+            if cargo_id is not None:
+                count_stmt = count_stmt.where(Usuario.cargo_id == cargo_id)
 
             count_result = await self.session.execute(count_stmt)
             total = count_result.scalar() or 0

@@ -7,15 +7,10 @@ import type {
   ZonaBodegaCrear,
 } from '@/types/api';
 
-export interface ListarZonasBodegaParams extends PaginatedListParams {
-  bodegaId?: number;
-}
-
-export async function listarZonasBodega(params: ListarZonasBodegaParams = {}) {
-  const { bodegaId, ...listParams } = params;
-  const query = buildListQuery(listParams);
-  const suffix = bodegaId != null ? `${query}&bodega_id=${bodegaId}` : query;
-  const response = await apiRequest<PaginatedZonasBodega>(`/api/v1/zonas-bodega?${suffix}`);
+export async function listarZonasBodega(params: PaginatedListParams = {}) {
+  const response = await apiRequest<PaginatedZonasBodega>(
+    `/api/v1/zonas-bodega?${buildListQuery(params)}`,
+  );
   return response.datos!;
 }
 

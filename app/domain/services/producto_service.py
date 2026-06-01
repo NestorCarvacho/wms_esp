@@ -20,7 +20,10 @@ class ProductoService:
         por_pagina: int = 10,
         es_super_admin: bool = False,
         empresa_id_filtro: int | None = None,
+        empresas_scope_ids: list[int] | None = None,
         buscar: str | None = None,
+        unidad_medida_id: int | None = None,
+        tipo_producto_id: int | None = None,
     ) -> Dict[str, Any]:
         """
         Lista productos de una empresa.
@@ -40,7 +43,10 @@ class ProductoService:
             por_pagina=por_pagina,
             es_super_admin=es_super_admin,
             empresa_id_filtro=empresa_id_filtro,
+            empresas_scope_ids=empresas_scope_ids,
             buscar=buscar,
+            unidad_medida_id=unidad_medida_id,
+            tipo_producto_id=tipo_producto_id,
         )
         
         return {
@@ -57,6 +63,8 @@ class ProductoService:
                     "activo": b.activo,
                     "unidad_medida_id": b.unidad_medida_id,
                     "unidad_medida_nombre": b.unidad_medida.nombre if b.unidad_medida else None,
+                    "tipo_producto_id": b.tipo_producto_id,
+                    "tipo_producto_nombre": b.tipo_producto.nombre if b.tipo_producto else None,
                     "precio_costo": float(b.precio_costo) if b.precio_costo is not None else None,
                 }
                 for b in productos
@@ -93,6 +101,7 @@ class ProductoService:
         sku: str,
         activo: bool = True,
         unidad_medida_id: int = None,
+        tipo_producto_id: int | None = None,
         precio_costo: float = None
     ) -> Dict[str, Any]:
         """
@@ -128,7 +137,9 @@ class ProductoService:
             raise ValueError(f"Ya existe una producto con el nombre '{nombre}' en esta empresa")
         
         # Crear producto
-        nuevo_producto = await self.repository.crear(empresa_id, nombre, sku, activo, unidad_medida_id, precio_costo)
+        nuevo_producto = await self.repository.crear(
+            empresa_id, nombre, sku, activo, unidad_medida_id, tipo_producto_id, precio_costo
+        )
         
         return {
             "id": nuevo_producto.id,
@@ -137,6 +148,7 @@ class ProductoService:
             "sku": nuevo_producto.sku,
             "activo": nuevo_producto.activo,
             "unidad_medida_id": nuevo_producto.unidad_medida_id,
+            "tipo_producto_id": nuevo_producto.tipo_producto_id,
             "precio_costo": nuevo_producto.precio_costo
         }
     
@@ -147,6 +159,7 @@ class ProductoService:
         nombre: str = None,
         sku: str = None,
         unidad_medida_id: int = None,
+        tipo_producto_id: int | None = None,
         precio_costo: float = None,
         activo: bool | None = None,
     ) -> Dict[str, Any]:
@@ -199,6 +212,7 @@ class ProductoService:
             sku,
             activo_efectivo,
             unidad_medida_id,
+            tipo_producto_id,
             precio_costo,
         )
 
@@ -212,6 +226,7 @@ class ProductoService:
             "sku": producto_actualizada.sku,
             "activo": producto_actualizada.activo,
             "unidad_medida_id": producto_actualizada.unidad_medida_id,
+            "tipo_producto_id": producto_actualizada.tipo_producto_id,
             "precio_costo": producto_actualizada.precio_costo
         }
     

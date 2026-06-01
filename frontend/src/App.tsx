@@ -16,6 +16,7 @@ import { ProductosPage } from '@/pages/ProductosPage';
 
 import { BodegasPage } from '@/pages/BodegasPage';
 import { TiposZonaPage } from '@/pages/TiposZonaPage';
+import { TiposProductoPage } from '@/pages/TiposProductoPage';
 import { ZonasBodegaPage } from '@/pages/ZonasBodegaPage';
 
 import { UsuariosPage } from '@/pages/UsuariosPage';
@@ -61,6 +62,7 @@ export default function App() {
             <Route index element={<DashboardPage />} />
 
             <Route path="productos" element={<ProductosPage />} />
+            <Route path="tipos-producto" element={<TiposProductoPage />} />
 
             <Route path="bodegas" element={<BodegasPage />} />
             <Route path="tipos-zona" element={<TiposZonaPage />} />

@@ -34,6 +34,7 @@ export function buildWmsMenu(isSuperAdmin: boolean): { mainMenu: MenuItem[]; con
           icon: 'folderOpen',
           children: [
             { id: 'productos', title: 'Productos', url: '/productos', routeMetadata: { iconName: 'table', breadcrumbTitle: 'Productos' } },
+            { id: 'tipos-producto', title: 'Tipos de producto', url: '/tipos-producto', routeMetadata: { iconName: 'layers', breadcrumbTitle: 'Tipos de producto' } },
             { id: 'unidades', title: 'Unidades de medida', url: '/unidades-medida', routeMetadata: { iconName: 'layers', breadcrumbTitle: 'Unidades de medida' } },
           ],
         },

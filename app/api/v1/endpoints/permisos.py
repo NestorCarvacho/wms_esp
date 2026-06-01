@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.dependencies import es_super_admin, obtener_usuario_autenticado
+from app.api.v1.empresa_contexto import ContextoEmpresa, kwargs_listado, obtener_contexto_empresa, resolver_empresa_creacion
 from app.domain.services.permiso_service import PermisoService
 from app.infrastructure.database import get_db_session
 from app.infrastructure.repositories.permiso_crud_repository import PermisoCRUDRepository
@@ -21,19 +22,16 @@ async def listar_permisos(
     pagina: int = 1,
     por_pagina: int = 10,
     buscar: str | None = None,
-    empresa_id: int | None = Query(None, description="Filtrar por empresa (solo super admin)"),
-    usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
-    es_admin: bool = Depends(es_super_admin),
+    ctx: ContextoEmpresa = Depends(obtener_contexto_empresa),
     service: PermisoService = Depends(obtener_permiso_service),
 ):
     try:
         resultado = await service.listar(
-            empresa_id=usuario_autenticado.get("empresa_id"),
+            empresa_id=ctx.empresa_usuario_id,
             pagina=pagina,
             por_pagina=por_pagina,
-            es_super_admin=es_admin,
-            empresa_id_filtro=empresa_id if es_admin else None,
             buscar=buscar,
+            **kwargs_listado(ctx),
         )
         return RespuestaAPIDTO(exito=True, datos=resultado, mensaje=f"Se encontraron {resultado['total']} permisos").dict()
     except Exception as e:
@@ -44,11 +42,15 @@ async def listar_permisos(
 async def crear_permiso(
     dto: PermisoCrearDTO,
     usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
+    session: AsyncSession = Depends(get_db_session),
     service: PermisoService = Depends(obtener_permiso_service),
 ):
     try:
+        empresa_id = await resolver_empresa_creacion(
+            usuario_autenticado, dto.empresa_id, session
+        )
         resultado = await service.crear(
-            empresa_id=usuario_autenticado.get("empresa_id"),
+            empresa_id=empresa_id,
             codigo=dto.codigo,
             descripcion=dto.descripcion,
             activo=dto.activo == 1,

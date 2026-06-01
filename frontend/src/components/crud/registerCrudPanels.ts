@@ -1,26 +1,52 @@
 import { registerSidePanelComponent } from '@/components/layout/SidePanelContainer';
 import { ProductoEditPanel } from './ProductoEditPanel';
+import { ProductoCreatePanel } from './ProductoCreatePanel';
 import { BodegaEditPanel } from './BodegaEditPanel';
+import { BodegaCreatePanel } from './BodegaCreatePanel';
 import { UnidadMedidaEditPanel } from './UnidadMedidaEditPanel';
+import { UnidadMedidaCreatePanel } from './UnidadMedidaCreatePanel';
 import { EmpresaEditPanel } from './EmpresaEditPanel';
+import { EmpresaCreatePanel } from './EmpresaCreatePanel';
 import { UsuarioEditPanel } from './UsuarioEditPanel';
+import { UsuarioCreatePanel } from './UsuarioCreatePanel';
 import { CargoEditPanel } from './CargoEditPanel';
+import { CargoCreatePanel } from './CargoCreatePanel';
 import { RolEditPanel } from './RolEditPanel';
+import { RolCreatePanel } from './RolCreatePanel';
+import { PermisoCreatePanel } from './PermisoCreatePanel';
 import { TipoZonaEditPanel } from './TipoZonaEditPanel';
+import { TipoZonaCreatePanel } from './TipoZonaCreatePanel';
 import { ZonaBodegaEditPanel } from './ZonaBodegaEditPanel';
+import { ZonaBodegaCreatePanel } from './ZonaBodegaCreatePanel';
+import { TipoProductoEditPanel } from './TipoProductoEditPanel';
+import { TipoProductoCreatePanel } from './TipoProductoCreatePanel';
+import { ProductoPresentacionesPanel } from './ProductoPresentacionesPanel';
 
 let registered = false;
 
 export function registerCrudPanels() {
   if (registered) return;
   registerSidePanelComponent('ProductoEditPanel', ProductoEditPanel);
+  registerSidePanelComponent('ProductoCreatePanel', ProductoCreatePanel);
   registerSidePanelComponent('BodegaEditPanel', BodegaEditPanel);
+  registerSidePanelComponent('BodegaCreatePanel', BodegaCreatePanel);
   registerSidePanelComponent('UnidadMedidaEditPanel', UnidadMedidaEditPanel);
+  registerSidePanelComponent('UnidadMedidaCreatePanel', UnidadMedidaCreatePanel);
   registerSidePanelComponent('EmpresaEditPanel', EmpresaEditPanel);
+  registerSidePanelComponent('EmpresaCreatePanel', EmpresaCreatePanel);
   registerSidePanelComponent('UsuarioEditPanel', UsuarioEditPanel);
+  registerSidePanelComponent('UsuarioCreatePanel', UsuarioCreatePanel);
   registerSidePanelComponent('CargoEditPanel', CargoEditPanel);
+  registerSidePanelComponent('CargoCreatePanel', CargoCreatePanel);
   registerSidePanelComponent('RolEditPanel', RolEditPanel);
+  registerSidePanelComponent('RolCreatePanel', RolCreatePanel);
+  registerSidePanelComponent('PermisoCreatePanel', PermisoCreatePanel);
   registerSidePanelComponent('TipoZonaEditPanel', TipoZonaEditPanel);
+  registerSidePanelComponent('TipoZonaCreatePanel', TipoZonaCreatePanel);
   registerSidePanelComponent('ZonaBodegaEditPanel', ZonaBodegaEditPanel);
+  registerSidePanelComponent('ZonaBodegaCreatePanel', ZonaBodegaCreatePanel);
+  registerSidePanelComponent('TipoProductoEditPanel', TipoProductoEditPanel);
+  registerSidePanelComponent('TipoProductoCreatePanel', TipoProductoCreatePanel);
+  registerSidePanelComponent('ProductoPresentacionesPanel', ProductoPresentacionesPanel);
   registered = true;
 }

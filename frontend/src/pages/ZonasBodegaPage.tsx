@@ -1,49 +1,121 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { listarBodegas } from '@/api/bodegas';
 import { listarTiposZona } from '@/api/tiposZona';
-import { crearZonaBodega, eliminarZonaBodega, listarZonasBodega } from '@/api/zonasBodega';
+import { eliminarZonaBodega, listarZonasBodega } from '@/api/zonasBodega';
 import { PageLayout } from '@/components/layout/PageLayout';
-import { FormLayout } from '@/components/layout/FormLayout';
-import { LabelInput } from '@/components/ui/inputs';
-import { Selector } from '@/components/ui/inputs/Selector';
 import { PrimaryButton } from '@/components/ui/buttons';
 import { Table } from '@/components/ui/tables';
 import { StatusPill } from '@/app/Feedback';
-import { EmpresaMaestraFilter } from '@/components/crud/EmpresaMaestraFilter';
+import { CrudDynamicFiltersCard } from '@/components/crud/CrudDynamicFiltersCard';
 import { createCrudTableActions } from '@/crud/crudTableActions';
+import { dependentSelectOptions } from '@/crud/crudFilterHelpers';
 import { useCrudUi } from '@/crud/useCrudUi';
-import { useEmpresaMaestraFilter } from '@/crud/useEmpresaMaestraFilter';
+import { useCrudEmpresaFilterCard } from '@/crud/useCrudEmpresaFilterCard';
+import { useCrudTableFilters } from '@/crud/useCrudTableFilters';
 import { usePaginatedCrudTable } from '@/crud/usePaginatedCrudTable';
 import type { Bodega, TipoZona, ZonaBodega } from '@/types/api';
 import { displayBodega, displayEmpresa, displayTipoZona } from '@/utils/displayLabels';
 
+const ZONA_FILTER_INITIAL = { bodega: '' } as const;
+
 export function ZonasBodegaPage() {
-  const { notifySuccess, notifyApiError, confirmDelete, openSidePanel } = useCrudUi();
-  const empresaFilter = useEmpresaMaestraFilter();
+  const { notifyApiError, confirmDelete, openSidePanel } = useCrudUi();
+  const listFilter = useCrudEmpresaFilterCard();
+  const tableFilters = useCrudTableFilters({ ...ZONA_FILTER_INITIAL });
+
+  const mapZonaFiltersToParams = useCallback(
+    (filters: Record<string, string | number | undefined>) => {
+      const bodega = (filters.bodega as string | undefined)?.trim();
+      return bodega ? { bodega_id: bodega } : undefined;
+    },
+    [],
+  );
+
   const table = usePaginatedCrudTable<ZonaBodega>({
-    empresaFilterId: empresaFilter.empresaIdParam,
+    empresaFilterId: listFilter.empresaIdParam,
+    filterValues: tableFilters.debouncedValues,
+    mapFiltersToParams: mapZonaFiltersToParams,
     fetchPage: async (params) => {
       const res = await listarZonasBodega(params);
       return { total: res.total, items: res.zonas_bodega };
     },
     onError: (err) => notifyApiError(err, 'Error al cargar zonas de bodega'),
   });
+
+  const [bodegasFiltro, setBodegasFiltro] = useState<Bodega[]>([]);
   const [bodegas, setBodegas] = useState<Bodega[]>([]);
   const [tiposZona, setTiposZona] = useState<TipoZona[]>([]);
-  const [formOptionsLoading, setFormOptionsLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
-  const [nombre, setNombre] = useState('');
-  const [bodegaId, setBodegaId] = useState('');
-  const [tipoZonaId, setTipoZonaId] = useState('');
-  const [submitting, setSubmitting] = useState(false);
 
-  const loadFormOptions = useCallback(async () => {
-    setFormOptionsLoading(true);
+  const puedeFiltrarBodega = listFilter.puedeFiltrarDependientes;
+
+  useEffect(() => {
+    if (!puedeFiltrarBodega) {
+      setBodegasFiltro([]);
+      return;
+    }
+    let cancelled = false;
+    listarBodegas({
+      pagina: 1,
+      porPagina: 500,
+      ...(listFilter.empresaIdParam != null ? { empresaId: listFilter.empresaIdParam } : {}),
+    })
+      .then((res) => {
+        if (!cancelled) setBodegasFiltro(res.bodegas);
+      })
+      .catch(() => {
+        if (!cancelled) setBodegasFiltro([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [puedeFiltrarBodega, listFilter.empresaIdParam]);
+
+  useEffect(() => {
+    tableFilters.setFilter('bodega', '');
+  }, [listFilter.empresaIdParam]);
+
+  const bodegaFilterOptions = useMemo(
+    () =>
+      dependentSelectOptions(
+        puedeFiltrarBodega,
+        bodegasFiltro.map((b) => ({
+          label: `${b.nombre}${b.codigo ? ` (${b.codigo})` : ''}`,
+          value: String(b.id),
+        })),
+        { allLabel: 'Todas las bodegas' },
+      ),
+    [puedeFiltrarBodega, bodegasFiltro],
+  );
+
+  const listFilterFields = useMemo(
+    () => [
+      listFilter.empresaField,
+      {
+        id: 'bodega',
+        label: 'Bodega',
+        type: 'selector' as const,
+        options: bodegaFilterOptions,
+        searchable: true,
+        disabled: !puedeFiltrarBodega || bodegasFiltro.length === 0,
+      },
+    ],
+    [listFilter.empresaField, bodegaFilterOptions, puedeFiltrarBodega, bodegasFiltro.length],
+  );
+
+  const tableFilterValues = useMemo(
+    () => ({
+      ...listFilter.filterValues,
+      bodega: tableFilters.values.bodega,
+    }),
+    [listFilter.filterValues, tableFilters.values.bodega],
+  );
+
+  const loadEditOptions = useCallback(async () => {
     try {
       const listParams = {
         pagina: 1,
         porPagina: 500,
-        ...(empresaFilter.empresaIdParam != null ? { empresaId: empresaFilter.empresaIdParam } : {}),
+        ...(listFilter.empresaIdParam != null ? { empresaId: listFilter.empresaIdParam } : {}),
       };
       const [bodegasRes, tiposRes] = await Promise.all([
         listarBodegas(listParams),
@@ -51,53 +123,16 @@ export function ZonasBodegaPage() {
       ]);
       setBodegas(bodegasRes.bodegas);
       setTiposZona(tiposRes.tipos_zona);
-      setBodegaId((prev) => {
-        if (prev && bodegasRes.bodegas.some((b) => String(b.id) === prev)) return prev;
-        return bodegasRes.bodegas.length ? String(bodegasRes.bodegas[0].id) : '';
-      });
-      setTipoZonaId((prev) => {
-        if (prev && tiposRes.tipos_zona.some((t) => String(t.id) === prev)) return prev;
-        return tiposRes.tipos_zona.length ? String(tiposRes.tipos_zona[0].id) : '';
-      });
     } catch (err) {
       notifyApiError(err, 'Error al cargar datos del formulario');
       setBodegas([]);
       setTiposZona([]);
-      setBodegaId('');
-      setTipoZonaId('');
-    } finally {
-      setFormOptionsLoading(false);
     }
-  }, [empresaFilter.empresaIdParam, notifyApiError]);
+  }, [listFilter.empresaIdParam, notifyApiError]);
 
   useEffect(() => {
-    void loadFormOptions();
-  }, [loadFormOptions]);
-
-  async function handleCreate(e: FormEvent) {
-    e.preventDefault();
-    if (!bodegaId || !tipoZonaId) {
-      notifyApiError(new Error('Seleccione bodega y tipo de zona'), 'Datos incompletos');
-      return;
-    }
-    setSubmitting(true);
-    try {
-      await crearZonaBodega({
-        bodega_id: Number(bodegaId),
-        tipo_zona_id: Number(tipoZonaId),
-        nombre: nombre.trim() || null,
-        activo: 1,
-      });
-      setNombre('');
-      setShowForm(false);
-      notifySuccess('Zona de bodega creada correctamente');
-      await table.reload();
-    } catch (err) {
-      notifyApiError(err, 'Error al crear zona de bodega');
-    } finally {
-      setSubmitting(false);
-    }
-  }
+    void loadEditOptions();
+  }, [loadEditOptions]);
 
   const tableActions = createCrudTableActions<ZonaBodega>({
     onEdit: (row) => {
@@ -121,78 +156,37 @@ export function ZonasBodegaPage() {
     },
   });
 
-  const bodegaOptions = bodegas.map((b) => ({
-    label: `${b.nombre}${b.codigo ? ` (${b.codigo})` : ''}`,
-    value: String(b.id),
-  }));
-
-  const tipoOptions = tiposZona.map((t) => ({
-    label: t.nombre,
-    value: String(t.id),
-  }));
-
-  const canCreate = bodegaOptions.length > 0 && tipoOptions.length > 0;
-
   return (
     <PageLayout
       routes={[{ text: 'Inventario' }, { text: 'Almacén' }, { text: 'Zonas de bodega' }]}
       icon="layers"
       supportingText={`${table.total} registradas`}
     >
-      <EmpresaMaestraFilter
-        show={empresaFilter.showFilter}
-        value={empresaFilter.empresaFilterId}
-        onChange={empresaFilter.setEmpresaFilterId}
-        options={empresaFilter.filterOptions}
-        loading={empresaFilter.loading}
-      />
-
       <div className="flex justify-end mb-4">
-        <PrimaryButton onClick={() => setShowForm((v) => !v)} disabled={!canCreate && !showForm}>
-          {showForm ? 'Cancelar' : 'Nueva zona'}
+        <PrimaryButton
+          onClick={() =>
+            openSidePanel({
+              component: 'ZonaBodegaCreatePanel',
+              title: 'Nueva zona de bodega',
+              props: { empresaId: listFilter.empresaIdParam, onSaved: table.reload },
+            })
+          }
+        >
+          Nueva zona
         </PrimaryButton>
       </div>
 
-      {!canCreate && !formOptionsLoading && (
-        <p className="text-sm text-neutral-500 mb-4">
-          Crea al menos una bodega y un tipo de zona antes de registrar zonas.
-        </p>
-      )}
-
-      {showForm && (
-        <FormLayout onSubmit={handleCreate} columns={2} className="mb-6">
-          <FormLayout.Section title="Datos de la zona">
-            <Selector
-              id="bodega"
-              label="Bodega"
-              options={bodegaOptions.length ? bodegaOptions : [{ label: 'Sin bodegas', value: '' }]}
-              value={bodegaId}
-              onChange={(v) => setBodegaId(String(v))}
-            />
-            <Selector
-              id="tipo-zona"
-              label="Tipo de zona"
-              options={tipoOptions.length ? tipoOptions : [{ label: 'Sin tipos', value: '' }]}
-              value={tipoZonaId}
-              onChange={(v) => setTipoZonaId(String(v))}
-            />
-            <LabelInput
-              id="nombre"
-              label="Nombre (opcional)"
-              value={nombre}
-              onChange={setNombre}
-              placeholder="Ej. Pasillo A-1"
-            />
-          </FormLayout.Section>
-          <FormLayout.Footer
-            primaryButton={
-              <PrimaryButton type="submit" colorVariant="success" isLoading={submitting} disabled={!canCreate}>
-                Guardar zona
-              </PrimaryButton>
-            }
-          />
-        </FormLayout>
-      )}
+      <CrudDynamicFiltersCard
+        fields={listFilterFields}
+        values={tableFilterValues}
+        onChange={(id, value) => {
+          if (id === 'empresa') {
+            listFilter.handleEmpresaChange(value);
+            return;
+          }
+          tableFilters.setFilter(id, value);
+        }}
+      />
 
       <Table
         data={table.items}

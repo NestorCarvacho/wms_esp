@@ -8,6 +8,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.infrastructure.database import get_db_session
 from app.infrastructure.repositories.empresa_crud_repository import EmpresaCRUDRepository
 from app.domain.services.empresa_service import EmpresaService
+from app.domain.services.empresa_maestra_service import EmpresaMaestraService
+from app.infrastructure.repositories.empresa_administrada_repository import EmpresaAdministradaRepository
 from app.api.v1.dependencies import obtener_usuario_autenticado, es_super_admin
 from app.schemas.empresa import (
     EmpresaCrearDTO,
@@ -28,6 +30,10 @@ async def obtener_empresa_service(session: AsyncSession = Depends(get_db_session
     return EmpresaService(repository)
 
 
+async def obtener_empresa_maestra_service(session: AsyncSession = Depends(get_db_session)) -> EmpresaMaestraService:
+    return EmpresaMaestraService(EmpresaAdministradaRepository(session))
+
+
 def validar_super_admin(es_admin: bool = Depends(es_super_admin)):
     """Valida que el usuario sea super admin."""
     if not es_admin:
@@ -36,6 +42,34 @@ def validar_super_admin(es_admin: bool = Depends(es_super_admin)):
             detail="Solo super admin puede gestionar empresas"
         )
     return es_admin
+
+
+@router.get(
+    "/administradas",
+    response_model=RespuestaAPIDTO,
+    summary="Empresas administradas por la maestra del usuario",
+    status_code=status.HTTP_200_OK,
+)
+async def listar_empresas_administradas(
+    usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
+    service: EmpresaMaestraService = Depends(obtener_empresa_maestra_service),
+):
+    try:
+        if not usuario_autenticado.get("es_empresa_maestra") and usuario_autenticado.get("empresa_id") != 1:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Solo usuarios de empresa maestra pueden listar empresas administradas",
+            )
+        resultado = await service.listar_administradas(usuario_autenticado.get("empresa_id"))
+        return RespuestaAPIDTO(
+            exito=True,
+            datos=resultado,
+            mensaje=f"Se encontraron {resultado['total']} empresas administradas",
+        ).dict()
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
 # ============ GET: LISTAR EMPRESAS (CON PAGINACIÓN) ============
