@@ -111,9 +111,11 @@ npm run dev
 
 | Síntoma | Causa probable | Solución |
 |---------|----------------|----------|
-| CORS en navegador | `CORS_ORIGINS` no incluye el dominio del frontend | Añadir URL exacta (con `https://`) |
+| CORS en navegador (sin header ACAO) | Backend responde **502** (caído o puerto mal configurado) | Ver fila siguiente; no es solo CORS |
+| CORS en navegador | `CORS_ORIGINS` no incluye el dominio del frontend | Añadir URL exacta: `https://wms-frontend-production-296e.up.railway.app` |
+| 502 en backend | Puerto del dominio ≠ puerto de la app | Servicio `wms_esp` → **Settings → Networking** → puerto **8080** (ver logs: `Uvicorn running on ...:8080`) |
 | API llama a localhost | `VITE_API_URL` no se definió antes del build | Redeploy frontend con la variable |
-| 502 en backend | BD no accesible o `DATABASE_URL` incorrecta | Revisar referencia MySQL y logs |
+| 502 en backend | BD no accesible o app no arranca | Revisar logs (`python-multipart`, MySQL dormido, etc.) |
 | Rutas React 404 al refrescar | Falta fallback SPA | `serve -s` ya lo incluye en `npm run start` |
 
 ## 8. Dos repositorios (opcional)

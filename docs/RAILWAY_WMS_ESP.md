@@ -23,8 +23,24 @@ Configuración as-code para los servicios del monorepo.
 ### wms_esp (backend)
 - `DATABASE_URL` — MySQL (Railway)
 - `DEBUG` — `False`
-- `CORS_ORIGINS` — URL del frontend
+- `CORS_ORIGINS` — `https://wms-frontend-production-296e.up.railway.app`
 - `SECRET_KEY` — **cambiar** en Railway si sigue siendo la de ejemplo
+
+## Puertos (importante)
+
+En los logs del backend debe aparecer algo como:
+
+```
+Uvicorn running on http://0.0.0.0:8080
+```
+
+El dominio público debe apuntar al **mismo puerto**:
+
+1. Servicio `wms_esp` → **Settings → Networking**
+2. Puerto público: **8080** (no 8000)
+3. Redeploy si hiciste cambios
+
+Si el puerto no coincide, la API responde **502** y el navegador muestra un error de **CORS** aunque `CORS_ORIGINS` esté bien.
 
 ### wms-frontend
 - `VITE_API_URL` — `https://wmsesp-production.up.railway.app`

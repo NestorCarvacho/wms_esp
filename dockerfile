@@ -30,9 +30,8 @@ RUN adduser --disabled-password --gecos "" wmsuser
 RUN chown -R wmsuser:wmsuser /app
 USER wmsuser
 
-# 8. Puerto dinámico (Railway inyecta PORT)
-ENV PORT=8000
+# 8. Railway inyecta PORT en runtime (p. ej. 8080). El dominio público debe usar el mismo puerto.
 EXPOSE 8000
 
 # 9. Comando para iniciar la aplicación usando Uvicorn
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT}"]
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
