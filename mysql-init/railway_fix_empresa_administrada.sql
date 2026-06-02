@@ -1,13 +1,15 @@
--- Multiempresa: empresa maestra y empresas administradas
--- Railway Query: ejecutar UNA sentencia a la vez, en orden (no pegar todo junto).
+-- Llenar tabla empresa_administrada (vacía = combos de empresa sin opciones)
+-- Railway Query: ejecutar bloque por bloque.
 
--- 1) Crear columna (obligatorio primero)
-ALTER TABLE empresa ADD COLUMN es_empresa_maestra TINYINT(1) NOT NULL DEFAULT 0;
+-- === BLOQUE 1: ver empresas existentes ===
+SELECT id, nombre, COALESCE(esta_activa, 1) AS esta_activa, COALESCE(activo, 1) AS activo
+FROM empresa
+ORDER BY id;
 
--- 2) Marcar empresa 1 como maestra (solo despues del paso 1)
+-- === BLOQUE 2: asegurar empresa 1 como maestra ===
 UPDATE empresa SET es_empresa_maestra = 1 WHERE id = 1;
 
--- 3) Tabla de vinculo maestra ↔ hijas
+-- === BLOQUE 3: crear tabla si no existe ===
 CREATE TABLE IF NOT EXISTS empresa_administrada (
   empresa_maestra_id BIGINT NOT NULL,
   empresa_administrada_id BIGINT NOT NULL,
@@ -21,12 +23,16 @@ CREATE TABLE IF NOT EXISTS empresa_administrada (
     FOREIGN KEY (empresa_administrada_id) REFERENCES empresa(id)
 );
 
--- 4) Vincular empresas activas a la maestra id=1
+-- === BLOQUE 4: vincular TODAS las empresas activas a la maestra id=1 ===
 INSERT IGNORE INTO empresa_administrada (empresa_maestra_id, empresa_administrada_id, activo)
 SELECT 1, e.id, 1
 FROM empresa e
 WHERE COALESCE(e.esta_activa, 1) = 1
   AND COALESCE(e.activo, 1) = 1;
 
--- 5) Verificar
-SELECT id, nombre, es_empresa_maestra FROM empresa;
+-- === BLOQUE 5: verificar (debe mostrar 1 fila por cada empresa) ===
+SELECT ea.empresa_maestra_id, ea.empresa_administrada_id, e.nombre
+FROM empresa_administrada ea
+INNER JOIN empresa e ON e.id = ea.empresa_administrada_id
+WHERE ea.empresa_maestra_id = 1 AND ea.activo = 1
+ORDER BY e.nombre;

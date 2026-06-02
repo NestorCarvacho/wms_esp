@@ -30,13 +30,33 @@ Este proyecto es un **monorepo** con dos servicios independientes:
 
 1. En el proyecto, **Add Service → Database → MySQL**.
 2. Railway crea la variable `DATABASE_URL` (formato `mysql://...`). El backend la convierte automáticamente a `mysql+aiomysql://`.
-3. Ejecuta los scripts de inicialización (consola MySQL de Railway o cliente local):
+3. Ejecuta las migraciones **en este orden** (BD ya existente — no uses `01_setup.sql`):
 
    ```bash
-   mysql -h HOST -P PORT -u USER -p < mysql-init/01_setup.sql
-   mysql -h HOST -P PORT -u USER -p < mysql-init/02_altern_tables.sql
-   mysql -h HOST -P PORT -u USER -p < mysql-init/03_rbac_hierarchy.sql
+   railway service link MySQL
+   railway run python scripts/apply_railway_migrations.py
    ```
+
+   El script aplica `04` → `05` → `06` → `07` → `08` → `10` → `09` de forma idempotente
+   y muestra un diagnóstico al final.
+
+   Solo diagnóstico (sin cambios):
+
+   ```bash
+   railway run python scripts/apply_railway_migrations.py --diagnose
+   ```
+
+   Si tu email de superadmin no es `nestor.carvacho@wms.com`:
+
+   ```bash
+   railway run python scripts/apply_railway_migrations.py --email tu@email.com
+   ```
+
+   **Alternativa manual** (consola Query de Railway): pega cada archivo de `mysql-init/`
+   en el orden anterior. Si un script falla a mitad, los siguientes no se aplican.
+
+   **No ejecutar** `01_setup.sql` ni `03_rbac_hierarchy.sql` en Railway si la BD ya tiene datos:
+   fallan con "table already exists" o "can't drop foreign key".
 
 
 ## 3. Servicio Backend (API)

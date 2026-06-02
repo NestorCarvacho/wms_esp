@@ -1,38 +1,24 @@
 -- ============================================================================
--- Grant acceso completo al superadmin (usuario id=1, empresa maestra id=1)
--- Usuario: nestor.carvacho@wms.com
+-- Superadmin: acceso completo (empresa maestra)
+-- Railway Query: ejecutar UN bloque a la vez (Run selection).
 --
--- Ejecutar DESPUÉS de:
---   05_rbac_seed_empresa_1.sql
---   07_producto_tipo_presentacion.sql
---   08_usuario_rol.sql
---
--- Idempotente: se puede ejecutar varias veces.
--- IMPORTANTE: Tras ejecutar, el usuario debe CERRAR SESIÓN y volver a entrar
---             para que el JWT cargue los permisos actualizados.
+-- ANTES: haber corrido 04, 05, 06 (columna es_empresa_maestra), 07, 08.
+-- CAMBIAR el email en cada bloque si no es nestor.carvacho@wms.com
+-- DESPUES: cerrar sesion en la app y volver a entrar (JWT).
 -- ============================================================================
 
-SET @usuario_id   = 1;
-SET @empresa_id   = 1;
-SET @usuario_email = 'nestor.carvacho@wms.com';
-
--- ---------------------------------------------------------------------------
--- 1) Verificar que el usuario existe
--- ---------------------------------------------------------------------------
+-- === BLOQUE 1: verificar usuario (debe devolver 1 fila) ===
 SELECT id, empresa_id, email, activo
 FROM usuario
-WHERE id = @usuario_id AND email = @usuario_email;
+WHERE email = 'nestor.carvacho@wms.com';
 
--- ---------------------------------------------------------------------------
--- 2) Empresa maestra (flag multiempresa)
--- ---------------------------------------------------------------------------
+-- === BLOQUE 2: marcar su empresa como maestra ===
+-- Si el paso 1 mostro empresa_id distinto de 1, cambia "WHERE id = 1" por ese id.
 UPDATE empresa
 SET es_empresa_maestra = 1, activo = 1, esta_activa = 1
-WHERE id = @empresa_id;
+WHERE id = 1;
 
--- ---------------------------------------------------------------------------
--- 3) Asegurar tabla usuario_rol (por si 08 no se aplicó)
--- ---------------------------------------------------------------------------
+-- === BLOQUE 3: tabla usuario_rol (si 08 no se aplico) ===
 CREATE TABLE IF NOT EXISTS usuario_rol (
   usuario_id BIGINT NOT NULL,
   rol_id BIGINT NOT NULL,
@@ -42,99 +28,95 @@ CREATE TABLE IF NOT EXISTS usuario_rol (
   FOREIGN KEY (rol_id) REFERENCES rol(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- ---------------------------------------------------------------------------
--- 4) Permisos faltantes (catálogo base + tipos/presentaciones)
--- ---------------------------------------------------------------------------
+-- === BLOQUE 4: permisos en empresa 1 (idempotente) ===
 INSERT INTO permiso (empresa_id, codigo, descripcion, activo) VALUES
-(@empresa_id, 'usuarios.leer',           'Ver usuarios', 1),
-(@empresa_id, 'usuarios.crear',          'Crear usuarios', 1),
-(@empresa_id, 'usuarios.editar',         'Editar usuarios', 1),
-(@empresa_id, 'usuarios.eliminar',       'Eliminar usuarios', 1),
-(@empresa_id, 'empresas.leer',           'Ver empresas', 1),
-(@empresa_id, 'empresas.crear',          'Crear empresas', 1),
-(@empresa_id, 'empresas.editar',         'Editar empresas', 1),
-(@empresa_id, 'empresas.eliminar',       'Eliminar empresas', 1),
-(@empresa_id, 'cargos.leer',             'Ver cargos', 1),
-(@empresa_id, 'cargos.crear',            'Crear cargos', 1),
-(@empresa_id, 'cargos.editar',           'Editar cargos', 1),
-(@empresa_id, 'cargos.eliminar',         'Eliminar cargos', 1),
-(@empresa_id, 'roles.leer',              'Ver roles', 1),
-(@empresa_id, 'roles.crear',             'Crear roles', 1),
-(@empresa_id, 'roles.editar',            'Editar roles', 1),
-(@empresa_id, 'roles.eliminar',          'Eliminar roles', 1),
-(@empresa_id, 'permisos.leer',           'Ver permisos', 1),
-(@empresa_id, 'permisos.crear',          'Crear permisos', 1),
-(@empresa_id, 'permisos.editar',         'Editar permisos', 1),
-(@empresa_id, 'permisos.eliminar',       'Eliminar permisos', 1),
-(@empresa_id, 'bodegas.leer',            'Ver bodegas', 1),
-(@empresa_id, 'bodegas.crear',           'Crear bodegas', 1),
-(@empresa_id, 'bodegas.editar',          'Editar bodegas', 1),
-(@empresa_id, 'bodegas.eliminar',        'Eliminar bodegas', 1),
-(@empresa_id, 'productos.leer',          'Ver productos', 1),
-(@empresa_id, 'productos.crear',         'Crear productos', 1),
-(@empresa_id, 'productos.editar',        'Editar productos', 1),
-(@empresa_id, 'productos.eliminar',      'Eliminar productos', 1),
-(@empresa_id, 'productos.importar',      'Importar productos desde Excel', 1),
-(@empresa_id, 'unidades_medida.leer',    'Ver unidades de medida', 1),
-(@empresa_id, 'unidades_medida.crear',   'Crear unidades de medida', 1),
-(@empresa_id, 'unidades_medida.editar',  'Editar unidades de medida', 1),
-(@empresa_id, 'unidades_medida.eliminar','Eliminar unidades de medida', 1),
-(@empresa_id, 'tipos_zona.leer',         'Ver tipos de zona', 1),
-(@empresa_id, 'tipos_zona.crear',        'Crear tipos de zona', 1),
-(@empresa_id, 'tipos_zona.editar',       'Editar tipos de zona', 1),
-(@empresa_id, 'tipos_zona.eliminar',     'Eliminar tipos de zona', 1),
-(@empresa_id, 'zonas_bodega.leer',       'Ver zonas de bodega', 1),
-(@empresa_id, 'zonas_bodega.crear',      'Crear zonas de bodega', 1),
-(@empresa_id, 'zonas_bodega.editar',     'Editar zonas de bodega', 1),
-(@empresa_id, 'zonas_bodega.eliminar',   'Eliminar zonas de bodega', 1),
-(@empresa_id, 'tipos_producto.leer',     'Ver tipos de producto', 1),
-(@empresa_id, 'tipos_producto.crear',    'Crear tipos de producto', 1),
-(@empresa_id, 'tipos_producto.editar',   'Editar tipos de producto', 1),
-(@empresa_id, 'tipos_producto.eliminar', 'Eliminar tipos de producto', 1),
-(@empresa_id, 'producto_presentacion.leer',     'Ver presentaciones de producto', 1),
-(@empresa_id, 'producto_presentacion.crear',    'Crear presentaciones de producto', 1),
-(@empresa_id, 'producto_presentacion.editar',   'Editar presentaciones de producto', 1),
-(@empresa_id, 'producto_presentacion.eliminar', 'Eliminar presentaciones de producto', 1)
+(1, 'usuarios.leer',           'Ver usuarios', 1),
+(1, 'usuarios.crear',          'Crear usuarios', 1),
+(1, 'usuarios.editar',         'Editar usuarios', 1),
+(1, 'usuarios.eliminar',       'Eliminar usuarios', 1),
+(1, 'empresas.leer',           'Ver empresas', 1),
+(1, 'empresas.crear',          'Crear empresas', 1),
+(1, 'empresas.editar',         'Editar empresas', 1),
+(1, 'empresas.eliminar',       'Eliminar empresas', 1),
+(1, 'cargos.leer',             'Ver cargos', 1),
+(1, 'cargos.crear',            'Crear cargos', 1),
+(1, 'cargos.editar',           'Editar cargos', 1),
+(1, 'cargos.eliminar',         'Eliminar cargos', 1),
+(1, 'roles.leer',              'Ver roles', 1),
+(1, 'roles.crear',             'Crear roles', 1),
+(1, 'roles.editar',            'Editar roles', 1),
+(1, 'roles.eliminar',          'Eliminar roles', 1),
+(1, 'permisos.leer',           'Ver permisos', 1),
+(1, 'permisos.crear',          'Crear permisos', 1),
+(1, 'permisos.editar',         'Editar permisos', 1),
+(1, 'permisos.eliminar',       'Eliminar permisos', 1),
+(1, 'bodegas.leer',            'Ver bodegas', 1),
+(1, 'bodegas.crear',           'Crear bodegas', 1),
+(1, 'bodegas.editar',          'Editar bodegas', 1),
+(1, 'bodegas.eliminar',        'Eliminar bodegas', 1),
+(1, 'productos.leer',          'Ver productos', 1),
+(1, 'productos.crear',         'Crear productos', 1),
+(1, 'productos.editar',        'Editar productos', 1),
+(1, 'productos.eliminar',      'Eliminar productos', 1),
+(1, 'productos.importar',      'Importar productos desde Excel', 1),
+(1, 'unidades_medida.leer',    'Ver unidades de medida', 1),
+(1, 'unidades_medida.crear',   'Crear unidades de medida', 1),
+(1, 'unidades_medida.editar',  'Editar unidades de medida', 1),
+(1, 'unidades_medida.eliminar','Eliminar unidades de medida', 1),
+(1, 'tipos_zona.leer',         'Ver tipos de zona', 1),
+(1, 'tipos_zona.crear',        'Crear tipos de zona', 1),
+(1, 'tipos_zona.editar',       'Editar tipos de zona', 1),
+(1, 'tipos_zona.eliminar',     'Eliminar tipos de zona', 1),
+(1, 'zonas_bodega.leer',       'Ver zonas de bodega', 1),
+(1, 'zonas_bodega.crear',      'Crear zonas de bodega', 1),
+(1, 'zonas_bodega.editar',     'Editar zonas de bodega', 1),
+(1, 'zonas_bodega.eliminar',   'Eliminar zonas de bodega', 1),
+(1, 'tipos_producto.leer',     'Ver tipos de producto', 1),
+(1, 'tipos_producto.crear',    'Crear tipos de producto', 1),
+(1, 'tipos_producto.editar',   'Editar tipos de producto', 1),
+(1, 'tipos_producto.eliminar', 'Eliminar tipos de producto', 1),
+(1, 'producto_presentacion.leer',     'Ver presentaciones de producto', 1),
+(1, 'producto_presentacion.crear',    'Crear presentaciones de producto', 1),
+(1, 'producto_presentacion.editar',   'Editar presentaciones de producto', 1),
+(1, 'producto_presentacion.eliminar', 'Eliminar presentaciones de producto', 1)
 ON DUPLICATE KEY UPDATE descripcion = VALUES(descripcion), activo = 1;
 
--- ---------------------------------------------------------------------------
--- 5) Rol Administrador con TODOS los permisos activos de la empresa
--- ---------------------------------------------------------------------------
+-- === BLOQUE 5: rol Administrador (si no existe) ===
 INSERT INTO rol (empresa_id, nombre, descripcion, activo)
-SELECT @empresa_id, 'Administrador', 'Acceso completo al WMS', 1
+SELECT 1, 'Administrador', 'Acceso completo al WMS', 1
 FROM DUAL
 WHERE NOT EXISTS (
-  SELECT 1 FROM rol WHERE empresa_id = @empresa_id AND nombre = 'Administrador'
+  SELECT 1 FROM rol WHERE empresa_id = 1 AND nombre = 'Administrador'
 );
 
-SET @rol_admin_id = (
-  SELECT id FROM rol
-  WHERE empresa_id = @empresa_id AND nombre = 'Administrador' AND activo = 1
-  LIMIT 1
-);
-
+-- === BLOQUE 6: Administrador -> todos los permisos de empresa 1 ===
 INSERT IGNORE INTO rol_permiso (rol_id, permiso_id, activo)
-SELECT @rol_admin_id, p.id, 1
-FROM permiso p
-WHERE p.empresa_id = @empresa_id AND p.activo = 1;
+SELECT r.id, p.id, 1
+FROM rol r
+INNER JOIN permiso p ON p.empresa_id = r.empresa_id AND p.activo = 1
+WHERE r.empresa_id = 1
+  AND r.nombre = 'Administrador'
+  AND r.activo = 1;
 
--- Reactivar vínculos existentes por si quedaron inactivos
+-- === BLOQUE 7: reactivar vinculos rol_permiso inactivos ===
 UPDATE rol_permiso rp
-INNER JOIN permiso p ON p.id = rp.permiso_id AND p.empresa_id = @empresa_id
-SET rp.activo = 1
-WHERE rp.rol_id = @rol_admin_id;
+INNER JOIN rol r ON r.id = rp.rol_id AND r.empresa_id = 1 AND r.nombre = 'Administrador'
+INNER JOIN permiso p ON p.id = rp.permiso_id AND p.empresa_id = 1
+SET rp.activo = 1;
 
--- ---------------------------------------------------------------------------
--- 6) Asignar rol Administrador al usuario (reemplaza roles previos)
--- ---------------------------------------------------------------------------
-DELETE FROM usuario_rol WHERE usuario_id = @usuario_id;
+-- === BLOQUE 8: quitar roles previos del superadmin ===
+DELETE ur FROM usuario_rol ur
+INNER JOIN usuario u ON u.id = ur.usuario_id
+WHERE u.email = 'nestor.carvacho@wms.com';
 
+-- === BLOQUE 9: asignar rol Administrador al superadmin ===
 INSERT INTO usuario_rol (usuario_id, rol_id, activo)
-VALUES (@usuario_id, @rol_admin_id, 1);
+SELECT u.id, r.id, 1
+FROM usuario u
+INNER JOIN rol r ON r.empresa_id = u.empresa_id AND r.nombre = 'Administrador' AND r.activo = 1
+WHERE u.email = 'nestor.carvacho@wms.com';
 
--- ---------------------------------------------------------------------------
--- 7) Verificación
--- ---------------------------------------------------------------------------
+-- === BLOQUE 10: verificar (permisos_efectivos debe ser ~44+) ===
 SELECT
   u.id AS usuario_id,
   u.email,
@@ -148,14 +130,5 @@ INNER JOIN usuario_rol ur ON ur.usuario_id = u.id AND ur.activo = 1
 INNER JOIN rol r ON r.id = ur.rol_id AND r.activo = 1
 INNER JOIN rol_permiso rp ON rp.rol_id = r.id AND rp.activo = 1
 INNER JOIN permiso p ON p.id = rp.permiso_id AND p.activo = 1
-WHERE u.id = @usuario_id
+WHERE u.email = 'nestor.carvacho@wms.com'
 GROUP BY u.id, u.email, u.empresa_id, e.es_empresa_maestra, r.nombre;
-
--- Listado de códigos (opcional, descomentar):
--- SELECT p.codigo
--- FROM usuario u
--- INNER JOIN usuario_rol ur ON ur.usuario_id = u.id AND ur.activo = 1
--- INNER JOIN rol_permiso rp ON rp.rol_id = ur.rol_id AND rp.activo = 1
--- INNER JOIN permiso p ON p.id = rp.permiso_id AND p.activo = 1
--- WHERE u.id = @usuario_id
--- ORDER BY p.codigo;

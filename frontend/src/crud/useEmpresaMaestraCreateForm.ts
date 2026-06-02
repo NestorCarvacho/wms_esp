@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { listarEmpresasAdministradas } from '@/api/empresas';
+import { listarEmpresasParaFiltro } from '@/api/empresas';
 import { useAuthContext } from '@/context/AuthContext';
 import type { Empresa } from '@/types/api';
 import { empresaSelectorOption } from '@/utils/displayLabels';
@@ -32,7 +32,7 @@ export function useEmpresaMaestraCreateForm() {
     if (!isSuperAdmin) return;
     let cancelled = false;
     setLoading(true);
-    listarEmpresasAdministradas()
+    listarEmpresasParaFiltro()
       .then((res) => {
         if (cancelled) return;
         setEmpresas(res.empresas);

@@ -104,8 +104,9 @@ async def descargar_plantilla_importacion(
 ):
     """
     Genera un Excel con:
-    - Hoja **Productos**: columnas sku, nombre, unidad_medida_id, precio_costo
+    - Hoja **Productos**: sku, nombre, id_tipo_producto, unidad_base, precio_costo
     - Hoja **Unidades_medida**: IDs de unidades activas de la empresa (JWT)
+    - Hoja **Tipos_producto**: IDs de tipos de producto de la empresa (JWT)
     """
     try:
         empresa_id = usuario_autenticado.get("empresa_id")

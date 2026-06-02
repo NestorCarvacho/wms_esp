@@ -1,5 +1,7 @@
 -- Clasificación de productos y presentaciones comerciales
+-- Railway Query: ejecutar UN bloque a la vez (Run selection). No uses SET/PREPARE aqui.
 
+-- === BLOQUE 1 ===
 CREATE TABLE IF NOT EXISTS tipo_producto (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
   empresa_id BIGINT NOT NULL,
@@ -10,11 +12,15 @@ CREATE TABLE IF NOT EXISTS tipo_producto (
   UNIQUE KEY uk_tipo_producto_empresa (nombre, empresa_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-ALTER TABLE producto
-  ADD COLUMN tipo_producto_id BIGINT NULL AFTER unidad_medida_id,
-  ADD CONSTRAINT fk_producto_tipo_producto
-    FOREIGN KEY (tipo_producto_id) REFERENCES tipo_producto(id);
+-- === BLOQUE 2 (ignorar "Duplicate column" si ya existe) ===
+ALTER TABLE producto ADD COLUMN tipo_producto_id BIGINT NULL;
 
+-- === BLOQUE 3 (ignorar "Duplicate foreign key" si ya existe) ===
+ALTER TABLE producto
+  ADD CONSTRAINT fk_producto_tipo_producto
+  FOREIGN KEY (tipo_producto_id) REFERENCES tipo_producto(id);
+
+-- === BLOQUE 4 ===
 CREATE TABLE IF NOT EXISTS producto_presentacion (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
   producto_id BIGINT NOT NULL,
@@ -32,15 +38,14 @@ CREATE TABLE IF NOT EXISTS producto_presentacion (
   UNIQUE KEY uk_presentacion_producto (producto_id, nombre)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Permisos RBAC (empresa maestra id=1)
-SET @empresa_id = 1;
-
-INSERT IGNORE INTO permiso (empresa_id, codigo, descripcion, activo) VALUES
-(@empresa_id, 'tipos_producto.leer',     'Ver tipos de producto', 1),
-(@empresa_id, 'tipos_producto.crear',    'Crear tipos de producto', 1),
-(@empresa_id, 'tipos_producto.editar',   'Editar tipos de producto', 1),
-(@empresa_id, 'tipos_producto.eliminar', 'Eliminar tipos de producto', 1),
-(@empresa_id, 'producto_presentacion.leer',     'Ver presentaciones de producto', 1),
-(@empresa_id, 'producto_presentacion.crear',    'Crear presentaciones de producto', 1),
-(@empresa_id, 'producto_presentacion.editar',   'Editar presentaciones de producto', 1),
-(@empresa_id, 'producto_presentacion.eliminar', 'Eliminar presentaciones de producto', 1);
+-- === BLOQUE 5 (permisos empresa 1) ===
+INSERT INTO permiso (empresa_id, codigo, descripcion, activo) VALUES
+(1, 'tipos_producto.leer',     'Ver tipos de producto', 1),
+(1, 'tipos_producto.crear',    'Crear tipos de producto', 1),
+(1, 'tipos_producto.editar',   'Editar tipos de producto', 1),
+(1, 'tipos_producto.eliminar', 'Eliminar tipos de producto', 1),
+(1, 'producto_presentacion.leer',     'Ver presentaciones de producto', 1),
+(1, 'producto_presentacion.crear',    'Crear presentaciones de producto', 1),
+(1, 'producto_presentacion.editar',   'Editar presentaciones de producto', 1),
+(1, 'producto_presentacion.eliminar', 'Eliminar presentaciones de producto', 1)
+ON DUPLICATE KEY UPDATE descripcion = VALUES(descripcion), activo = 1;

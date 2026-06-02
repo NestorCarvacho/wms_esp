@@ -9,6 +9,22 @@ export async function listarEmpresasAdministradas() {
   return response.datos!;
 }
 
+/** Empresas para combos de filtro (administradas, con fallback al listado general). */
+export async function listarEmpresasParaFiltro() {
+  try {
+    const res = await listarEmpresasAdministradas();
+    if (res.empresas.length > 0) return res;
+  } catch {
+    /* fallback abajo */
+  }
+  const res = await listarEmpresas({
+    pagina: 1,
+    porPagina: 500,
+    extra: { solo_activas: true },
+  });
+  return { total: res.total, empresas: res.empresas };
+}
+
 export async function listarEmpresas(params: PaginatedListParams = {}) {
   const response = await apiRequest<PaginatedEmpresas>(
     `/api/v1/empresas?${buildListQuery(params)}`,

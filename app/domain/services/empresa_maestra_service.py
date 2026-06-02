@@ -13,7 +13,8 @@ class EmpresaMaestraService:
         return await self.repository.es_empresa_maestra(empresa_id)
 
     async def listar_administradas(self, empresa_maestra_id: int) -> dict[str, Any]:
-        if not await self.repository.es_empresa_maestra(empresa_maestra_id):
+        es_maestra = await self.repository.es_empresa_maestra(empresa_maestra_id)
+        if not es_maestra and empresa_maestra_id != 1:
             raise ValueError("La empresa no está configurada como maestra")
         empresas = await self.repository.listar_empresas_administradas(empresa_maestra_id)
         return {

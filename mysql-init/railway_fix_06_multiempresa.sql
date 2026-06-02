@@ -1,13 +1,13 @@
--- Multiempresa: empresa maestra y empresas administradas
--- Railway Query: ejecutar UNA sentencia a la vez, en orden (no pegar todo junto).
+-- Fix Railway: columna es_empresa_maestra + tabla empresa_administrada
+-- IMPORTANTE: ejecutar cada bloque por separado en Railway Query (Run selection).
 
--- 1) Crear columna (obligatorio primero)
+-- === BLOQUE 1 (primero; ignorar error si columna ya existe) ===
 ALTER TABLE empresa ADD COLUMN es_empresa_maestra TINYINT(1) NOT NULL DEFAULT 0;
 
--- 2) Marcar empresa 1 como maestra (solo despues del paso 1)
+-- === BLOQUE 2 (solo si bloque 1 OK o "Duplicate column") ===
 UPDATE empresa SET es_empresa_maestra = 1 WHERE id = 1;
 
--- 3) Tabla de vinculo maestra ↔ hijas
+-- === BLOQUE 3 ===
 CREATE TABLE IF NOT EXISTS empresa_administrada (
   empresa_maestra_id BIGINT NOT NULL,
   empresa_administrada_id BIGINT NOT NULL,
@@ -21,12 +21,12 @@ CREATE TABLE IF NOT EXISTS empresa_administrada (
     FOREIGN KEY (empresa_administrada_id) REFERENCES empresa(id)
 );
 
--- 4) Vincular empresas activas a la maestra id=1
+-- === BLOQUE 4 ===
 INSERT IGNORE INTO empresa_administrada (empresa_maestra_id, empresa_administrada_id, activo)
 SELECT 1, e.id, 1
 FROM empresa e
 WHERE COALESCE(e.esta_activa, 1) = 1
   AND COALESCE(e.activo, 1) = 1;
 
--- 5) Verificar
-SELECT id, nombre, es_empresa_maestra FROM empresa;
+-- === BLOQUE 5 (verificar) ===
+SELECT id, nombre, es_empresa_maestra, esta_activa FROM empresa;
