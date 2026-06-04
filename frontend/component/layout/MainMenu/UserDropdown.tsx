@@ -1,11 +1,9 @@
-import React from 'react';
-import { colors } from '@/assets/styles/colors';
-import { Card } from '@/components/ui/cards/Card';
-import { Text } from '@/components/ui/text/Text';
-import { IconScout } from '@/components/ui/images/IconScout';
-import { PrimaryButton } from '@/components/ui/buttons';
-import { Divider } from '@/components/ui/separators';
-
+import { Bell, LogOut, Settings, User } from 'lucide-react';
+import {
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from '@/components/ui/shadcn/dropdown-menu';
 
 interface UserDropdownProps {
   onEditProfile: () => void;
@@ -14,97 +12,39 @@ interface UserDropdownProps {
   userName: string;
 }
 
-interface UserDropdownButtonProps {
-  onClick: () => void;
-  icon: React.ReactNode;
-  children: React.ReactNode;
-}
-
-const UserDropdownButton: React.FC<UserDropdownButtonProps> = ({ 
-  onClick, 
-  icon, 
-  children,
-}) => (
-  <PrimaryButton
-    onClick={onClick}
-    variant="ghost"
-    textAlign="left"
-    className="py-3 rounded-md"
-    iconLeft={icon}
-    iconSize={24}
-    customVariant={{
-      default: {
-        textColor: colors.grays.neutral00,
-      },
-      pressed: {
-        textColor: colors.grays.neutral00,
-      },
-      focus: {
-        textColor: colors.grays.neutral00,
-      },
-    }}
-    textVariant="body-regular"
-    fullWidth
-  >
-    {children}
-  </PrimaryButton>
-);
-
-const UserDropdown: React.FC<UserDropdownProps> = ({ 
-  onEditProfile, 
-  onLogout, 
+const UserDropdown: React.FC<UserDropdownProps> = ({
+  onEditProfile,
+  onLogout,
   onHelpCenter,
   userName,
 }) => (
-  <Card
-    padding="24px"
-    className="tooltip-system-options absolute right-0 mt-2 w-72 z-50"
-    style={{ visibility: 'visible' }}
-  >
-    <div className="title mb-6">
-      <div className="flex items-center space-x-3">
-        <div className="w-10 h-10">
-          <IconScout name="user" size="xl" color={colors.grays.neutral66} />
+  <>
+    <DropdownMenuLabel className="font-normal">
+      <div className="flex items-center gap-3 py-1">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted text-muted-foreground">
+          <User className="h-5 w-5" />
         </div>
-        <div className="flex flex-col gap-1">
-          <Text variant="subheader-medium" color={colors.grays.neutral33}>
-            {userName}
-          </Text>
-        </div>
+        <p className="text-sm font-semibold text-foreground truncate">{userName}</p>
       </div>
-    </div>
-    
-    <Divider color={colors.grays.neutralE5} />
-
-    <div className="item-option mb-2">
-      <UserDropdownButton
-        onClick={onEditProfile}
-        icon={<IconScout name="setting" size="lg" color={colors.important.main} />}
-      >
-        Editar perfil
-      </UserDropdownButton>
-    </div>
-    
-    <div className="item-option out-action mb-2">
-      <UserDropdownButton
-        onClick={onLogout}
-        icon={<IconScout name="signout" size="lg" color={colors.feedback.error300} />}
-      >
-        Cerrar sesión
-      </UserDropdownButton>
-    </div>
-
-    <Divider color={colors.grays.neutralE5} />
-
-    <div className="item-option help-megamenu-profile">
-      <UserDropdownButton
-        onClick={onHelpCenter}
-        icon={<IconScout name="bell" size="lg" color={colors.important.main} />}
-      >
-        Centro de ayuda
-      </UserDropdownButton>
-    </div>
-  </Card>
+    </DropdownMenuLabel>
+    <DropdownMenuSeparator />
+    <DropdownMenuItem onClick={onEditProfile} className="cursor-pointer gap-3">
+      <Settings className="h-4 w-4" />
+      Editar perfil
+    </DropdownMenuItem>
+    <DropdownMenuItem
+      onClick={onLogout}
+      className="cursor-pointer gap-3 text-destructive focus:text-destructive"
+    >
+      <LogOut className="h-4 w-4" />
+      Cerrar sesión
+    </DropdownMenuItem>
+    <DropdownMenuSeparator />
+    <DropdownMenuItem onClick={onHelpCenter} className="cursor-pointer gap-3">
+      <Bell className="h-4 w-4" />
+      Centro de ayuda
+    </DropdownMenuItem>
+  </>
 );
 
 export default UserDropdown;

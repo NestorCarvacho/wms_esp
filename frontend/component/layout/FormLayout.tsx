@@ -1,6 +1,6 @@
 import React, { type FormEvent, type ReactNode, createContext, useContext } from 'react';
 import { Text } from '@/components/ui/text/Text';
-import { colors } from '@/assets/styles/colors';
+import { colorClass } from '@/assets/styles/colors';
 
 
 // ============================================================================
@@ -80,7 +80,7 @@ const FormLayoutSection: React.FC<FormLayoutSectionProps> = ({
 
   return (
     <>
-      <Text variant="body-medium" color={colors.primary.dash}>
+      <Text variant="body-medium" className={colorClass.brandLight}>
         {title}
       </Text>
       <div className={`grid grid-cols-1 ${gridColsClass} gap-6`}>
@@ -169,8 +169,8 @@ const FormLayoutFooter: React.FC<FormLayoutFooterProps> = ({
  *   </FormLayout.Section>
  *   
  *   <FormLayout.Section title="Estado civil">
- *     <Selector label="Género" options={genderOptions} />
- *     <Selector label="Estado civil" options={maritalOptions} />
+ *     <ComboBox label="Género" options={genderOptions} />
+ *     <ComboBox label="Estado civil" options={maritalOptions} />
  *     <div aria-hidden="true" className="hidden md:block" />
  *   </FormLayout.Section>
  *   

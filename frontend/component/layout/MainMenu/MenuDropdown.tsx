@@ -1,231 +1,116 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Text } from '@/components/ui/text/Text';
 import { Card } from '@/components/ui/cards/Card';
-import { colors } from '@/assets/styles/colors';
-import { IconScout, type IconScoutName } from '@/components/ui/images/IconScout';
-
+import { MenuIcon, sectionIconName } from '@/components/ui/menu';
+import { cn } from '@/lib/utils';
 
 interface MenuDropdownProps {
-  item: any;
-  position?: 'left' | 'right' | 'center';
+  item: { id: number; title: string; children?: unknown[] };
 }
 
-const getPositionClasses = (position: 'left' | 'right' | 'center'): string => {
-  const positionMap = {
-    left: 'left-0',
-    right: 'right-0',
-    center: 'left-1/2 transform -translate-x-1/2',
-  };
-  return positionMap[position] || 'left-0';
-};
-
-
-interface SubItemHeaderProps { 
-  subItem: { 
-    title: string; 
+interface SubItemHeaderProps {
+  subItem: {
+    title: string;
     icon?: string | null;
-    routeMetadata?: {
-      iconName?: string;
-      breadcrumbTitle?: string;
-      componentName?: string;
-    };
-  } 
+    routeMetadata?: { iconName?: string };
+  };
 }
 
 const SubItemHeader: React.FC<SubItemHeaderProps> = ({ subItem }) => {
-  // Prioridad: routeMetadata.iconName > backend icon
-  const iconToUse = subItem.routeMetadata?.iconName || subItem.icon;
-  
+  const iconToUse = sectionIconName(subItem.routeMetadata?.iconName || subItem.icon);
+
   return (
-    <div className="grid grid-cols-[16px_1fr] gap-x-2 mb-4">
-      <div className="w-4 h-4 flex items-center justify-start">
-        {iconToUse ? (
-          <IconScout name={iconToUse as IconScoutName} size={16} color={colors.primary.auxiliar} />
-        ) : null}
-      </div>
-      <div className="flex items-center">
-        <Text
-          variant="body-medium"
-          fontFamily="montserrat"
-          color={colors.primary.main}
-        >
-          {subItem.title}
-        </Text>
-      </div>
+    <div className="grid grid-cols-[20px_1fr] gap-x-2 mb-3">
+      <MenuIcon name={iconToUse} size={16} className="text-slate-500" />
+      <h3 className="text-sm font-semibold text-slate-900">{subItem.title}</h3>
     </div>
   );
 };
 
-interface MenuLinkProps { 
-  node: { 
-    title: string; 
-    url?: string;
-    routeMetadata?: {
-      iconName?: string;
-      breadcrumbTitle?: string;
-      componentName?: string;
-    };
-  } 
+interface MenuLinkProps {
+  node: { title: string; url?: string };
 }
 
 const MenuLink: React.FC<MenuLinkProps> = ({ node }) => {
-  type LinkState = 'default' | 'hover' | 'pressed';
-  const [state, setState] = React.useState<LinkState>('default');
-
-  const stateColors = {
-    default: colors.grays.neutral33,
-    hover: colors.primary.main,
-    pressed: colors.important.main,
-  };
-
-  const collapseDoubleSlashes = (s: string): string => s.replace(/\/{2,}/g, '/');
-
   const normalizeUrl = (input?: string): string => {
     const raw = (input || '').trim();
     if (!raw) return '/';
-    const protocolMatch = raw.match(/^([a-z][a-z0-9+.-]*:\/\/[^/?#]+)([/?#].*)?$/i);
-    if (protocolMatch) {
-      const [, protoHost, rest] = protocolMatch;
-      if (!rest) return protoHost;
-      return protoHost + collapseDoubleSlashes(rest);
-    }
-    // For non-absolute URLs, ensure a single leading slash and collapse duplicates
     const ensured = raw.startsWith('/') ? raw : `/${raw}`;
-    return collapseDoubleSlashes(ensured);
+    return ensured.replace(/\/{2,}/g, '/');
   };
-
-  React.useEffect(() => {
-    const handleGlobalMouseUp = () => {
-      if (state === 'pressed') {
-        setState('default');
-      }
-    };
-
-    document.addEventListener('mouseup', handleGlobalMouseUp);
-    return () => document.removeEventListener('mouseup', handleGlobalMouseUp);
-  }, [state]);
-
-  // ⭐ URL viene enriquecida desde routes.tsx via menu.mapper
-  const to = normalizeUrl(node.url);
 
   return (
     <Link
-      to={to}
-      className="pb-2 transition-colors duration-150 outline-none block"
-      style={{ color: stateColors[state] }}
-      onMouseEnter={() => setState('hover')}
-      onMouseLeave={() => setState('default')}
-      onMouseDown={() => setState('pressed')}
-      onMouseUp={() => setState('hover')}
+      to={normalizeUrl(node.url)}
+      className={cn(
+        'block py-1.5 text-sm text-slate-600 transition-colors',
+        'hover:text-slate-900 focus-visible:outline-none focus-visible:text-emerald-700',
+      )}
       data-testid="menu-link-menudropdown"
     >
-      <Text
-        variant="subheader-regular"
-        fontFamily="montserrat"
-        color="inherit"
-        as="span"
-        data-testid="text-subheader-menudropdown"
-      >
-        {node.title}
-      </Text>
+      {node.title}
     </Link>
   );
 };
 
-interface MenuColumnProps {
-  section: {
-    title: string;
-    icon?: string | null;
-    routeMetadata?: {
-      iconName?: string;
-      breadcrumbTitle?: string;
-      componentName?: string;
-    };
-    children?: {
-      id: string | number;
-      title: string;
-      url?: string;
-      routeMetadata?: {
-        iconName?: string;
-        breadcrumbTitle?: string;
-        componentName?: string;
-      };
-    }[];
-  };
-}
-
-const MenuColumn: React.FC<MenuColumnProps> = ({ section }) => (
-  <div className="mb-2">
-    <SubItemHeader subItem={{ 
-      title: section.title, 
-      icon: section.icon,
-      routeMetadata: section.routeMetadata, 
-    }}
-    />
-    {(section.children || []).map((child) => (
-      <div key={child.id} className="grid grid-cols-[16px_1fr] gap-x-2">
-        <div className="w-4 h-4" />
-        <MenuLink node={child} />
-      </div>
-    ))}
-  </div>
-);
-
-
 type NormalizedSection = {
   title: string;
   icon?: string | null;
-  routeMetadata?: {
-    iconName?: string;
-    breadcrumbTitle?: string;
-    componentName?: string;
-  };
+  routeMetadata?: { iconName?: string };
   children: {
     id: string | number;
     title: string;
     url?: string;
-    routeMetadata?: {
-      iconName?: string;
-      breadcrumbTitle?: string;
-      componentName?: string;
-    };
+    routeMetadata?: { iconName?: string };
   }[];
 };
 
-const normalizeSections = (item: any): NormalizedSection[] => {
-  const sections: any[] = item?.children ?? [];
-  return (sections || []).map((section: any, idx: number) => ({
-    title: section?.title ?? `Section ${idx + 1}`,
-    icon: (section?.icon ?? null) as string | null,
+const normalizeSections = (item: MenuDropdownProps['item']): NormalizedSection[] => {
+  const sections: {
+    title?: string;
+    icon?: string;
+    routeMetadata?: { iconName?: string };
+    children?: unknown[];
+  }[] = (item?.children as typeof sections) ?? [];
+  return sections.map((section, idx) => ({
+    title: section?.title ?? `Sección ${idx + 1}`,
+    icon: section?.icon ?? null,
     routeMetadata: section?.routeMetadata,
-    children: (section?.children ?? []).map((child: any) => ({
+    children: ((section?.children ?? []) as NormalizedSection['children']).map((child) => ({
       id: child.id,
-      title: child?.title,
-      url: child?.url,
-      routeMetadata: child?.routeMetadata,
+      title: child.title,
+      url: child.url,
+      routeMetadata: child.routeMetadata,
     })),
   }));
 };
 
-const MenuDropdown: React.FC<MenuDropdownProps> = ({ item, position = 'left' }) => {
-  const positionClasses = getPositionClasses(position);
+/** Panel mega-menú (contenido dentro de DropdownMenuContent). */
+const MenuDropdown: React.FC<MenuDropdownProps> = ({ item }) => {
   const sections = normalizeSections(item);
 
   return (
-    <div
-      className={`absolute top-full ${positionClasses} mt-1 w-max min-w-[450px] max-w-screen z-40`}
+    <Card
+      elevation={3}
+      padding="24px"
+      className="border-slate-200"
       data-testid="menu-dropdown"
       data-item-id={item.id}
     >
-      <Card padding="32px" elevation={3}>
-        <div className="flex gap-x-8">
-          {sections.map((section, idx) => (
-            <MenuColumn key={idx} section={section} />
-          ))}
-        </div>
-      </Card>
-    </div>
+      <div className="flex gap-8">
+        {sections.map((section, idx) => (
+          <div key={idx} className="min-w-[160px]">
+            <SubItemHeader subItem={section} />
+            {(section.children || []).map((child) => (
+              <div key={child.id} className="grid grid-cols-[20px_1fr] gap-x-2 pl-0">
+                <span />
+                <MenuLink node={child} />
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+    </Card>
   );
 };
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import type { UseFormRegister, UseFormSetValue, UseFormWatch, FieldErrors, UseFormTrigger } from 'react-hook-form';
 import { LabelInput } from '@/components/ui/inputs';
-import { Selector } from '@/components/ui/inputs/Selector';
+import { ComboBox } from '@/components/ui/inputs/ComboBox';
 import { DatePicker } from '@/components/ui/filters/DatePicker';
 import { PrimaryButton } from '@/components/ui/buttons/PrimaryButton';
 import { FormLayout } from '@/components/layout';
@@ -61,7 +61,7 @@ export const CreateEmployeeContractForm: React.FC<CreateEmployeeContractFormProp
     <FormLayout onSubmit={handleSubmit} columns={4}>
       {/* Sección 1: Datos del contrato */}
       <FormLayout.Section title="Datos del contrato">
-        <Selector
+        <ComboBox
           label={translate('employee:contracts.fields.contractStatus')}
           required
           options={contractStatusOptions}
@@ -75,7 +75,7 @@ export const CreateEmployeeContractForm: React.FC<CreateEmployeeContractFormProp
           data-testid="contract-status-select"
         />
 
-        <Selector
+        <ComboBox
           label={translate('employee:contracts.fields.companyContract')}
           required
           options={companyOptions}
@@ -113,7 +113,7 @@ export const CreateEmployeeContractForm: React.FC<CreateEmployeeContractFormProp
           data-testid="contract-number-input"
         />
 
-        <Selector
+        <ComboBox
           label={translate('employee:contracts.fields.contractType')}
           required
           options={contractTypeOptions}
@@ -127,7 +127,7 @@ export const CreateEmployeeContractForm: React.FC<CreateEmployeeContractFormProp
           data-testid="contract-type-select"
         />
 
-        <Selector
+        <ComboBox
           label={translate('employee:contracts.fields.contractModality')}
           required
           options={contractModalityOptions}
@@ -177,7 +177,7 @@ export const CreateEmployeeContractForm: React.FC<CreateEmployeeContractFormProp
 
       {/* Sección 2: Datos organizacionales */}
       <FormLayout.Section title="Datos organizacionales">
-        <Selector
+        <ComboBox
           label={translate('employee:contracts.fields.area')}
           options={areaOptions}
           value={contractForm.watch('areaId')?.toString() || ''}
@@ -190,7 +190,7 @@ export const CreateEmployeeContractForm: React.FC<CreateEmployeeContractFormProp
           data-testid="area-select"
         />
 
-        <Selector
+        <ComboBox
           label={translate('employee:contracts.fields.position')}
           required
           options={positionOptions}
@@ -204,7 +204,7 @@ export const CreateEmployeeContractForm: React.FC<CreateEmployeeContractFormProp
           data-testid="position-select"
         />
 
-        <Selector
+        <ComboBox
           label={translate('employee:contracts.fields.costCenter')}
           required
           options={costCenterOptions}
@@ -218,7 +218,7 @@ export const CreateEmployeeContractForm: React.FC<CreateEmployeeContractFormProp
           data-testid="cost-center-select"
         />
 
-        <Selector
+        <ComboBox
           label={translate('employee:contracts.fields.union')}
           options={unionOptions}
           value={contractForm.watch('unionCode') || ''}

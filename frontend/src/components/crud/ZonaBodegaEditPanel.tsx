@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { actualizarZonaBodega } from '@/api/zonasBodega';
 import { LabelInput } from '@/components/ui/inputs';
-import { Selector } from '@/components/ui/inputs/Selector';
+import { ComboBox } from '@/components/ui/inputs/ComboBox';
 import { PrimaryButton } from '@/components/ui/buttons';
 import { useUI } from '@/hooks/ui';
 import { ApiError } from '@/api/client';
@@ -57,14 +57,14 @@ export function ZonaBodegaEditPanel({ zona, bodegas, tiposZona, onSaved }: ZonaB
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      <Selector
+      <ComboBox
         id="edit-bodega"
         label="Bodega"
         options={bodegaOptions}
         value={bodegaId}
         onChange={(v) => setBodegaId(String(v))}
       />
-      <Selector
+      <ComboBox
         id="edit-tipo"
         label="Tipo de zona"
         options={tipoOptions}

@@ -1,11 +1,11 @@
 import * as React from 'react';
 import { Text } from '@/components/ui/text/Text';
 import { IconScout } from '@/components/ui/images/IconScout';
-import { Selector } from '@/components/ui/inputs/Selector';
-import { colors } from '@/assets/styles/colors';
+import { ComboBox } from '@/components/ui/inputs/ComboBox';
+import { colorClass } from '@/assets/styles/colors';
+import { cn } from '@/lib/utils';
 import { buildPaginationWindow, getPageSizeOptions } from './Table.utils';
 import type { PageToken } from './Table.types';
-
 
 export interface TableFooterProps {
   pageInfo: { current: number; pageSize: number; total: number } | null;
@@ -15,10 +15,6 @@ export interface TableFooterProps {
   disabled?: boolean;
 }
 
-/**
- * Internal component for table footer with pagination
- * Maintains mobile responsivity with flex-col → flex-row
- */
 export const TableFooter: React.FC<TableFooterProps> = ({
   pageInfo,
   onChangePage,
@@ -28,7 +24,7 @@ export const TableFooter: React.FC<TableFooterProps> = ({
 }) => (
   <div className="pt-2 px-4">
     <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-      <Text variant="small-medium" color={colors.grays.neutral99}>
+      <Text variant="small-medium" className={colorClass.muted}>
         Total de registros: {totalRows}
       </Text>
       {pageInfo && onChangePage && (
@@ -36,19 +32,16 @@ export const TableFooter: React.FC<TableFooterProps> = ({
           className="flex flex-col gap-3 md:flex-row md:items-center md:gap-3"
           data-testid="pagination"
         >
-          {/* Pagination: arrows and numbers */}
           <div className="flex items-center gap-3 justify-start md:order-2">
-            {/* Left arrow */}
             <button
               onClick={() => !disabled && onChangePage(Math.max(1, pageInfo.current - 1))}
               disabled={disabled || pageInfo.current === 1}
               className="inline-flex items-center justify-center h-5 w-5 disabled:opacity-40"
               aria-label="Página anterior"
             >
-              <IconScout name="angleLeft" size="md" color={colors.grays.neutral33} />
+              <IconScout name="angleLeft" size="md" color="currentColor" className={colorClass.body} />
             </button>
 
-            {/* Page numbers */}
             {(() => {
               const pages = buildPaginationWindow({
                 totalItems: pageInfo.total,
@@ -63,7 +56,7 @@ export const TableFooter: React.FC<TableFooterProps> = ({
                         key={`ellipsis-${index}`}
                         variant="small-medium"
                         lineHeight="20px"
-                        color={colors.grays.neutral33}
+                        className={colorClass.body}
                       >
                         …
                       </Text>
@@ -78,11 +71,9 @@ export const TableFooter: React.FC<TableFooterProps> = ({
                         <Text
                           variant="small-medium"
                           lineHeight="20px"
-                          color={
-                            page === pageInfo.current
-                              ? colors.important.main
-                              : colors.grays.neutral33
-                          }
+                          className={cn(
+                            page === pageInfo.current ? colorClass.accent : colorClass.body,
+                          )}
                         >
                           {page}
                         </Text>
@@ -93,7 +84,6 @@ export const TableFooter: React.FC<TableFooterProps> = ({
               );
             })()}
 
-            {/* Right arrow */}
             <button
               onClick={() => !disabled && onChangePage(pageInfo.current + 1)}
               disabled={
@@ -102,20 +92,19 @@ export const TableFooter: React.FC<TableFooterProps> = ({
               className="inline-flex items-center justify-center h-5 w-5 disabled:opacity-40"
               aria-label="Página siguiente"
             >
-              <IconScout name="angleRight" size="md" color={colors.grays.neutral33} />
+              <IconScout name="angleRight" size="md" color="currentColor" className={colorClass.body} />
             </button>
           </div>
 
-          {/* Page size selector */}
           {(() => {
             const options = getPageSizeOptions(totalRows);
             if (options.length === 0) return null;
             return (
               <div className="flex items-center gap-2 justify-start md:order-1">
-                <Text variant="body-regular" color={colors.grays.neutral33}>
+                <Text variant="body-regular" className={colorClass.body}>
                   Filas
                 </Text>
-                <Selector
+                <ComboBox
                   label=""
                   value={String(pageInfo.pageSize)}
                   onChange={(value: string | string[]) => {
@@ -129,7 +118,7 @@ export const TableFooter: React.FC<TableFooterProps> = ({
                   searchable={false}
                   className="!mb-0"
                   labelClassName="hidden"
-                  selectClassName="min-w-[64px]"
+                  triggerClassName="min-w-[64px]"
                   disabled={disabled}
                   portal
                 />

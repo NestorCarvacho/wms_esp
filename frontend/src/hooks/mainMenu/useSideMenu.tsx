@@ -1,7 +1,6 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { IconScout } from '@/components/ui/images/IconScout';
-import { colors } from '@/assets/styles/colors';
+import { MenuIcon, mainMenuIconName, sectionIconName } from '@/components/ui/menu';
 import { useMenu, type MenuItem } from '@/api';
 
 export interface SectionConfig {
@@ -17,7 +16,9 @@ type MenuLevel = { type: 'main' | 'submenu'; title: string; items?: MenuItem[] }
 export function useSideMenu() {
   const navigate = useNavigate();
   const { mainMenu, configMenu } = useMenu();
-  const [navigationStack, setNavigationStack] = useState<MenuLevel[]>([{ type: 'main', title: 'Categorías', items: mainMenu }]);
+  const [navigationStack, setNavigationStack] = useState<MenuLevel[]>([
+    { type: 'main', title: 'Categorías', items: mainMenu },
+  ]);
 
   const currentLevel = navigationStack[navigationStack.length - 1];
 
@@ -28,11 +29,18 @@ export function useSideMenu() {
           items: mainMenu,
           onItemClick: (item) => {
             if (typeof item !== 'string' && item.children?.length) {
-              setNavigationStack((stack) => [...stack, { type: 'submenu', title: item.title, items: [item] }]);
+              setNavigationStack((stack) => [
+                ...stack,
+                { type: 'submenu', title: item.title, items: [item] },
+              ]);
             }
           },
-          getIcon: (_, index) => (
-            <IconScout name={index === 0 ? 'folderOpen' : 'usersAlt'} size={16} color={colors.grays.neutralFF} />
+          getIcon: (item) => (
+            <MenuIcon
+              name={typeof item !== 'string' ? mainMenuIconName(item) : 'layers'}
+              size={18}
+              className="text-slate-300"
+            />
           ),
         },
       ];
@@ -42,10 +50,15 @@ export function useSideMenu() {
           items: [configMenu],
           onItemClick: (item) => {
             if (typeof item !== 'string') {
-              setNavigationStack((stack) => [...stack, { type: 'submenu', title: item.title, items: [item] }]);
+              setNavigationStack((stack) => [
+                ...stack,
+                { type: 'submenu', title: item.title, items: [item] },
+              ]);
             }
           },
-          getIcon: () => <IconScout name="setting" size={16} color={colors.grays.neutralFF} />,
+          getIcon: () => (
+            <MenuIcon name="setting" size={18} className="text-slate-300" />
+          ),
         });
       }
 
@@ -62,6 +75,13 @@ export function useSideMenu() {
           navigate(child.url.startsWith('/') ? child.url : `/${child.url}`);
         }
       },
+      getIcon: () => (
+        <MenuIcon
+          name={sectionIconName(section.icon)}
+          size={18}
+          className="text-slate-300"
+        />
+      ),
     }));
 
     return { main: [] as SectionConfig[], submenu: sections };

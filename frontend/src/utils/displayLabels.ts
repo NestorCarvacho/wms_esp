@@ -39,7 +39,7 @@ export function displayTipoProducto(row: {
 }
 
 /** Etiqueta estándar para combos de empresa (búsqueda con texto completo). */
-export function empresaSelectorOption(empresa: { codigo: string; nombre: string; id?: number }) {
+export function empresaComboBoxOption(empresa: { codigo: string; nombre: string; id?: number }) {
   const label = `${empresa.codigo} — ${empresa.nombre}`;
   return {
     label,

@@ -1,6 +1,6 @@
 import React from 'react';
-import { colors } from '@/assets/styles/colors';
-
+import { Card as UiCard } from '@/components/ui/shadcn/card';
+import { cn } from '@/lib/utils';
 
 type CardElevation = 1 | 2 | 3;
 
@@ -16,41 +16,34 @@ interface CardProps {
   'data-testid'?: string;
 }
 
+const elevationClass: Record<CardElevation, string> = {
+  1: 'shadow-sm',
+  2: 'shadow-md',
+  3: 'shadow-lg',
+};
+
 export const Card: React.FC<CardProps> = ({
   children,
   elevation = 2,
-  backgroundColor = colors.grays.neutralFF,
-  shadowColor = '#00000026',
-  borderRadius = '20px',
+  backgroundColor,
+  borderRadius,
   padding = '8px',
   className = '',
   style,
   'data-testid': dataTestId,
-}) => {
-  const getBlurValue = (): string => {
-    switch (elevation) {
-      case 1:
-        return '0 2px 4px 0';
-      case 2:
-        return '0 5px 8px 0';
-      case 3:
-        return '0 4px 16px 0';
-      default:
-        return '0 5px 8px 0';
-    }
-  };
+}) => (
+  <UiCard
+    data-testid={dataTestId}
+    className={cn('border-border', elevationClass[elevation], className)}
+    style={{
+      backgroundColor,
+      borderRadius,
+      padding,
+      ...style,
+    }}
+  >
+    {children}
+  </UiCard>
+);
 
-  const cardStyles: React.CSSProperties = {
-    backgroundColor,
-    borderRadius,
-    padding,
-    boxShadow: `${getBlurValue()} ${shadowColor}`,
-    ...style,
-  };
-
-  return (
-    <div className={className} style={cardStyles} data-testid={dataTestId}>
-      {children}
-    </div>
-  );
-};
+export default Card;

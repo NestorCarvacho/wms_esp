@@ -4,7 +4,7 @@ import { listarCargos } from '@/api/cargos';
 import { listarRoles } from '@/api/roles';
 import { listarRolesUsuario, sincronizarRolesUsuario } from '@/api/usuarioRoles';
 import { LabelInput } from '@/components/ui/inputs';
-import { Selector } from '@/components/ui/inputs/Selector';
+import { ComboBox } from '@/components/ui/inputs/ComboBox';
 import { PrimaryButton } from '@/components/ui/buttons';
 import { useUI } from '@/hooks/ui';
 import { ApiError } from '@/api/client';
@@ -94,7 +94,7 @@ export function UsuarioEditPanel({ usuario, onSaved }: UsuarioEditPanelProps) {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <LabelInput id="edit-email" label="Email" type="email" value={email} onChange={setEmail} required />
-      <Selector
+      <ComboBox
         id="edit-cargo"
         label="Cargo (organizacional)"
         options={cargoOptions}

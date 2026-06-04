@@ -32,6 +32,22 @@ export function tableValueCompare(
  * Resolves cell content to a React node with proper formatting
  * Handles primitives, React elements, null/undefined, objects, etc.
  */
+/** Texto plano para tooltip / medición de truncado. */
+export function getTooltipText(node: React.ReactNode): string {
+  if (node == null || node === false) return '';
+  if (typeof node === 'string' || typeof node === 'number' || typeof node === 'boolean') {
+    return String(node);
+  }
+  if (Array.isArray(node)) {
+    return node.map(getTooltipText).filter(Boolean).join(' ');
+  }
+  if (React.isValidElement(node)) {
+    const props = node.props as { children?: React.ReactNode };
+    return getTooltipText(props.children);
+  }
+  return '';
+}
+
 export function resolveCellContent(rawValue: any): React.ReactNode {
   // Preserve provided React elements (from custom render functions)
   if (React.isValidElement(rawValue)) return rawValue;

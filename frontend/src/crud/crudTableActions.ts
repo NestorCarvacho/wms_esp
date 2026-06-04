@@ -1,4 +1,3 @@
-import { colors } from '@/assets/styles/colors';
 import type { TableAction } from '@/components/ui/tables';
 
 export function createCrudTableActions<T>(handlers: {
@@ -16,7 +15,7 @@ export function createCrudTableActions<T>(handlers: {
       id: 'delete',
       label: 'Eliminar',
       icon: 'trash',
-      color: colors.feedback.error300,
+      variant: 'destructive',
       onClick: handlers.onDelete,
     },
   ];

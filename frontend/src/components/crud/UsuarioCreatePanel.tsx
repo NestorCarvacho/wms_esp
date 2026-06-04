@@ -2,13 +2,13 @@ import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { crearUsuario } from '@/api/usuarios';
 import { listarCargos } from '@/api/cargos';
 import { LabelInput } from '@/components/ui/inputs';
-import { Selector } from '@/components/ui/inputs/Selector';
+import { ComboBox } from '@/components/ui/inputs/ComboBox';
 import { useUI } from '@/hooks/ui';
 import { ApiError } from '@/api/client';
 import { useAuthContext } from '@/context/AuthContext';
 import { useEmpresaMaestraFilter } from '@/crud/useEmpresaMaestraFilter';
 import type { Cargo } from '@/types/api';
-import { empresaSelectorOption } from '@/utils/displayLabels';
+import { empresaComboBoxOption } from '@/utils/displayLabels';
 import { CrudPanelFooter } from './CrudPanelFooter';
 
 export interface UsuarioCreatePanelProps {
@@ -73,7 +73,7 @@ export function UsuarioCreatePanel({ onSaved }: UsuarioCreatePanelProps) {
   const empresaOptions = useMemo(
     () =>
       listFilter.empresas.map((e) => {
-        const opt = empresaSelectorOption({ ...e, id: e.id });
+        const opt = empresaComboBoxOption({ ...e, id: e.id });
         return { label: opt.label, value: opt.value, searchTokens: opt.searchTokens };
       }),
     [listFilter.empresas],
@@ -107,7 +107,7 @@ export function UsuarioCreatePanel({ onSaved }: UsuarioCreatePanelProps) {
       <LabelInput id="create-email" label="Email" type="email" value={email} onChange={setEmail} required />
       <LabelInput id="create-contrasena" label="Contraseña" type="password" value={contrasena} onChange={setContrasena} required />
       {isSuperAdmin && (
-        <Selector
+        <ComboBox
           id="create-empresaId"
           label="Empresa"
           options={empresaOptions}
@@ -121,7 +121,7 @@ export function UsuarioCreatePanel({ onSaved }: UsuarioCreatePanelProps) {
           disabled={listFilter.loading || empresaOptions.length === 0}
         />
       )}
-      <Selector
+      <ComboBox
         id="create-cargoId"
         label="Cargo"
         options={cargoOptions}

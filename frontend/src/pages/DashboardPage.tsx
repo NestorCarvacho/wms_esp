@@ -15,7 +15,8 @@ import { IconScout } from '@/components/ui/images/IconScout';
 import { Feedback } from '@/app/Feedback';
 import { useAuthContext } from '@/context/AuthContext';
 import { ApiError } from '@/api/client';
-import { colors } from '@/assets/styles/colors';
+import { colorClass } from '@/assets/styles/colors';
+import { cn } from '@/lib/utils';
 import { displayEmpresa } from '@/utils/displayLabels';
 
 const EMPRESA_MAESTRA_ID = 1;
@@ -90,10 +91,10 @@ function WarehouseSummaryCard({
 
   return (
     <Card elevation={2} padding="20px">
-      <Text variant="body-medium" color={colors.primary.dash}>
+      <Text variant="body-medium" className={colorClass.brandLight}>
         Resumen del almacén
       </Text>
-      <Text variant="small-regular" color={colors.grays.neutral66} className="mt-1">
+      <Text variant="small-regular" className={cn(colorClass.muted, 'mt-1')}>
         {title}
       </Text>
       {loading ? (
@@ -104,10 +105,10 @@ function WarehouseSummaryCard({
         <div className="mt-3 grid grid-cols-2 gap-3">
           {statCards.map((item) => (
             <div key={item.label}>
-              <Text variant="header-6" color={colors.primary.main}>
+              <Text variant="header-6" className={colorClass.brand}>
                 {item.value}
               </Text>
-              <Text variant="small-regular" color={colors.grays.neutral66}>
+              <Text variant="small-regular" className={colorClass.muted}>
                 {item.label}
               </Text>
             </div>
@@ -198,7 +199,7 @@ export function DashboardPage() {
 
       <div className={`grid gap-4 mb-6 ${isSuperAdmin ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
         <Card elevation={2} padding="20px">
-          <Text variant="body-medium" color={colors.primary.dash}>
+          <Text variant="body-medium" className={colorClass.brandLight}>
             Tu sesión
           </Text>
           <div className="mt-3 space-y-2">
@@ -208,7 +209,7 @@ export function DashboardPage() {
               {isSuperAdmin ? ' · Super admin' : ''}
             </Text>
             {apiStatus && (
-              <Text variant="small-regular" color={colors.grays.neutral66}>
+              <Text variant="small-regular" className={colorClass.muted}>
                 API: {apiStatus}
               </Text>
             )}
@@ -234,19 +235,19 @@ export function DashboardPage() {
         )}
       </div>
 
-      <Text variant="body-medium" color={colors.primary.dash} className="mb-3">
+      <Text variant="body-medium" className={cn(colorClass.brandLight, 'mb-3')}>
         Accesos rápidos
       </Text>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {quickLinks.map((link) => (
           <Card key={link.to} elevation={1} padding="20px" className="flex flex-col gap-3">
             <div className="flex items-center gap-2">
-              <IconScout name={link.icon} size="md" color={colors.primary.main} />
-              <Text variant="subheader-medium" color={colors.primary.main}>
+              <IconScout name={link.icon} size="md" className={colorClass.brand} />
+              <Text variant="subheader-medium" className={colorClass.brand}>
                 {link.title}
               </Text>
             </div>
-            <Text variant="body-regular" color={colors.grays.neutral66}>
+            <Text variant="body-regular" className={colorClass.muted}>
               {link.description}
             </Text>
             <Link to={link.to}>

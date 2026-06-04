@@ -4,7 +4,7 @@ import { listarTiposProducto } from '@/api/tiposProducto';
 import { listarUnidadesMedida } from '@/api/unidadesMedida';
 import { EmpresaCreateSelector } from '@/components/crud/EmpresaCreateSelector';
 import { LabelInput } from '@/components/ui/inputs';
-import { Selector } from '@/components/ui/inputs/Selector';
+import { ComboBox } from '@/components/ui/inputs/ComboBox';
 import { useUI } from '@/hooks/ui';
 import { ApiError } from '@/api/client';
 import { useEmpresaMaestraCreateForm } from '@/crud/useEmpresaMaestraCreateForm';
@@ -100,7 +100,7 @@ export function ProductoCreatePanel({ onSaved }: ProductoCreatePanelProps) {
       />
       <LabelInput id="create-nombre" label="Nombre" value={nombre} onChange={setNombre} required />
       <LabelInput id="create-sku" label="SKU" value={sku} onChange={setSku} required />
-      <Selector
+      <ComboBox
         id="create-tipo"
         label="Tipo de producto"
         options={tipoOptions}
@@ -108,7 +108,7 @@ export function ProductoCreatePanel({ onSaved }: ProductoCreatePanelProps) {
         onChange={(v) => setTipoProductoId(String(v))}
         searchable
       />
-      <Selector
+      <ComboBox
         id="create-unidad"
         label="Unidad base de stock"
         options={unidadOptions.length ? unidadOptions : [{ label: 'Sin unidades', value: '' }]}

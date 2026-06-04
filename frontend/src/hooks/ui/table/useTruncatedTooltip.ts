@@ -1,12 +1,24 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
+import { getTooltipText } from '@/components/ui/tables/Table.utils';
 import type { OverflowStrategy } from '@/components/ui/tables/Table.types';
 
-export function useTruncatedTooltip(strategy: OverflowStrategy, _children: ReactNode, width: number) {
+function isOverflowing(element: HTMLElement): boolean {
+  if (element.scrollWidth > element.clientWidth + 1) return true;
+  const inner = element.querySelector<HTMLElement>('[data-cell-text], span');
+  if (inner && inner !== element && inner.scrollWidth > inner.clientWidth + 1) return true;
+  return false;
+}
+
+export function useTruncatedTooltip(
+  strategy: OverflowStrategy,
+  children: ReactNode,
+  width: number,
+) {
   const ref = useRef<HTMLDivElement>(null);
-  const [showTooltip, setShowTooltip] = useState(false);
   const [isTruncated, setIsTruncated] = useState(false);
   const [measured, setMeasured] = useState(false);
   const tooltipId = useId();
+  const tooltipText = getTooltipText(children);
 
   useEffect(() => {
     if (strategy !== 'truncate') {
@@ -19,27 +31,29 @@ export function useTruncatedTooltip(strategy: OverflowStrategy, _children: React
     if (!element) return;
 
     const measure = () => {
-      setIsTruncated(element.scrollWidth > element.clientWidth);
+      setIsTruncated(isOverflowing(element));
       setMeasured(true);
     };
 
     measure();
+    const raf = requestAnimationFrame(measure);
 
     const observer = new ResizeObserver(measure);
     observer.observe(element);
+    const parent = element.closest('td');
+    if (parent) observer.observe(parent);
 
-    return () => observer.disconnect();
-  }, [strategy, width]);
+    return () => {
+      cancelAnimationFrame(raf);
+      observer.disconnect();
+    };
+  }, [strategy, width, tooltipText, children]);
 
   return {
     ref,
-    showTooltip,
     isTruncated,
     measured,
     tooltipId,
-    handleMouseEnter: () => setShowTooltip(true),
-    handleMouseLeave: () => setShowTooltip(false),
-    handleFocus: () => setShowTooltip(true),
-    handleBlur: () => setShowTooltip(false),
+    tooltipText,
   };
 }

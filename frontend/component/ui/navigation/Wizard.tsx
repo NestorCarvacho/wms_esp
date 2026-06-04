@@ -1,7 +1,7 @@
 import React from 'react';
 import { Text } from '@/components/ui/text/Text';
 import { IconScout } from '@/components/ui/images/IconScout';
-import { colors } from '@/assets/styles/colors';
+import { palette } from '@/assets/styles/colors';
 
 
 interface WizardStep {
@@ -34,13 +34,13 @@ export const Wizard: React.FC<WizardProps> = ({
   const getStepColor = (status: string) => {
     switch (status) {
       case 'completed':
-        return colors.primary.main;
+        return palette.brand;
       case 'current':
-        return colors.primary.main;
+        return palette.brand;
       case 'pending':
-        return colors.grays.neutralCC;
+        return palette.disabled;
       default:
-        return colors.grays.neutralCC;
+        return palette.disabled;
     }
   };
 
@@ -91,7 +91,7 @@ export const Wizard: React.FC<WizardProps> = ({
                   ) : (
                     <Text
                       variant="subheader-medium"
-                      color={status === 'current' ? colors.grays.neutralFF : stepColor}
+                      color={status === 'current' ? palette.white : stepColor}
                     >
                       {index + 1}
                     </Text>
@@ -114,8 +114,8 @@ export const Wizard: React.FC<WizardProps> = ({
                   className="flex-1 h-0.5 mx-2"
                   style={{
                     backgroundColor: completedSteps.has(index)
-                      ? colors.primary.main
-                      : colors.grays.neutralE5,
+                      ? palette.brand
+                      : palette.border,
                     maxWidth: '80px',
                     minWidth: '20px',
                     marginTop: '20px', // Align with center of circle (40px height / 2)

@@ -4,7 +4,7 @@ import { PrimaryButton } from '@/components/ui/buttons/PrimaryButton.tsx';
 import { IconScout, type IconScoutName } from '@/components/ui/images/IconScout.tsx';
 import { Card } from '@/components/ui/cards/Card.tsx';
 import { Text } from '@/components/ui/text/Text.tsx';
-import { colors } from '@/assets/styles/colors.ts';
+import { colorClass, palette } from '@/assets/styles/colors';
 
 
 interface ExportFormat {
@@ -56,7 +56,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         <Text variant="header-6">
           {translate('attendance:monthly.export.title')}
         </Text>
-        <Text variant="body-regular" color={colors.grays.neutral66}>
+        <Text variant="body-regular" className={colorClass.muted}>
           {translate('attendance:monthly.export.selectFormat')}
         </Text>
       </div>
@@ -73,12 +73,12 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                 borderWidth: selectedFormat === format.value ? '2px' : '1px',
                 borderColor:
                   selectedFormat === format.value
-                    ? colors.primary.main
-                    : colors.grays.neutralE5,
+                    ? palette.brand
+                    : palette.border,
                 backgroundColor:
                   selectedFormat === format.value
-                    ? colors.primary.background100
-                    : colors.grays.neutralFF,
+                    ? palette.brandBg
+                    : palette.white,
               }}
             >
               <div className="flex items-center gap-3">

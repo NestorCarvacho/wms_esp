@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LabelInput } from '@/components/ui/inputs';
-import { Selector } from '@/components/ui/inputs/Selector';
+import { ComboBox } from '@/components/ui/inputs/ComboBox';
 import { DatePicker } from '@/components/ui/filters/DatePicker';
 import { PrimaryButton } from '@/components/ui/buttons/PrimaryButton';
 import FormLayout from '@/components/layout/FormLayout';
@@ -93,7 +93,7 @@ export const EmployeeProfilePersonalDataForm: React.FC<PersonalDataFormProps> = 
         />
 
         {/* Row 3: Sexo, Estado civil, Estado */}
-        <Selector
+        <ComboBox
           label="Sexo"
           value={genderCode || undefined}
           onChange={(value) => setValue('genderCode', value as string)}
@@ -102,7 +102,7 @@ export const EmployeeProfilePersonalDataForm: React.FC<PersonalDataFormProps> = 
           color={errors.genderCode ? 'error' : 'default'}
           supportingText={errors.genderCode?.message}
         />
-        <Selector
+        <ComboBox
           label="Estado civil"
           value={maritalStatusId ? String(maritalStatusId) : undefined}
           onChange={(value) => setValue('maritalStatusId', value ? Number(value) : 0)}
@@ -111,7 +111,7 @@ export const EmployeeProfilePersonalDataForm: React.FC<PersonalDataFormProps> = 
           color={errors.maritalStatusId ? 'error' : 'default'}
           supportingText={errors.maritalStatusId?.message}
         />
-        <Selector
+        <ComboBox
           label="Estado"
           value={employmentStatus || undefined}
           onChange={(value) => setValue('employmentStatus', value as string)}

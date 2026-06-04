@@ -5,7 +5,7 @@ import { PrimaryButton } from '@/components/ui/buttons';
 import { Text } from '@/components/ui/text';
 import { ChangePasswordData } from '@/schemas/account';
 import { IconScout } from '@/components/ui/images/IconScout';
-import { colors } from '@/assets/styles/colors';
+import { colorClass } from '@/assets/styles/colors';
 
 
 interface ChangePasswordFormProps {
@@ -64,7 +64,7 @@ export const ChangePasswordForm: React.FC<ChangePasswordFormProps> = ({
           variant="body-medium"
           onClick={onBackToLogin}
           className="cursor-pointer transition-colors hover:opacity-80"
-          color={colors.primary.main}
+          className={colorClass.brand}
         >
           Regresar
         </Text>

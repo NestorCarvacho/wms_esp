@@ -3,7 +3,8 @@ import Cropper from 'react-easy-crop';
 import type { Area } from 'react-easy-crop';
 import { PrimaryButton } from '@/components/ui/buttons/PrimaryButton';
 import { Text } from '@/components/ui/text/Text';
-import { colors } from '@/assets/styles/colors';
+import { colorClass, palette } from '@/assets/styles/colors';
+import { cn } from '@/lib/utils';
 import {
   getCroppedImageBase64,
   validateCroppedImageSize,
@@ -139,7 +140,7 @@ export const ImageCropModal: React.FC<ImageCropModalProps> = ({
           <div
             className="relative rounded-lg overflow-hidden"
             style={{
-              backgroundColor: colors.grays.neutralE5,
+              backgroundColor: palette.border,
               width: `${containerDimensions.width}px`,
               height: `${containerDimensions.height}px`,
             }}
@@ -168,7 +169,7 @@ export const ImageCropModal: React.FC<ImageCropModalProps> = ({
 
         {/* Zoom Control */}
         <div className="mt-6">
-          <Text variant="subheader-medium" color={colors.grays.neutral66} className="mb-2">
+          <Text variant="subheader-medium" className={cn(colorClass.muted, 'mb-2')}>
             Zoom: {zoom.toFixed(1)}x
           </Text>
           <input
@@ -181,28 +182,23 @@ export const ImageCropModal: React.FC<ImageCropModalProps> = ({
             onChange={(event) => setZoom(Number(event.target.value))}
             className="w-full h-2 rounded-lg appearance-none cursor-pointer"
             style={{
-              backgroundColor: colors.grays.neutralE5,
-              accentColor: colors.primary.main,
+              backgroundColor: palette.border,
+              accentColor: palette.brand,
             }}
             data-testid="image-crop-modal-zoom-slider"
           />
         </div>
 
         {/* Info */}
-        <div
-          className="mt-4 p-3 rounded-lg"
-          style={{ backgroundColor: colors.primary.background100 }}
-        >
-          <Text variant="small-medium" color={colors.primary.dark}>
+        <div className={cn('mt-4 rounded-lg p-3', colorClass.brandBg)}>
+          <Text variant="small-medium" className={colorClass.brand}>
             Dimensiones finales: {config.outputWidth}x{config.outputHeight} píxeles
           </Text>
         </div>
       </div>
 
       {/* Footer */}
-      <div
-        className="flex items-center justify-end gap-4 p-6 border-t flex-shrink-0"
-        style={{ borderColor: colors.grays.neutralE5 }}
+      <div className="flex flex-shrink-0 items-center justify-end gap-4 border-t border-slate-200 p-6"
       >
         <PrimaryButton
           type="button"

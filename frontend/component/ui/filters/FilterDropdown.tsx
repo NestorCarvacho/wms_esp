@@ -1,10 +1,10 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { colors } from '@/assets/styles/colors';
+import { colorClass, palette } from '@/assets/styles/colors';
 import { PrimaryButton } from '@/components/ui/buttons/PrimaryButton';
 import { IconScout } from '@/components/ui/images/IconScout';
 import { LocalIcon } from '@/components/ui/images/LocalIcon';
 import { Card } from '@/components/ui/cards/Card';
-import { Selector, SelectorProps } from '@/components/ui/inputs/Selector';
+import { ComboBox, ComboBoxProps } from '@/components/ui/inputs/ComboBox';
 import { Text } from '@/components/ui/text/Text';
 
 
@@ -86,14 +86,15 @@ export const FilterDropdown: React.FC<FilterDropdownProps> = ({
     return () => document.removeEventListener('mousedown', handler);
   }, [open, closeOnOutsideClick, close]);
 
-  const handleSelectorChange = useCallback<
-    NonNullable<SelectorProps['onChange']>
-  >(() => {
-    if (closeOnSelect) close();
-  }, [closeOnSelect, close]);
+  const handleComboBoxChange = useCallback<NonNullable<ComboBoxProps['onChange']>>(
+    () => {
+      if (closeOnSelect) close();
+    },
+    [closeOnSelect, close],
+  );
 
-  const buttonBg = colors.primary.background;
-  const rightIconColor = colors.important.main;
+  const buttonBg = palette.brandBg;
+  const rightIconColor = palette.accent;
 
   // Auto-apply default values once on mount if uncontrolled and feature enabled
   useEffect(() => {
@@ -120,7 +121,7 @@ export const FilterDropdown: React.FC<FilterDropdownProps> = ({
       {filters.filter(filter => !filter.hide).map(filter => {
 			  const value = mergedValues[filter.key];
 			  return (
-  <Selector
+  <ComboBox
     key={filter.key}
     label={filter.label}
     options={filter.options}
@@ -135,7 +136,7 @@ export const FilterDropdown: React.FC<FilterDropdownProps> = ({
       }
       onChangeFilter?.(filter.key, val);
       onAnyFilterChange?.();
-      handleSelectorChange(val);
+      handleComboBoxChange(val);
     }}
   />
 			  );
@@ -149,7 +150,7 @@ export const FilterDropdown: React.FC<FilterDropdownProps> = ({
       {filtersNode}
     </div>
   ) : (
-    <Text variant="subheader-regular" color={colors.grays.neutral99} as="span">
+    <Text variant="subheader-regular" className={colorClass.muted} as="span">
       Sin filtros configurados
     </Text>
   );
@@ -160,19 +161,19 @@ export const FilterDropdown: React.FC<FilterDropdownProps> = ({
         customVariant={{
           default: {
             backgroundColor: buttonBg,
-            textColor: colors.primary.dash,
+            textColor: palette.brandLight,
           },
           hover: {
-            backgroundColor: colors.primary.background100 || buttonBg,
-            textColor: colors.primary.dash,
+            backgroundColor: palette.brandBg,
+            textColor: palette.brandLight,
           },
           pressed: {
-            backgroundColor: colors.primary.background200 || buttonBg,
-            textColor: colors.primary.dash,
+            backgroundColor: palette.brandBg200,
+            textColor: palette.brandLight,
           },
           focus: {
-            backgroundColor: colors.primary.background100 || buttonBg,
-            textColor: colors.primary.dash,
+            backgroundColor: palette.brandBg,
+            textColor: palette.brandLight,
           },
         }}
         iconLeft={<LocalIcon name="filter" className="!w-5 !h-5"/>}
@@ -190,7 +191,7 @@ export const FilterDropdown: React.FC<FilterDropdownProps> = ({
           className={`absolute mt-2 z-50 min-w-[290px] ${placement === 'right' ? 'right-0' : 'left-0'}`}
         >
           <Card className={`flex flex-col gap-2 ${cardClassName}`} padding="16px">
-            <Text variant="subheader-regular" color={colors.primary.dash} as="span">Filtros</Text>
+            <Text variant="subheader-regular" className={colorClass.brandLight} as="span">Filtros</Text>
             {contentBody}
           </Card>
         </div>

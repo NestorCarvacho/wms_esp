@@ -30,8 +30,30 @@ async def obtener_presentacion_service(
     )
 
 
-def _empresa_operacion(ctx: ContextoEmpresa) -> int:
-    return ctx.empresa_operacion()
+async def _empresa_para_producto(
+    producto_id: int,
+    ctx: ContextoEmpresa,
+    service: ProductoPresentacionService,
+) -> int:
+    return await service.resolver_empresa_para_producto(
+        producto_id,
+        ctx.empresa_usuario_id,
+        ctx.es_empresa_maestra,
+        ctx.empresas_administradas_ids,
+    )
+
+
+async def _empresa_para_presentacion(
+    presentacion_id: int,
+    ctx: ContextoEmpresa,
+    service: ProductoPresentacionService,
+) -> int:
+    return await service.resolver_empresa_para_presentacion(
+        presentacion_id,
+        ctx.empresa_usuario_id,
+        ctx.es_empresa_maestra,
+        ctx.empresas_administradas_ids,
+    )
 
 
 @router.get(
@@ -48,9 +70,10 @@ async def listar_presentaciones(
     service: ProductoPresentacionService = Depends(obtener_presentacion_service)
 ):
     try:
+        empresa_id = await _empresa_para_producto(producto_id, ctx, service)
         resultado = await service.listar_presentaciones(
             producto_id=producto_id,
-            empresa_id=_empresa_operacion(ctx),
+            empresa_id=empresa_id,
             pagina=pagina,
             por_pagina=por_pagina,
             buscar=buscar,
@@ -61,7 +84,10 @@ async def listar_presentaciones(
             mensaje=f"Se encontraron {resultado['total']} presentaciones",
         ).dict()
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+        msg = str(e)
+        if "no autorizado" in msg.lower():
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=msg)
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=msg)
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
@@ -78,9 +104,10 @@ async def crear_presentacion(
     service: ProductoPresentacionService = Depends(obtener_presentacion_service)
 ):
     try:
+        empresa_id = await _empresa_para_producto(producto_id, ctx, service)
         datos = await service.crear_presentacion(
             producto_id=producto_id,
-            empresa_id=_empresa_operacion(ctx),
+            empresa_id=empresa_id,
             nombre=dto.nombre,
             cantidad_contenida=dto.cantidad_contenida,
             unidad_medida_id=dto.unidad_medida_id,
@@ -109,9 +136,10 @@ async def actualizar_presentacion(
 ):
     try:
         payload = dto.model_dump(exclude_unset=True)
+        empresa_id = await _empresa_para_presentacion(presentacion_id, ctx, service)
         datos = await service.actualizar_presentacion(
             presentacion_id=presentacion_id,
-            empresa_id=_empresa_operacion(ctx),
+            empresa_id=empresa_id,
             **payload,
         )
         return RespuestaAPIDTO(exito=True, datos=datos, mensaje="Presentación actualizada").dict()
@@ -134,9 +162,8 @@ async def eliminar_presentacion(
     service: ProductoPresentacionService = Depends(obtener_presentacion_service)
 ):
     try:
-        resultado = await service.eliminar_presentacion(
-            presentacion_id, _empresa_operacion(ctx)
-        )
+        empresa_id = await _empresa_para_presentacion(presentacion_id, ctx, service)
+        resultado = await service.eliminar_presentacion(presentacion_id, empresa_id)
         return RespuestaAPIDTO(exito=True, datos=resultado, mensaje="Presentación eliminada").dict()
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
@@ -156,9 +183,10 @@ async def calcular_descuento_inventario(
 ):
     """Calcula unidades base a descontar según tipo de venta (unidad o empaque)."""
     try:
+        empresa_id = await _empresa_para_presentacion(dto.presentacion_id, ctx, service)
         datos = await service.calcular_descuento_stock(
             presentacion_id=dto.presentacion_id,
-            empresa_id=_empresa_operacion(ctx),
+            empresa_id=empresa_id,
             cantidad=dto.cantidad,
             venta_por_presentacion=dto.venta_por_presentacion,
         )

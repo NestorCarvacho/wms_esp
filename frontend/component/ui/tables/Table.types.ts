@@ -64,8 +64,10 @@ export interface TableAction<T> {
   icon: IconScoutName;
   /** Click handler receiving the row data */
   onClick: (row: T) => void;
-  /** Icon color (optional) */
+  /** @deprecated Use `variant` */
   color?: string;
+  /** Estilo del ítem en el menú de acciones */
+  variant?: 'default' | 'destructive';
   /** Function to determine if action is disabled for specific row */
   disabled?: (row: T) => boolean;
   /** Function to determine if action is hidden for specific row */

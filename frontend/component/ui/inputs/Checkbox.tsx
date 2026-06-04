@@ -1,5 +1,6 @@
 import React, { useState, useId, useRef, useEffect } from 'react';
-import { colors } from '@/assets/styles/colors';
+import { colorClass, palette } from '@/assets/styles/colors';
+import { cn } from '@/lib/utils';
 import { Text } from '@/components/ui/text/Text';
 
 
@@ -49,9 +50,9 @@ export const Checkbox: React.FC<CheckboxProps> = ({
   const [isHover, setIsHover] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
-  const baseColor = colors.primary.main; 
-  const hoverColor = colors.primary.dark;
-  const disabledColor = colors.grays.neutralCC;
+  const baseColor = palette.brand;
+  const hoverColor = palette.brandDark;
+  const disabledColor = palette.disabled;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (disabled) return;
@@ -71,7 +72,7 @@ export const Checkbox: React.FC<CheckboxProps> = ({
   }, [effectiveIndeterminate, currentChecked]);
 
   const currentBg = disabled
-    ? colors.grays.neutralFF
+    ? palette.white
     : effectiveIndeterminate
       ? (isHover ? hoverColor : baseColor)
       : currentChecked
@@ -85,9 +86,9 @@ export const Checkbox: React.FC<CheckboxProps> = ({
   const checkmarkColor = disabled
     ? disabledColor
     : effectiveIndeterminate
-      ? colors.grays.neutralFF
+      ? palette.white
       : currentChecked
-        ? colors.grays.neutralFF
+        ? palette.white
         : 'transparent';
 
   return (
@@ -145,8 +146,7 @@ export const Checkbox: React.FC<CheckboxProps> = ({
       {label && (
         <Text
           variant="subheader-regular"
-          className={labelClassName}
-          color={disabled ? colors.grays.neutral99 : colors.grays.neutral00}
+          className={cn(disabled ? colorClass.muted : colorClass.emphasis, labelClassName)}
         >
           {label}
         </Text>

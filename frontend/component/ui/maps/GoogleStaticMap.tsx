@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { colors } from '@/assets/styles/colors';
+import { palette } from '@/assets/styles/colors';
 
 
 export interface GoogleStaticMapProps {
@@ -47,7 +47,7 @@ export const GoogleStaticMap: React.FC<GoogleStaticMapProps> = ({
         style={{
 				  width,
 				  height,
-				  borderColor: colors.primary.auxiliar,
+				  borderColor: palette.brandAux,
 				  background: 'repeating-linear-gradient(45deg, #fafafa, #fafafa 10px, #f0f0f0 10px, #f0f0f0 20px)',
 				  ...style,
         }}
@@ -74,7 +74,7 @@ export const GoogleStaticMap: React.FC<GoogleStaticMapProps> = ({
           height={height}
           alt={alt}
           className={`rounded-lg border object-cover w-full h-full ${isStillLoading ? 'opacity-0' : 'opacity-100 transition-opacity duration-300'}`}
-          style={{ borderColor: colors.primary.auxiliar }}
+          style={{ borderColor: palette.brandAux }}
           loading="lazy"
           onLoad={() => setHasLoaded(true)}
           onError={() => setHasError(true)}
@@ -84,7 +84,7 @@ export const GoogleStaticMap: React.FC<GoogleStaticMapProps> = ({
       {isStillLoading && (
         <div
           className="absolute inset-0 flex items-center justify-center rounded-lg border"
-          style={{ borderColor: colors.primary.auxiliar }}
+          style={{ borderColor: palette.brandAux }}
           data-testid="map-loading"
         >
           <div

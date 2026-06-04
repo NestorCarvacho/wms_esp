@@ -37,6 +37,45 @@ class ProductoPresentacionService:
         self.unidad_repository = unidad_repository
         self.conversion = InventarioPresentacionService()
 
+    async def resolver_empresa_para_producto(
+        self,
+        producto_id: int,
+        empresa_usuario_id: int,
+        es_maestra: bool,
+        empresas_administradas_ids: list[int],
+    ) -> int:
+        """
+        Empresa real del producto tras validar acceso multi-tenant.
+        La empresa maestra puede operar productos de empresas administradas.
+        """
+        if es_maestra:
+            producto = await self.producto_repository.obtener_por_id(producto_id, None)
+            if not producto:
+                raise ValueError("Producto no encontrado")
+            if producto.empresa_id not in empresas_administradas_ids:
+                raise ValueError("No autorizado para acceder a este producto")
+            return producto.empresa_id
+
+        producto = await self.producto_repository.obtener_por_id(producto_id, empresa_usuario_id)
+        if not producto:
+            raise ValueError("Producto no encontrado")
+        return producto.empresa_id
+
+    async def resolver_empresa_para_presentacion(
+        self,
+        presentacion_id: int,
+        empresa_usuario_id: int,
+        es_maestra: bool,
+        empresas_administradas_ids: list[int],
+    ) -> int:
+        empresa_filtro = None if es_maestra else empresa_usuario_id
+        presentacion = await self.repository.obtener_por_id(presentacion_id, empresa_filtro)
+        if not presentacion:
+            raise ValueError("Presentación no encontrada")
+        if es_maestra and presentacion.producto.empresa_id not in empresas_administradas_ids:
+            raise ValueError("No autorizado para acceder a esta presentación")
+        return presentacion.producto.empresa_id
+
     async def _validar_producto(self, producto_id: int, empresa_id: int):
         producto = await self.producto_repository.obtener_por_id(producto_id, empresa_id)
         if not producto:
@@ -84,8 +123,29 @@ class ProductoPresentacionService:
         if cantidad_contenida <= 0:
             raise ValueError("La cantidad contenida debe ser mayor a cero")
         nombre = nombre.strip()
-        if await self.repository.obtener_por_nombre(producto_id, nombre):
+        if await self.repository.obtener_por_nombre(producto_id, nombre, solo_activas=True):
             raise ValueError(f"Ya existe la presentación '{nombre}' para este producto")
+
+        inactiva = await self.repository.obtener_por_nombre(
+            producto_id, nombre, solo_activas=False
+        )
+        if inactiva is not None and not inactiva.activo:
+            reactivada = await self.repository.actualizar(
+                inactiva.id,
+                empresa_id,
+                nombre=nombre,
+                cantidad_contenida=cantidad_contenida,
+                unidad_medida_id=unidad_medida_id,
+                precio_costo=precio_costo,
+                precio_venta=precio_venta,
+                permite_venta_unidad=permite_venta_unidad,
+                permite_venta_presentacion=permite_venta_presentacion,
+                activo=True,
+            )
+            if not reactivada:
+                raise ValueError("No se pudo reactivar la presentación")
+            return _serializar_presentacion(reactivada)
+
         nueva = await self.repository.crear(
             producto_id,
             nombre,

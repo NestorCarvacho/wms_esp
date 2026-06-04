@@ -34,7 +34,8 @@ import { PermisosPage } from '@/pages/PermisosPage';
 import { PerfilPage } from '@/pages/PerfilPage';
 import SidePanelContainer from '@/components/layout/SidePanelContainer';
 import NotificationContainer from '@/components/layout/NotificationContainer';
-import { ConfirmModalHost } from '@/layout/ConfirmModalHost';
+import { ModalContainer } from '@/components/layout/ModalContainer';
+import { TooltipProvider } from '@/components/ui/shadcn/tooltip';
 
 registerCrudPanels();
 
@@ -51,6 +52,7 @@ export default function App() {
   return (
     <AuthProvider>
       <UIProvider>
+        <TooltipProvider delayDuration={200} skipDelayDuration={0}>
         <BrowserRouter>
 
         <Routes>
@@ -94,10 +96,11 @@ export default function App() {
 
         </Routes>
 
-        <ConfirmModalHost />
+        <ModalContainer />
         <SidePanelContainer />
         <NotificationContainer />
         </BrowserRouter>
+        </TooltipProvider>
       </UIProvider>
     </AuthProvider>
   );

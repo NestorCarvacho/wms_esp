@@ -7,6 +7,7 @@ import {
   type ReactNode,
 } from 'react';
 import type { Modal, Notification, NotificationType, SidePanelState } from '@/store/slices/uiSlice';
+import { showAppToast } from '@/lib/notify';
 
 interface ShowNotificationInput {
   type: NotificationType;
@@ -23,6 +24,7 @@ interface OpenSidePanelInput {
 interface UIContextValue {
   modals: Modal[];
   sidePanel: SidePanelState | null;
+  /** @deprecated Sonner; siempre []. Mantenido por compatibilidad de tipos. */
   notifications: Notification[];
   openModal: (component: string, props?: Record<string, unknown>, isClosable?: boolean) => string;
   closeModal: (id?: string) => void;
@@ -37,7 +39,6 @@ const UIContext = createContext<UIContextValue | null>(null);
 export function UIProvider({ children }: { children: ReactNode }) {
   const [modals, setModals] = useState<Modal[]>([]);
   const [sidePanel, setSidePanel] = useState<SidePanelState | null>(null);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
 
   const openModal = useCallback(
     (component: string, props?: Record<string, unknown>, isClosable = true) => {
@@ -70,27 +71,18 @@ export function UIProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const showNotification = useCallback((input: ShowNotificationInput) => {
-    const id = `notif-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-    setNotifications((prev) => [
-      ...prev,
-      {
-        id,
-        type: input.type,
-        message: input.message,
-        duration: input.duration ?? 3000,
-      },
-    ]);
+    showAppToast(input);
   }, []);
 
-  const removeNotification = useCallback((id: string) => {
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
+  const removeNotification = useCallback((_id: string) => {
+    /* Sonner gestiona el ciclo de vida del toast */
   }, []);
 
   const value = useMemo(
     () => ({
       modals,
       sidePanel,
-      notifications,
+      notifications: [] as Notification[],
       openModal,
       closeModal,
       openSidePanel,
@@ -101,7 +93,6 @@ export function UIProvider({ children }: { children: ReactNode }) {
     [
       modals,
       sidePanel,
-      notifications,
       openModal,
       closeModal,
       openSidePanel,

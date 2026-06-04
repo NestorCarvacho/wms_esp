@@ -353,19 +353,31 @@ async def actualizar_producto(
     """
     try:
         empresa_id = usuario_autenticado.get("empresa_id")
-        
-        # Si es super admin, obtener sin filtro de empresa para verificar existencia
+
         producto_empresa_id = None if es_admin else empresa_id
-        
+        producto_ref = await service.obtener_producto(id, producto_empresa_id)
+        if not es_admin and producto_ref["empresa_id"] != empresa_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="No tiene permiso para editar productos de otras empresas",
+            )
+        empresa_id_operacion = producto_ref["empresa_id"]
+
+        campos_enviados = getattr(actualizar_dto, "model_fields_set", None) or getattr(
+            actualizar_dto, "__fields_set__", set()
+        )
+        actualizar_tipo_producto = "tipo_producto_id" in campos_enviados
+
         producto_actualizada = await service.actualizar_producto(
             producto_id=id,
-            empresa_id=empresa_id,
+            empresa_id=empresa_id_operacion,
             nombre=actualizar_dto.nombre,
             sku=actualizar_dto.sku,
             activo=bool(actualizar_dto.activo) if actualizar_dto.activo is not None else None,
             unidad_medida_id=actualizar_dto.unidad_medida_id,
             tipo_producto_id=actualizar_dto.tipo_producto_id,
-            precio_costo=actualizar_dto.precio_costo
+            actualizar_tipo_producto=actualizar_tipo_producto,
+            precio_costo=actualizar_dto.precio_costo,
         )
         
         return RespuestaAPIDTO(
@@ -375,7 +387,7 @@ async def actualizar_producto(
         ).dict()
     except ValueError as e:
         error_msg = str(e)
-        if "no encontrado" in error_msg.lower():
+        if "no encontrad" in error_msg.lower():
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=error_msg
@@ -432,8 +444,15 @@ async def eliminar_producto(
     """
     try:
         empresa_id = usuario_autenticado.get("empresa_id")
-        
-        resultado = await service.eliminar_producto(id, empresa_id)
+        producto_empresa_id = None if es_admin else empresa_id
+        producto_ref = await service.obtener_producto(id, producto_empresa_id)
+        if not es_admin and producto_ref["empresa_id"] != empresa_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="No tiene permiso para eliminar productos de otras empresas",
+            )
+
+        resultado = await service.eliminar_producto(id, producto_ref["empresa_id"])
         
         return RespuestaAPIDTO(
             exito=True,

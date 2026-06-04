@@ -1,7 +1,7 @@
 import React from 'react';
 import type { UseFormRegister, UseFormSetValue, UseFormWatch, FieldErrors, UseFormTrigger } from 'react-hook-form';
 import { LabelInput, ImageUploader } from '@/components/ui/inputs';
-import { Selector } from '@/components/ui/inputs/Selector';
+import { ComboBox } from '@/components/ui/inputs/ComboBox';
 import { Checkbox } from '@/components/ui/inputs/Checkbox';
 import { PrimaryButton } from '@/components/ui/buttons/PrimaryButton';
 import { IconScout } from '@/components/ui/images/IconScout';
@@ -50,7 +50,7 @@ export const CreateCompanyConfigForm: React.FC<CreateCompanyConfigFormProps> = (
     <FormLayout onSubmit={handleSubmit} columns={3} data-testid="create-company-config-form">
       {/* Sección 1: Empresa Padre */}
       <FormLayout.Section title="Empresa Padre">
-        <Selector
+        <ComboBox
           label="Empresa Padre (Holding)"
           required
           options={holdingCompanyOptions}

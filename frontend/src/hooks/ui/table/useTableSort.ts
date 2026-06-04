@@ -38,8 +38,11 @@ export function useTableSort<T extends Record<string, unknown>>({
     [isLoading, onSortChange],
   );
 
+  /** Sin `onSortChange`, ordenar en cliente aunque `serverSideSort` esté activo (página actual). */
+  const sortOnClient = !serverSideSort || !onSortChange;
+
   const sortedData = useMemo(() => {
-    if (serverSideSort || !sort) return data;
+    if (!sort || !sortOnClient) return data;
 
     const column = columns.find((c) => String(c.key) === sort.key);
     if (!column?.sortable) return data;
@@ -49,7 +52,7 @@ export function useTableSort<T extends Record<string, unknown>>({
       const valueB = (rowB as Record<string, unknown>)[sort.key];
       return tableValueCompare(valueA, valueB, sort.direction);
     });
-  }, [data, sort, columns, serverSideSort]);
+  }, [data, sort, columns, sortOnClient]);
 
   return { sortedData, sort, handleSort };
 }

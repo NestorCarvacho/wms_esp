@@ -1,14 +1,12 @@
-import { colors } from '@/assets/styles/colors';
-
 /**
- * Color palette for table components
+ * Paleta tablas WMS (shadcn Table + tokens Tailwind).
  */
 export const TABLE_PALETTE = {
-  border: colors.primary.auxiliar,
-  headerText: colors.grays.neutral00,
-  arrow: colors.grays.neutral66,
-  rowText: colors.grays.neutral33,
-  rowHover: colors.primary.background,
+  border: '#e2e8f0',
+  headerText: '#0f172a',
+  arrow: '#64748b',
+  rowText: '#334155',
+  rowHover: '#f1f5f9',
 } as const;
 
 /**
@@ -71,6 +69,6 @@ export const SKELETON_ROWS_COUNT = 10;
  * Skeleton loading animation colors
  */
 export const SKELETON_COLORS = {
-  box: colors.grays.neutralE5,
-  bar: colors.grays.neutralE5,
+  box: '#e2e8f0',
+  bar: '#e2e8f0',
 } as const;

@@ -1,5 +1,6 @@
 import React from 'react';
-import { colors } from '@/assets/styles/colors';
+import { colorClass, palette } from '@/assets/styles/colors';
+import { cn } from '@/lib/utils';
 
 
 export interface RadioButtonProps {
@@ -75,21 +76,21 @@ export const RadioButton: React.FC<RadioButtonProps> = ({
       <div
         className="w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all"
         style={{
-          borderColor: checked ? colors.primary.main : colors.grays.neutralCC,
-          backgroundColor: colors.grays.neutralFF,
+          borderColor: checked ? palette.brand : palette.disabled,
+          backgroundColor: palette.white,
         }}
       >
         {/* Inner filled circle when selected */}
         {checked && (
           <div 
             className="w-3 h-3 rounded-full transition-all"
-            style={{ backgroundColor: colors.primary.main }}
+            style={{ backgroundColor: palette.brand }}
           />
         )}
       </div>
 
       {/* Label */}
-      <span style={{ color: checked ? colors.primary.main : colors.grays.neutral66 }}>
+      <span className={cn(checked ? colorClass.brand : colorClass.muted)}>
         {label}
       </span>
 

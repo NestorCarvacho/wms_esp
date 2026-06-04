@@ -1,8 +1,5 @@
 import React from 'react';
-import { PrimaryButton } from './PrimaryButton';
-import { colors } from '@/assets/styles/colors';
-import { Text } from '@/components/ui/text';
-
+import { cn } from '@/lib/utils';
 
 interface NavIconProps {
   icon: React.ReactNode;
@@ -22,39 +19,25 @@ const NavIcon: React.FC<NavIconProps> = ({
   disabled = false,
 }) => (
   <div className="relative">
-    <PrimaryButton
+    <button
+      type="button"
       onClick={onClick}
-      variant="ghost"
-      size="sm"
-      className={`relative !p-2 rounded-md !min-w-0 !w-auto ${className}`}
-      customVariant={{
-        hover: {
-          backgroundColor: colors.primary.dark,
-        },
-      }}
       disabled={disabled}
+      className={cn(
+        'inline-flex items-center justify-center rounded-lg p-2 transition-colors',
+        'text-slate-200 hover:bg-slate-800 hover:text-white',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900',
+        'disabled:opacity-50 disabled:pointer-events-none',
+        className,
+      )}
     >
       {icon}
-    </PrimaryButton>
-      
+    </button>
+
     {showNotification && (
-      <div 
-        className="absolute -top-0.5 -right-0.5 w-5 h-5 rounded-full flex items-center justify-center box-border border-2"
-        style={{
-          backgroundColor: colors.feedback.alert300,
-          borderColor: colors.primary.main,
-        }}
-      >
-        {notificationCount && (
-          <Text 
-            variant="small-medium"
-            color={colors.primary.main}
-            style={{ fontSize: 9 }}
-          >
-            {notificationCount > 99 ? '99+' : notificationCount.toString()}
-          </Text>
-        )}
-      </div>
+      <span className="absolute -top-0.5 -right-0.5 flex h-5 min-w-5 items-center justify-center rounded-full border-2 border-slate-900 bg-amber-400 px-1 text-[9px] font-semibold text-slate-900">
+        {notificationCount && notificationCount > 99 ? '99+' : notificationCount}
+      </span>
     )}
   </div>
 );

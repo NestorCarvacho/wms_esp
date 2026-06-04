@@ -1,7 +1,8 @@
 import React, { useState, useCallback, useRef, useMemo } from 'react';
 import { PrimaryButton } from '@/components/ui/buttons/PrimaryButton';
 import { Text } from '@/components/ui/text/Text';
-import { colors } from '@/assets/styles/colors';
+import { colorClass, palette } from '@/assets/styles/colors';
+import { cn } from '@/lib/utils';
 import { useUI } from '@/hooks/ui';
 import {
   validateLogoFile,
@@ -241,8 +242,8 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
             finalConfig.cropShape === 'round' ? 'rounded-full' : ''
           }`}
           style={{
-            borderColor: colors.grays.neutralCC,
-            backgroundColor: colors.grays.neutralFA,
+            borderColor: palette.disabled,
+            backgroundColor: palette.surface,
             width: `${finalConfig.previewWidth}px`,
             height: `${finalConfig.previewHeight}px`,
           }}
@@ -260,7 +261,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
               <svg
                 className="mx-auto h-12 w-12"
                 fill="none"
-                stroke={colors.grays.neutral99}
+                stroke={palette.muted}
                 viewBox="0 0 24 24"
               >
                 <path
@@ -270,7 +271,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
                   d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
                 />
               </svg>
-              <Text variant="small-regular" color={colors.grays.neutral99} className="mt-2">
+              <Text variant="small-regular" className={cn(colorClass.muted, 'mt-2')}>
                 Sin imagen
               </Text>
             </div>
@@ -329,18 +330,18 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
 
           {/* Info Text */}
           <div className="flex flex-col gap-1">
-            <Text variant="small-regular" color={colors.grays.neutral66}>
+            <Text variant="small-regular" className={colorClass.muted}>
               Formatos admitidos: {finalConfig.acceptedFormats.replace(/\./g, '').toUpperCase()}
             </Text>
-            <Text variant="small-regular" color={colors.grays.neutral66}>
+            <Text variant="small-regular" className={colorClass.muted}>
               Tamaño máximo de entrada: {finalConfig.maxInputSizeMB}MB
             </Text>
             {finalConfig.enableCrop && (
               <>
-                <Text variant="small-regular" color={colors.grays.neutral66}>
+                <Text variant="small-regular" className={colorClass.muted}>
                   Tamaño máximo de salida: {finalConfig.maxOutputSizeKB}KB
                 </Text>
-                <Text variant="small-regular" color={colors.grays.neutral66}>
+                <Text variant="small-regular" className={colorClass.muted}>
                   Dimensiones: {finalConfig.outputWidth}x{finalConfig.outputHeight} píxeles (calidad{' '}
                   {finalConfig.jpegQuality * 100}%)
                 </Text>
@@ -353,12 +354,12 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
             <div
               className="p-3 rounded-lg border"
               style={{
-                backgroundColor: colors.feedback.error100,
-                borderColor: colors.feedback.error300,
+                backgroundColor: palette.errorBg,
+                borderColor: palette.errorBorder,
               }}
               data-testid={`${testId}-error-message`}
             >
-              <Text variant="small-regular" color={colors.feedback.error400}>
+              <Text variant="small-regular" className={colorClass.destructive}>
                 {imageError}
               </Text>
             </div>
@@ -369,12 +370,12 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
             <div
               className="p-3 rounded-lg border"
               style={{
-                backgroundColor: colors.feedback.success100,
-                borderColor: colors.feedback.success200,
+                backgroundColor: palette.successBg,
+                borderColor: palette.successBorder,
               }}
               data-testid={`${testId}-success-message`}
             >
-              <Text variant="small-regular" color={colors.feedback.success400}>
+              <Text variant="small-regular" className={colorClass.success}>
                 Imagen guardada correctamente
               </Text>
             </div>

@@ -2,7 +2,8 @@ import React from 'react';
 import { LabelInput } from '@/components/ui/inputs';
 import { PrimaryButton } from '@/components/ui/buttons';
 import { Text } from '@/components/ui/text';
-import { colors } from '@/assets/styles/colors';
+import { colorClass } from '@/assets/styles/colors';
+import { cn } from '@/lib/utils';
 import { IconScout } from '@/components/ui/images/IconScout';
 
 
@@ -52,15 +53,14 @@ export const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({
         <Text
           variant="body-medium"
           onClick={onBackToLogin}
-          className="cursor-pointer transition-colors hover:opacity-80"
-          color={colors.primary.main}
+          className={cn('cursor-pointer transition-colors hover:opacity-80', colorClass.brand)}
         >
           Regresar
         </Text>
       </div>
 
       <div className="text-center mt-4">
-        <Text variant="small-regular" color={colors.grays.neutral66}>
+        <Text variant="small-regular" className={colorClass.muted}>
           • No olvides revisar la carpeta spam
         </Text>
       </div>

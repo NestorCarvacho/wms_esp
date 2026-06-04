@@ -75,13 +75,18 @@ class ProductoPresentacionCRUDRepository:
         return result.scalars().first()
 
     async def obtener_por_nombre(
-        self, producto_id: int, nombre: str
+        self,
+        producto_id: int,
+        nombre: str,
+        *,
+        solo_activas: bool = True,
     ) -> ProductoPresentacion | None:
         stmt = select(ProductoPresentacion).where(
             ProductoPresentacion.producto_id == producto_id,
             ProductoPresentacion.nombre == nombre,
-            ProductoPresentacion.activo == True,
         )
+        if solo_activas:
+            stmt = stmt.where(ProductoPresentacion.activo == True)
         result = await self.session.execute(stmt)
         return result.scalars().first()
 

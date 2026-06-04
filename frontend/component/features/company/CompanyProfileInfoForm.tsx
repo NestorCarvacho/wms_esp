@@ -7,7 +7,7 @@
 import React from 'react';
 import { FormLayout } from '@/components/layout/FormLayout';
 import { LabelInput } from '@/components/ui/inputs/LabelInput';
-import { Selector } from '@/components/ui/inputs/Selector';
+import { ComboBox } from '@/components/ui/inputs/ComboBox';
 import { PrimaryButton } from '@/components/ui/buttons/PrimaryButton';
 import { formatRut } from '@/utils';
 import type { CompanyProfile } from '@/api/domains/company';
@@ -105,7 +105,7 @@ export const CompanyProfileInfoForm: React.FC<CompanyProfileInfoFormProps> = ({
           errorMessage={errors.addressNumber?.message}
           data-testid="input-company-address-number"
         />
-        <Selector
+        <ComboBox
           label="Región"
           required
           value={regionId ? String(regionId) : undefined}
@@ -123,7 +123,7 @@ export const CompanyProfileInfoForm: React.FC<CompanyProfileInfoFormProps> = ({
           supportingText={errors.regionId?.message}
           data-testid="select-company-region"
         />
-        <Selector
+        <ComboBox
           label="Comuna"
           required
           value={communeId ? String(communeId) : undefined}

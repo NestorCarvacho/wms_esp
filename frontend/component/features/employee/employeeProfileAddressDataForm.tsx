@@ -1,6 +1,6 @@
 import React from 'react';
 import { LabelInput } from '@/components/ui/inputs';
-import { Selector } from '@/components/ui/inputs/Selector';
+import { ComboBox } from '@/components/ui/inputs/ComboBox';
 import { PrimaryButton } from '@/components/ui/buttons/PrimaryButton';
 import FormLayout from '@/components/layout/FormLayout';
 import type { EmployeeProfile } from '@/api/domains/employee';
@@ -41,7 +41,7 @@ export const EmployeeProfileAddressDataForm: React.FC<AddressDataFormProps> = ({
     <FormLayout onSubmit={handleSubmit} columns={2}>
       <FormLayout.Section title="Dirección del colaborador">
         {/* Row 1: Región, Comuna */}
-        <Selector
+        <ComboBox
           label="Región"
           value={regionId ? String(regionId) : undefined}
           onChange={(value) => {
@@ -57,7 +57,7 @@ export const EmployeeProfileAddressDataForm: React.FC<AddressDataFormProps> = ({
           color={errors.regionId ? 'error' : 'default'}
           supportingText={errors.regionId?.message}
         />
-        <Selector
+        <ComboBox
           label="Comuna"
           value={communeId ? String(communeId) : undefined}
           onChange={(value) => {

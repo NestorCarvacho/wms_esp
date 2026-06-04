@@ -1,6 +1,6 @@
 import { DynamicFiltersCard, type FilterField } from '@/components/ui/cards/DynamicFiltersCard';
 import { LabelInput } from '@/components/ui/inputs/LabelInput';
-import { Selector } from '@/components/ui/inputs/Selector';
+import { ComboBox } from '@/components/ui/inputs/ComboBox';
 
 export interface CrudFilterFieldDef {
   id: string;
@@ -25,7 +25,7 @@ interface CrudDynamicFiltersCardProps {
 }
 
 /**
- * Barra de filtros CRUD usando `DynamicFiltersCard` (patrón hooks_ejemplos / ui/filters).
+ * Barra de filtros CRUD usando `DynamicFiltersCard`.
  * Colócala encima de `Table`, no dentro del slot de la tabla.
  */
 export function CrudDynamicFiltersCard({
@@ -55,7 +55,7 @@ export function CrudDynamicFiltersCard({
             disabled={field.disabled}
           />
         ) : (
-          <Selector
+          <ComboBox
             id={`filter-${field.id}`}
             label={field.label}
             options={field.options ?? []}

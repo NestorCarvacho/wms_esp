@@ -1,11 +1,15 @@
 import React from 'react';
-import { IconScout } from '@/components/ui/images/IconScout';
+import { Settings, ChevronDown } from 'lucide-react';
 import { NavButton } from '@/components/ui/buttons';
 import { MenuDropdown } from './';
 import { useMenu } from '@/api';
 import type { MenuItem as ApiMenuItem } from '@/api';
-import { colors } from '@/assets/styles/colors';
-
+import { cn } from '@/lib/utils';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from '@/components/ui/shadcn/dropdown-menu';
 
 interface NavigationBarProps {
   activeMenuItem: number | null;
@@ -18,12 +22,14 @@ interface NavigationBarProps {
   clearConfigTimer: () => void;
 }
 
+type DropdownAlign = 'start' | 'center' | 'end';
+
 interface MenuItemProps {
-  item: any;
-  isActive: boolean;
-  position: 'left' | 'right' | 'center';
-  onMouseEnter: () => void;
-  onMouseLeave: () => void;
+  item: ApiMenuItem;
+  isOpen: boolean;
+  align: DropdownAlign;
+  onOpen: () => void;
+  onClose: () => void;
   clearTimer: () => void;
   icon?: React.ReactNode;
   showDropdownIcon?: boolean;
@@ -31,30 +37,47 @@ interface MenuItemProps {
 
 const MenuItem: React.FC<MenuItemProps> = ({
   item,
-  isActive,
-  position,
-  onMouseEnter,
-  onMouseLeave,
+  isOpen,
+  align,
+  onOpen,
+  onClose,
   clearTimer,
   icon,
   showDropdownIcon = true,
 }) => (
-  <div
-    className="relative"
-    onMouseEnter={onMouseEnter}
-    onMouseLeave={onMouseLeave}
-    onClick={() => { clearTimer(); onMouseEnter(); }}
-  >
-    <NavButton icon={icon} showDropdownIcon={showDropdownIcon} isActive={isActive}>
-      {!icon ? item.title : ''}
-    </NavButton>
-
-    {isActive && (
-      <div onMouseEnter={clearTimer} onMouseLeave={onMouseLeave}>
-        <MenuDropdown item={item} position={position} />
-      </div>
-    )}
-  </div>
+  <DropdownMenu open={isOpen} modal={false}>
+    <div
+      className="relative"
+      onMouseEnter={onOpen}
+      onMouseLeave={onClose}
+    >
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          className="outline-none focus-visible:ring-2 focus-visible:ring-slate-400 rounded-lg"
+          onClick={() => {
+            clearTimer();
+            onOpen();
+          }}
+          data-testid={`nav-menu-trigger-${item.id}`}
+        >
+          <NavButton icon={icon} showDropdownIcon={showDropdownIcon} isActive={isOpen}>
+            {!icon ? item.title : ''}
+          </NavButton>
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        align={align}
+        sideOffset={8}
+        className="w-auto min-w-[420px] max-w-[90vw] p-0 border-slate-200 shadow-lg"
+        onMouseEnter={clearTimer}
+        onMouseLeave={onClose}
+        onCloseAutoFocus={(e) => e.preventDefault()}
+      >
+        <MenuDropdown item={item} />
+      </DropdownMenuContent>
+    </div>
+  </DropdownMenu>
 );
 
 const NavigationBar: React.FC<NavigationBarProps> = ({
@@ -67,68 +90,49 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
   clearMenuTimer,
   clearConfigTimer,
 }) => {
-  const rootRef = React.useRef<HTMLDivElement>(null);
-  const { mainMenu, configMenu } = (useMenu() as unknown) as {
-    mainMenu: ApiMenuItem[];
-    configMenu: ApiMenuItem | null;
-  };
+  const { mainMenu, configMenu } = useMenu();
 
-  const getDropdownPosition = (index: number): 'left' | 'right' | 'center' => {
+  const getDropdownAlign = (index: number): DropdownAlign => {
     const totalItems = mainMenu.length;
     const isEven = totalItems % 2 === 0;
     const mid = Math.ceil(totalItems / 2);
-    
     const centerItems = isEven ? [mid - 1, mid] : [mid - 1];
     if (centerItems.includes(index)) return 'center';
-    
-    return index < mid - 1 ? 'left' : 'right';
+    return index < mid - 1 ? 'start' : 'end';
   };
 
-  React.useEffect(() => {
-    if (!activeMenuItem && !isConfigMenuOpen) return;
-    const handleDocumentClick = (e: MouseEvent) => {
-      const root = rootRef.current;
-      if (root && !root.contains(e.target as Node)) {
-        if (activeMenuItem) handleMenuItemLeave();
-        if (isConfigMenuOpen) handleConfigMenuLeave();
-      }
-    };
-    document.addEventListener('mousedown', handleDocumentClick);
-    return () => document.removeEventListener('mousedown', handleDocumentClick);
-  }, [activeMenuItem, isConfigMenuOpen, handleMenuItemLeave, handleConfigMenuLeave]);
-
   return (
-    <div ref={rootRef} className="desktop-options-bar" style={{ backgroundColor: colors.primary.background }}>
+    <div className={cn('desktop-options-bar border-t border-slate-800 bg-slate-50')}>
       <div className="max-w-full px-4">
         <div className="flex items-center justify-between options-bar-height">
-          <div className="flex-1 flex justify-center space-x-2">
-            {mainMenu.map((item, idx: number) => (
+          <div className="flex-1 flex justify-center gap-1">
+            {mainMenu.map((item, idx) => (
               <MenuItem
                 key={item.id}
                 item={item}
-                isActive={activeMenuItem === item.id}
-                position={getDropdownPosition(idx)}
-                onMouseEnter={() => handleMenuItemEnter(item.id)}
-                onMouseLeave={handleMenuItemLeave}
+                isOpen={activeMenuItem === item.id}
+                align={getDropdownAlign(idx)}
+                onOpen={() => handleMenuItemEnter(item.id)}
+                onClose={handleMenuItemLeave}
                 clearTimer={clearMenuTimer}
               />
             ))}
           </div>
 
-          <div className="flex-shrink-0">
+          <div className="shrink-0">
             {configMenu && (
               <MenuItem
                 item={configMenu}
-                isActive={isConfigMenuOpen}
-                position="right"
-                onMouseEnter={handleConfigMenuEnter}
-                onMouseLeave={handleConfigMenuLeave}
+                isOpen={isConfigMenuOpen}
+                align="end"
+                onOpen={handleConfigMenuEnter}
+                onClose={handleConfigMenuLeave}
                 clearTimer={clearConfigTimer}
                 icon={
-                  <div className="flex items-center space-x-1">
-                    <IconScout name="setting" size={18} color={colors.primary.dark} />
-                    <IconScout name="angleDown" size={18} color={colors.primary.dark} />
-                  </div>
+                  <span className="inline-flex items-center gap-0.5 text-slate-700">
+                    <Settings className="h-4 w-4" />
+                    <ChevronDown className="h-4 w-4" />
+                  </span>
                 }
                 showDropdownIcon={false}
               />

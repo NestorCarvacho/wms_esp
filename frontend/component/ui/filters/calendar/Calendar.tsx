@@ -1,13 +1,13 @@
 import React, { useMemo } from 'react';
 import { formatDateToYYYYMMDD } from '@/utils';
 import { IconScout } from '@/components/ui/images/IconScout';
-import { colors, semanticColors } from '@/assets/styles/colors';
-import { Selector } from '@/components/ui/inputs/Selector';
+import { palette } from '@/assets/styles/colors';
+import { ComboBox } from '@/components/ui/inputs/ComboBox';
 import { WEEK_DAYS_SHORT, MONTHS_ES, generateYearsArray } from './calendarConstants';
 import { getMonthMatrix, addMonths, isWithinRange } from './calendarUtils';
 
 
-interface MonthYearSelectorProps {
+interface MonthYearComboBoxProps {
   month: number;
   year: number;
   onMonthChange: (month: number) => void;
@@ -19,7 +19,7 @@ interface MonthYearSelectorProps {
  * Month and Year selector component for calendar navigation
  * Exportable for independent use
  */
-export const MonthYearSelector: React.FC<MonthYearSelectorProps> = ({
+export const MonthYearSelector: React.FC<MonthYearComboBoxProps> = ({
   month,
   year,
   onMonthChange,
@@ -47,27 +47,25 @@ export const MonthYearSelector: React.FC<MonthYearSelectorProps> = ({
   return (
     <div className={`flex items-center gap-2 flex-nowrap ${className}`}>
       <div className="w-[112px] shrink-0">
-        <Selector
+        <ComboBox
           label=""
           options={monthOptions}
           value={String(month)}
           onChange={(value) => onMonthChange(Number(value as string))}
           searchable={false}
           className="!mb-0"
-          selectClassName="!py-1 !pr-6 !pl-2 !text-sm"
-          TextVariant="subheader-regular"
+          triggerClassName="!py-1 !pr-6 !pl-2 !text-sm"
         />
       </div>
       <div className="w-[84px] shrink-0">
-        <Selector
+        <ComboBox
           label=""
           options={yearOptions}
           value={String(year)}
           onChange={(value) => onYearChange(Number(value as string))}
           searchable={false}
           className="!mb-0"
-          selectClassName="!py-1 !pr-6 !pl-2 !text-sm"
-          TextVariant="subheader-regular"
+          triggerClassName="!py-1 !pr-6 !pl-2 !text-sm"
         />
       </div>
     </div>
@@ -124,7 +122,7 @@ export const Calendar: React.FC<CalendarProps> = ({
           <button
             type="button"
             className="px-2 py-1 text-sm"
-            style={{ color: colors.primary.main }}
+            style={{ color: palette.brand }}
             onClick={() => onMonthChange(addMonths(baseMonth, -1))}
             aria-label="Previous month"
           >
@@ -145,7 +143,7 @@ export const Calendar: React.FC<CalendarProps> = ({
           <button
             type="button"
             className="px-2 py-1 text-sm"
-            style={{ color: colors.primary.main }}
+            style={{ color: palette.brand }}
             onClick={() => onMonthChange(addMonths(baseMonth, 1))}
             aria-label="Next month"
           >
@@ -159,7 +157,7 @@ export const Calendar: React.FC<CalendarProps> = ({
       {/* Week days header */}
       <div
         className="grid grid-cols-7 gap-1 text-center text-xs"
-        style={{ color: semanticColors.text.light }}
+        style={{ color: palette.muted }}
       >
         {WEEK_DAYS_SHORT.map((weekDay) => (
           <div key={weekDay}>{weekDay}</div>
@@ -190,14 +188,14 @@ export const Calendar: React.FC<CalendarProps> = ({
 
           const style: React.CSSProperties = {};
           if (isDisabled) {
-            style.backgroundColor = colors.grays.neutralE5;
-            style.color = colors.grays.neutral99;
+            style.backgroundColor = palette.border;
+            style.color = palette.muted;
           } else if (isSelected) {
-            style.backgroundColor = colors.important.main;
-            style.color = colors.grays.neutralFF;
+            style.backgroundColor = palette.accent;
+            style.color = palette.white;
           } else if (isInRange) {
-            style.backgroundColor = colors.primary.background;
-            style.color = colors.primary.main;
+            style.backgroundColor = palette.brandBg;
+            style.color = palette.brand;
           }
 
           return (

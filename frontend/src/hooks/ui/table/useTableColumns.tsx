@@ -36,6 +36,7 @@ export function useTableColumns<T>({
               label: action.label,
               icon: action.icon,
               color: action.color,
+              variant: action.variant,
               disabled: action.disabled?.(row),
               onClick: () => action.onClick(row),
             }))}

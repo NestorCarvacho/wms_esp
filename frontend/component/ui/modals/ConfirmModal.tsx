@@ -4,7 +4,8 @@ import { PrimaryButton } from '@/components/ui/buttons/PrimaryButton';
 import { Text } from '@/components/ui/text/Text';
 import { Card } from '@/components/ui/cards/Card';
 import { IconScout, IconScoutName } from '@/components/ui/images/IconScout';
-import { colors } from '@/assets/styles/colors';
+import { colorClass } from '@/assets/styles/colors';
+import { cn } from '@/lib/utils';
 
 
 export type ConfirmModalVariant = 'default' | 'success' | 'alert' | 'error';
@@ -24,11 +25,14 @@ export interface ConfirmModalProps {
   isLoading?: boolean;
 }
 
-const variantColors: Record<ConfirmModalVariant, { iconColor: string; buttonVariant: 'primary' | 'success' | 'alert' | 'error' }> = {
-  default: { iconColor: colors.primary.auxiliar, buttonVariant: 'primary' },
-  success: { iconColor: colors.feedback.success300, buttonVariant: 'success' },
-  alert: { iconColor: colors.feedback.alert300, buttonVariant: 'alert' },
-  error: { iconColor: colors.feedback.error300, buttonVariant: 'error' },
+const variantConfig: Record<
+  ConfirmModalVariant,
+  { iconClass: string; buttonVariant: 'primary' | 'success' | 'alert' | 'error' }
+> = {
+  default: { iconClass: 'text-blue-400', buttonVariant: 'primary' },
+  success: { iconClass: colorClass.successIcon, buttonVariant: 'success' },
+  alert: { iconClass: colorClass.alert, buttonVariant: 'alert' },
+  error: { iconClass: colorClass.destructive, buttonVariant: 'error' },
 };
 
 export const ConfirmModal: React.FC<ConfirmModalProps> = ({
@@ -63,7 +67,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
     }
   };
 
-  const { iconColor, buttonVariant } = variantColors[variant];
+  const { iconClass, buttonVariant } = variantConfig[variant];
 
   return (
     <div onClick={(e) => e.stopPropagation()}>
@@ -79,7 +83,8 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
             <IconScout
               name={icon}
               size={32}
-              color={iconColor}
+              color="currentColor"
+              className={iconClass}
               data-testid="confirm-modal-icon"
             />
           </div>
@@ -87,8 +92,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
 
         <Text
           variant="header-6"
-          color={colors.primary.main}
-          className="text-center"
+          className={cn('text-center', colorClass.brand)}
           data-testid="confirm-modal-title"
         >
           {title}
@@ -96,19 +100,19 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
 
         {bannerIcon && bannerText && (
           <div
-            className="flex items-center gap-2 py-2 px-4"
-            style={{ backgroundColor: colors.primary.background200 }}
+            className={cn('flex items-center gap-2 py-2 px-4', colorClass.brandBgStrong)}
             data-testid="confirm-modal-banner"
           >
             <IconScout
               name={bannerIcon}
               size={24}
-              color={colors.important.intermediate}
+              color="currentColor"
+              className={colorClass.accent}
               data-testid="confirm-modal-banner-icon"
             />
             <Text
               variant="small-regular"
-              color={colors.grays.neutral33}
+              className={colorClass.body}
               data-testid="confirm-modal-banner-text"
             >
               {bannerText}
@@ -118,8 +122,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
 
         <Text
           variant="subheader-regular"
-          color={colors.grays.neutral33}
-          className=""
+          className={colorClass.body}
           data-testid="confirm-modal-body"
         >
           {bodyText}

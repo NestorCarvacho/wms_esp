@@ -6,7 +6,7 @@ import {
 } from '@/api/productoPresentaciones';
 import { listarUnidadesMedida } from '@/api/unidadesMedida';
 import { LabelInput } from '@/components/ui/inputs';
-import { Selector } from '@/components/ui/inputs/Selector';
+import { ComboBox } from '@/components/ui/inputs/ComboBox';
 import { PrimaryButton } from '@/components/ui/buttons';
 import { useUI } from '@/hooks/ui';
 import { ApiError } from '@/api/client';
@@ -39,7 +39,11 @@ export function ProductoPresentacionesPanel({ producto, onSaved }: ProductoPrese
     setLoading(true);
     try {
       const [presRes, uniRes] = await Promise.all([
-        listarProductoPresentaciones(producto.id, { pagina: 1, porPagina: 100 }),
+        listarProductoPresentaciones(producto.id, {
+          pagina: 1,
+          porPagina: 100,
+          ...(empresaId != null ? { empresaId } : {}),
+        }),
         listarUnidadesMedida({
           pagina: 1,
           porPagina: 500,
@@ -184,7 +188,7 @@ export function ProductoPresentacionesPanel({ producto, onSaved }: ProductoPrese
             onChange={setCantidad}
             required
           />
-          <Selector
+          <ComboBox
             id="pres-unidad"
             label="Unidad del contenido"
             options={unidadOptions.length ? unidadOptions : [{ label: 'Sin unidades', value: '' }]}

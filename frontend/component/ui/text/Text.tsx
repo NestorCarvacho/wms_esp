@@ -1,5 +1,6 @@
 import React from 'react';
-import { colors } from '@/assets/styles/colors';
+import { cn } from '@/lib/utils';
+import { colorClass } from '@/assets/styles/colors';
 
 
 type FontFamily = 'roboto' | 'montserrat';
@@ -39,10 +40,8 @@ const calculateLineHeight = (
   return '100%';
 };
 
-const getDefaultColor = (lineHeight: LineHeight): string => {
-  if (lineHeight === '20px') return colors.grays.neutral00;
-  return colors.grays.neutral33;
-};
+const getDefaultColorClass = (lineHeight: LineHeight): string =>
+  lineHeight === '20px' ? colorClass.emphasis : colorClass.body;
 
 const textStyles = {
   // Header styles
@@ -114,9 +113,18 @@ export const Text: React.FC<TextProps> = ({
     fontFamily: fontFamilyMap[fontFamily],
     lineHeight: calculateLineHeight(lineHeight, variant),
     margin: 0,
-    color: color || getDefaultColor(lineHeight),
+    ...(color ? { color } : {}),
     ...externalStyle,
   };
 
-  return React.createElement(Element, { className, style: styles, onClick, 'data-testid': dataTestId }, children);
+  return React.createElement(
+    Element,
+    {
+      className: cn(!color && getDefaultColorClass(lineHeight), className),
+      style: styles,
+      onClick,
+      'data-testid': dataTestId,
+    },
+    children,
+  );
 };

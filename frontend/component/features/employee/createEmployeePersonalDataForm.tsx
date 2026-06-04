@@ -1,7 +1,7 @@
 import React from 'react';
 import type { UseFormRegister, UseFormSetValue, UseFormWatch, FieldErrors, UseFormTrigger } from 'react-hook-form';
 import { LabelInput } from '@/components/ui/inputs';
-import { Selector } from '@/components/ui/inputs/Selector';
+import { ComboBox } from '@/components/ui/inputs/ComboBox';
 import { DatePicker } from '@/components/ui/filters/DatePicker';
 import { PrimaryButton } from '@/components/ui/buttons/PrimaryButton';
 import { FormLayout } from '@/components/layout';
@@ -167,7 +167,7 @@ export const CreateEmployeePersonalDataForm: React.FC<
         />
 
         {/* Row 4: Sexo, Estado civil, Estado del empleado */}
-        <Selector
+        <ComboBox
           label="Sexo"
           value={normalizeWatchValue(personalForm.watch('genderCode'))}
           onChange={(value) => personalForm.setValue('genderCode', normalizeSelectValue(value))}
@@ -177,7 +177,7 @@ export const CreateEmployeePersonalDataForm: React.FC<
           color={personalForm.errors.genderCode ? 'error' : undefined}
           supportingText={personalForm.errors.genderCode?.message}
         />
-        <Selector
+        <ComboBox
           label="Estado civil"
           value={personalForm.watch('maritalStatusId')
             ? String(personalForm.watch('maritalStatusId'))
@@ -191,7 +191,7 @@ export const CreateEmployeePersonalDataForm: React.FC<
           color={personalForm.errors.maritalStatusId ? 'error' : undefined}
           supportingText={personalForm.errors.maritalStatusId?.message}
         />
-        <Selector
+        <ComboBox
           label="Estado del empleado"
           value={normalizeSelectWithFallback(personalForm.watch('employmentStatus'), 'V')}
           onChange={(value) => personalForm.setValue('employmentStatus', normalizeSelectWithFallback(value, 'V'))}

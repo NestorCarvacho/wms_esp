@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { actualizarProducto } from '@/api/productos';
 import { listarTiposProducto } from '@/api/tiposProducto';
 import { LabelInput } from '@/components/ui/inputs';
-import { Selector } from '@/components/ui/inputs/Selector';
+import { ComboBox } from '@/components/ui/inputs/ComboBox';
 import { PrimaryButton } from '@/components/ui/buttons';
 import { useUI } from '@/hooks/ui';
 import { ApiError } from '@/api/client';
@@ -48,12 +48,17 @@ export function ProductoEditPanel({ producto, unidades, onSaved }: ProductoEditP
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    const unidadId = Number(unidadMedidaId);
+    if (!unidadMedidaId || !Number.isFinite(unidadId) || unidadId <= 0) {
+      showNotification({ type: 'error', message: 'Seleccione una unidad de medida válida' });
+      return;
+    }
     setSubmitting(true);
     try {
       await actualizarProducto(producto.id, {
         nombre: nombre.trim(),
         sku: sku.trim(),
-        unidad_medida_id: Number(unidadMedidaId),
+        unidad_medida_id: unidadId,
         tipo_producto_id: tipoProductoId ? Number(tipoProductoId) : null,
         activo: preserveActivoNumber(producto.activo),
       });
@@ -74,7 +79,7 @@ export function ProductoEditPanel({ producto, unidades, onSaved }: ProductoEditP
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <LabelInput id="edit-nombre" label="Nombre" value={nombre} onChange={setNombre} required />
       <LabelInput id="edit-sku" label="SKU" value={sku} onChange={setSku} required />
-      <Selector
+      <ComboBox
         id="edit-tipo"
         label="Tipo de producto"
         options={tipoOptions}
@@ -82,7 +87,7 @@ export function ProductoEditPanel({ producto, unidades, onSaved }: ProductoEditP
         onChange={(v) => setTipoProductoId(String(v))}
         searchable
       />
-      <Selector
+      <ComboBox
         id="edit-unidad"
         label="Unidad base de stock"
         options={unidadOptions.length ? unidadOptions : [{ label: 'Sin unidades', value: '' }]}

@@ -1,7 +1,7 @@
 import React from 'react';
 import type { UseFormRegister, UseFormSetValue, UseFormWatch, FieldErrors, UseFormTrigger } from 'react-hook-form';
 import { LabelInput } from '@/components/ui/inputs';
-import { Selector } from '@/components/ui/inputs/Selector';
+import { ComboBox } from '@/components/ui/inputs/ComboBox';
 import { PrimaryButton } from '@/components/ui/buttons/PrimaryButton';
 import { FormLayout } from '@/components/layout';
 import type { CreateCompanyInfo } from '@/schemas/company/createCompanyForm';
@@ -123,7 +123,7 @@ export const CreateCompanyInfoForm: React.FC<CreateCompanyInfoFormProps> = ({
           data-testid="company-address-number-input"
         />
 
-        <Selector
+        <ComboBox
           label="Región"
           required
           options={regionOptions}
@@ -138,7 +138,7 @@ export const CreateCompanyInfoForm: React.FC<CreateCompanyInfoFormProps> = ({
           data-testid="region-selector"
         />
 
-        <Selector
+        <ComboBox
           label="Comuna"
           required
           options={communeOptions}

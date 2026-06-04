@@ -160,6 +160,7 @@ class ProductoService:
         sku: str = None,
         unidad_medida_id: int = None,
         tipo_producto_id: int | None = None,
+        actualizar_tipo_producto: bool = False,
         precio_costo: float = None,
         activo: bool | None = None,
     ) -> Dict[str, Any]:
@@ -214,6 +215,7 @@ class ProductoService:
             unidad_medida_id,
             tipo_producto_id,
             precio_costo,
+            actualizar_tipo_producto=actualizar_tipo_producto,
         )
 
         if not producto_actualizada:

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { listarEmpresasParaFiltro } from '@/api/empresas';
 import { useAuthContext } from '@/context/AuthContext';
 import type { Empresa } from '@/types/api';
-import { empresaSelectorOption } from '@/utils/displayLabels';
+import { empresaComboBoxOption } from '@/utils/displayLabels';
 
 function resolveDefaultEmpresaFilterId(
   empresas: Empresa[],
@@ -59,7 +59,7 @@ export function useEmpresaMaestraFilter() {
     () => [
       { label: 'Todas las empresas administradas', value: '' },
       ...empresas.map((e) => {
-        const opt = empresaSelectorOption(e);
+        const opt = empresaComboBoxOption(e);
         return { label: opt.label, value: String(e.id), searchTokens: opt.searchTokens };
       }),
     ],

@@ -65,7 +65,7 @@ export interface DynamicFiltersCardProps {
  * <DynamicFiltersCard
  *   header={<RadioButtonGroup options={[...]} />}
  *   fields={[
- *     { id: 'year', type: 'selector', component: <Selector ... />, colSpan: 1 },
+ *     { id: 'year', type: 'selector', component: <ComboBox ... />, colSpan: 1 },
  *     { id: 'dateRange', type: 'dateRange', component: <DateRangePicker ... />, colSpan: 2 }
  *   ]}
  *   actions={<div><PrimaryButton>Buscar</PrimaryButton></div>}

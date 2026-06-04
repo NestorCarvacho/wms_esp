@@ -1,7 +1,7 @@
 import React from 'react';
 import { LabelInput } from '@/components/ui/inputs/LabelInput';
 import { IconScout } from '@/components/ui/images/IconScout';
-import { colors } from '@/assets/styles/colors';
+import { colorClass, palette } from '@/assets/styles/colors';
 
 
 interface DateInputProps {
@@ -37,13 +37,14 @@ export const DateInput: React.FC<DateInputProps> = ({
   disabled = false,
 }) => {
   const calendarIcon = (
-    <IconScout name="calendarAlt" color={colors.primary.dash} size={20} />
+    <IconScout name="calendarAlt" color="currentColor" className={colorClass.brandLight} size={20} />
   );
   
   const dropdownIcon = showDropdownIcon ? (
     <IconScout
       name="angleDown"
-      color={colors.important.main}
+      color="currentColor"
+      className={colorClass.accent}
       size={20}
       className={`transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
     />
@@ -66,10 +67,10 @@ export const DateInput: React.FC<DateInputProps> = ({
         onChange={() => {}}
         iconLeft={showCalendarIcon === 'left' ? calendarIcon : undefined}
         iconRight={rightIcon}
-        customFocusColor={colors.important.main}
-        customBorderColor={colors.grays.neutralE5}
-        customTextColor={colors.grays.neutral33}
-        customLabelColor={colors.grays.neutral66}
+        customFocusColor={palette.accent}
+        customBorderColor={palette.border}
+        customTextColor={palette.body}
+        customLabelColor={palette.muted}
         fullWidth
         placeholder={placeholder}
         hasError={hasError}

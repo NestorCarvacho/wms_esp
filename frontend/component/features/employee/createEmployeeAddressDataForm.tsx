@@ -1,7 +1,7 @@
 import React from 'react';
 import type { UseFormRegister, UseFormSetValue, UseFormWatch, FieldErrors, UseFormTrigger } from 'react-hook-form';
 import { LabelInput } from '@/components/ui/inputs';
-import { Selector } from '@/components/ui/inputs/Selector';
+import { ComboBox } from '@/components/ui/inputs/ComboBox';
 import { PrimaryButton } from '@/components/ui/buttons/PrimaryButton';
 import { FormLayout } from '@/components/layout';
 import type { CreateEmployeeAddressData } from '@/schemas/employee/createEmployeeForm';
@@ -42,7 +42,7 @@ export const CreateEmployeeAddressDataForm: React.FC<CreateEmployeeAddressDataFo
     <FormLayout onSubmit={handleSubmit} columns={2}>
       <FormLayout.Section title="Dirección del nuevo colaborador">
         {/* Row 1: Región, Comuna */}
-        <Selector
+        <ComboBox
           label="Región"
           value={addressForm.watch('regionId') ? String(addressForm.watch('regionId')) : undefined}
           onChange={(value) => {
@@ -58,7 +58,7 @@ export const CreateEmployeeAddressDataForm: React.FC<CreateEmployeeAddressDataFo
           color={addressForm.errors.regionId ? 'error' : undefined}
           supportingText={addressForm.errors.regionId?.message}
         />
-        <Selector
+        <ComboBox
           label="Comuna"
           value={addressForm.watch('communeId') ? String(addressForm.watch('communeId')) : undefined}
           onChange={(value) => {

@@ -3,7 +3,7 @@ import { listarBodegas } from '@/api/bodegas';
 import { listarTiposZona } from '@/api/tiposZona';
 import { crearZonaBodega } from '@/api/zonasBodega';
 import { LabelInput } from '@/components/ui/inputs';
-import { Selector } from '@/components/ui/inputs/Selector';
+import { ComboBox } from '@/components/ui/inputs/ComboBox';
 import { useUI } from '@/hooks/ui';
 import { ApiError } from '@/api/client';
 import type { Bodega, TipoZona } from '@/types/api';
@@ -109,14 +109,14 @@ export function ZonaBodegaCreatePanel({ empresaId, onSaved }: ZonaBodegaCreatePa
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      <Selector
+      <ComboBox
         id="create-bodega"
         label="Bodega"
         options={bodegaOptions}
         value={bodegaId}
         onChange={(v) => setBodegaId(String(v))}
       />
-      <Selector
+      <ComboBox
         id="create-tipo-zona"
         label="Tipo de zona"
         options={tipoOptions}

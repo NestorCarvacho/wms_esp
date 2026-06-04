@@ -1,5 +1,5 @@
 import React from 'react';
-import { colors } from '@/assets/styles/colors';
+import { cn } from '@/lib/utils';
 
 
 type DividerOrientation = 'h' | 'v';
@@ -13,20 +13,21 @@ interface DividerProps {
 
 const Divider: React.FC<DividerProps> = ({
   orientation = 'h',
-  color = colors.primary.auxiliar,
+  color,
   thickness = 1,
   className = '',
 }) => {
   const isHorizontal = orientation === 'h';
-  
+
   return (
     <div
-      className={`
-        ${isHorizontal ? 'w-full h-px' : 'w-px h-full min-h-4'}
-        ${className}
-      `}
+      className={cn(
+        isHorizontal ? 'w-full h-px' : 'w-px h-full min-h-4',
+        !color && 'bg-blue-300',
+        className,
+      )}
       style={{
-        backgroundColor: color,
+        ...(color ? { backgroundColor: color } : {}),
         [isHorizontal ? 'height' : 'width']: `${thickness}px`,
       }}
     />

@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { formatDateToYYYYMMDD } from '@/utils';
-import { semanticColors } from '@/assets/styles/colors';
 import { DateInput, Calendar, formatDateDisplay, parseDateToMonthYear } from './calendar';
 import { useCalendarPanel } from '@/hooks/ui/filters/calendar';
 
@@ -93,11 +92,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
       {open && (
         <div
           ref={panelRef}
-          className="absolute left-0 mt-2 z-50 rounded shadow-md border p-3 min-w-[280px]"
-          style={{
-            backgroundColor: semanticColors.background.primary,
-            borderColor: semanticColors.border.light,
-          }}
+          className="absolute left-0 mt-2 z-50 rounded-md border border-border bg-background p-3 min-w-[280px] shadow-md"
         >
           <Calendar
             baseMonth={baseMonth}

@@ -198,7 +198,8 @@ class ProductoCRUDRepository:
                          activo: bool= True,
                          unidad_medida_id: int = None,
                          tipo_producto_id: int | None = None,
-                         precio_costo: float = None ) -> Producto | None:
+                         precio_costo: float = None,
+                         actualizar_tipo_producto: bool = False) -> Producto | None:
         """
         Actualiza un producto existente.
         
@@ -228,7 +229,9 @@ class ProductoCRUDRepository:
                 datos_actualizar["activo"] = activo
             if unidad_medida_id is not None:
                 datos_actualizar["unidad_medida_id"] = unidad_medida_id
-            if tipo_producto_id is not None:
+            if actualizar_tipo_producto:
+                datos_actualizar["tipo_producto_id"] = tipo_producto_id
+            elif tipo_producto_id is not None:
                 datos_actualizar["tipo_producto_id"] = tipo_producto_id
             if precio_costo is not None:
                 datos_actualizar["precio_costo"] = precio_costo

@@ -1,4 +1,4 @@
-import { Selector } from '@/components/ui/inputs/Selector';
+import { ComboBox } from '@/components/ui/inputs/ComboBox';
 
 interface EmpresaCreateSelectorProps {
   show: boolean;
@@ -22,7 +22,7 @@ export function EmpresaCreateSelector({
   if (!show) return null;
 
   return (
-    <Selector
+    <ComboBox
       id={id}
       label="Empresa"
       options={

@@ -5,13 +5,13 @@ import { setStoredUser } from '@/api/auth';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { FormLayout } from '@/components/layout/FormLayout';
 import { LabelInput } from '@/components/ui/inputs';
-import { Selector } from '@/components/ui/inputs/Selector';
+import { ComboBox } from '@/components/ui/inputs/ComboBox';
 import { PrimaryButton } from '@/components/ui/buttons';
 import { Text } from '@/components/ui/text/Text';
 import { Feedback } from '@/app/Feedback';
 import { useAuthContext } from '@/context/AuthContext';
 import { ApiError } from '@/api/client';
-import { colors } from '@/assets/styles/colors';
+import { colorClass } from '@/assets/styles/colors';
 import type { PerfilUsuarioActualizar } from '@/types/api';
 
 const GENERO_OPTIONS = [
@@ -150,7 +150,7 @@ export function PerfilPage() {
       {success && <Feedback type="success" message={success} />}
 
       {loading ? (
-        <Text variant="body-regular" color={colors.grays.neutral66}>Cargando perfil…</Text>
+        <Text variant="body-regular" className={colorClass.muted}>Cargando perfil…</Text>
       ) : (
         <FormLayout onSubmit={handleSubmit} columns={2}>
           <FormLayout.Section title="Cuenta">
@@ -158,7 +158,7 @@ export function PerfilPage() {
             <LabelInput id="empresa" label="Empresa" value={empresaNombre || '—'} onChange={() => undefined} disabled />
             <LabelInput id="cargo" label="Cargo" value={cargoNombre || '—'} onChange={() => undefined} disabled />
             {isSuperAdmin && (
-              <Text variant="small-regular" color={colors.grays.neutral66}>
+              <Text variant="small-regular" className={colorClass.muted}>
                 Como super admin puedes ver tu empresa asignada. Los datos personales se guardan en el perfil.
               </Text>
             )}
@@ -176,7 +176,7 @@ export function PerfilPage() {
               value={fechaNacimiento}
               onChange={setFechaNacimiento}
             />
-            <Selector
+            <ComboBox
               id="genero"
               label="Género"
               options={[{ label: 'Seleccionar', value: '' }, ...GENERO_OPTIONS]}

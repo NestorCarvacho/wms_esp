@@ -3,7 +3,8 @@ import { LabelInput } from '@/components/ui/inputs';
 import { PrimaryButton } from '@/components/ui/buttons';
 import { Text } from '@/components/ui/text';
 import { useLogin } from '@/hooks/account/useLogin.ts';
-import { colors } from '@/assets/styles/colors';
+import { colorClass } from '@/assets/styles/colors';
+import { cn } from '@/lib/utils';
 import { IconScout } from '@/components/ui/images/IconScout';
 
 
@@ -60,16 +61,14 @@ export const LoginForm: React.FC<LoginFormProps> = ({
         <Text
           variant="body-medium"
           onClick={onForgotPassword}
-          className="cursor-pointer transition-colors hover:opacity-80"
-          color= {colors.primary.dash}
+          className={cn('cursor-pointer transition-colors hover:opacity-80', colorClass.brandLight)}
         >
           Olvidé mi contraseña
         </Text>
         <Text
           variant="subheader-medium"
           onClick={onNeedHelp}
-          className="cursor-pointer transition-colors hover:opacity-80"
-          color={colors.grays.neutral99}
+          className={cn('cursor-pointer transition-colors hover:opacity-80', colorClass.muted)}
         >
           ¿Necesitas ayuda?
         </Text>

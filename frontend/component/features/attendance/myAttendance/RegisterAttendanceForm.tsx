@@ -1,6 +1,6 @@
 import React from 'react';
 import { LabelInput } from '@/components/ui/inputs/LabelInput';
-import { Selector } from '@/components/ui/inputs/Selector';
+import { ComboBox } from '@/components/ui/inputs/ComboBox';
 import { PrimaryButton } from '@/components/ui/buttons/PrimaryButton';
 import { IconScout } from '@/components/ui/images/IconScout';
 import {
@@ -69,7 +69,7 @@ export const RegisterAttendanceForm: React.FC<RegisterAttendanceFormProps> = ({
           variant="standard"
           iconRight={<IconScout name="clockThree" size="sm" />}
         />
-        <Selector
+        <ComboBox
           label="Ubicación"
           placeholder="Selecciona la ubicación"
           options={locations}

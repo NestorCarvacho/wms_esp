@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Text } from '@/components/ui/text/Text';
-import { colors } from '@/assets/styles/colors';
+import { colorClass, palette } from '@/assets/styles/colors';
 
 
 interface Tab {
@@ -47,8 +47,7 @@ export const TabList: React.FC<TabListProps> = ({
     <div className={className}>
       <ul 
         role="tablist" 
-        className="flex justify-center mb-6"
-        style={{ borderBottom: `1px solid ${colors.grays.neutralE5}` }}
+        className="mb-6 flex justify-center border-b border-slate-200"
       >
         {tabs.map((tab) => {
           const isActive = tab.id === activeTab;
@@ -62,13 +61,13 @@ export const TabList: React.FC<TabListProps> = ({
                 style={{
                   borderBottom: `2px solid ${
                     isActive 
-                      ? colors.important.main 
+                      ? palette.accent
                       : 'transparent'
                   }`,
                 }}
                 onMouseEnter={(e) => {
                   if (!isActive) {
-                    e.currentTarget.style.borderBottomColor = colors.grays.neutralCC;
+                    e.currentTarget.style.borderBottomColor = palette.disabled;
                   }
                 }}
                 onMouseLeave={(e) => {
@@ -80,7 +79,7 @@ export const TabList: React.FC<TabListProps> = ({
               >
                 <Text
                   variant="body-regular"
-                  color={isActive ? colors.important.main : colors.primary.dash}
+                  className={isActive ? colorClass.accent : colorClass.brandLight}
                   style={{
                     fontWeight: isActive ? 500 : 400,
                     cursor: 'pointer',

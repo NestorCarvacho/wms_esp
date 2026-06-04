@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { listarEmpresasParaFiltro } from '@/api/empresas';
 import { useAuthContext } from '@/context/AuthContext';
 import type { Empresa } from '@/types/api';
-import { empresaSelectorOption } from '@/utils/displayLabels';
+import { empresaComboBoxOption } from '@/utils/displayLabels';
 
 function resolveDefaultEmpresaId(
   empresas: Empresa[],
@@ -52,7 +52,7 @@ export function useEmpresaMaestraCreateForm() {
   const empresaOptions = useMemo(
     () =>
       empresas.map((e) => {
-        const opt = empresaSelectorOption({ ...e, id: e.id });
+        const opt = empresaComboBoxOption({ ...e, id: e.id });
         return { label: opt.label, value: opt.value, searchTokens: opt.searchTokens };
       }),
     [empresas],

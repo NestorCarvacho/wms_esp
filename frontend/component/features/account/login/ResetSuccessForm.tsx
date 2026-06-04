@@ -2,7 +2,8 @@ import React from 'react';
 import { IconScout } from '@/components/ui/images/IconScout';
 import { PrimaryButton } from '@/components/ui/buttons';
 import { Text } from '@/components/ui/text';
-import { colors } from '@/assets/styles/colors';
+import { colorClass } from '@/assets/styles/colors';
+import { cn } from '@/lib/utils';
 
 
 interface ResetSuccessFormProps {
@@ -20,17 +21,17 @@ export const ResetSuccessForm: React.FC<ResetSuccessFormProps> = ({
         <IconScout 
           name="checkCircle"
           size={64}
-          color={colors.feedback.success300}
+          className={colorClass.successIcon}
         />  
       </div>
       
       <div>
-        <Text variant="subheader-regular" className="text-justify" color={colors.grays.neutral33}>
+        <Text variant="subheader-regular" className={cn('text-justify', colorClass.body)}>
           Enviamos un email a tu correo electrónico con las instrucciones 
           para recuperar tu contraseña.
         </Text>
         <div className="mt-4">
-          <Text variant="subheader-regular" className="text-center" color={colors.grays.neutral66}>
+          <Text variant="subheader-regular" className={cn('text-center', colorClass.muted)}>
             Usuario: {email}
           </Text>
         </div>
@@ -48,7 +49,7 @@ export const ResetSuccessForm: React.FC<ResetSuccessFormProps> = ({
     </div>
 
     <div className="text-center pt-4 border-t border-gray-200">
-      <Text variant="small-regular" color={colors.grays.neutral99}>
+      <Text variant="small-regular" className={colorClass.muted}>
         • No olvides revisar la carpeta spam
       </Text>
     </div>
