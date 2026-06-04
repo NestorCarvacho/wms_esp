@@ -3,6 +3,7 @@ import type { MenuItem } from '@/api/menuConfig';
 
 export function mainMenuIconName(item: MenuItem): IconScoutName {
   if (item.title === 'Inventario') return 'folderOpen';
+  if (item.title === 'Inventario operativo') return 'table';
   if (item.title === 'Administración') return 'usersAlt';
   if (item.title === 'Configuración') return 'setting';
   return 'layers';

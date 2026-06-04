@@ -8,15 +8,11 @@ interface MainLayoutProps {
 
 const MainLayout: React.FC<MainLayoutProps> = ({ children }) => (
   <div className="min-h-screen">
-    <div className="min-h-screen bg-gray-50">
-      <TopNavigation />
+    <TopNavigation />
 
-      <main className="main-content-padding">
-        <div>
-          {children || <Outlet />}
-        </div>
-      </main>
-    </div>
+    <main className="main-content-padding">
+      {children || <Outlet />}
+    </main>
   </div>
 );
 

@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.openapi.utils import get_openapi
 from app.core.config import APP_NAME, APP_VERSION, CORS_ORIGINS, DEBUG
-from app.api.v1.endpoints import auth, bodegas, productos, unidadesMedidas, usuarios, empresas, cargos, roles, perfil_usuario, permiso_cargo, permisos, rol_permiso, tipo_zona, zona_bodega, tipo_producto, producto_presentacion
+from app.api.v1.endpoints import auth, bodegas, productos, unidadesMedidas, usuarios, empresas, cargos, roles, perfil_usuario, permiso_cargo, permisos, rol_permiso, tipo_zona, zona_bodega, tipo_producto, producto_presentacion, inventario
 
 # Crear instancia de FastAPI
 app = FastAPI(
@@ -46,7 +46,7 @@ app = FastAPI(
         },
         {
             "name": "Inventario",
-            "description": "Movimientos de stock (próximamente)",
+            "description": "Stock por zona, recepciones, traslados y despachos",
         },
         {
             "name": "Órdenes",
@@ -125,8 +125,9 @@ app.include_router(zona_bodega.router)
 app.include_router(tipo_producto.router)
 app.include_router(producto_presentacion.router)
 
+app.include_router(inventario.router)
+
 # TODO: Agregar routers de:
-# - Inventario
 # - Órdenes
 # - log_auditoria;
 # - movimiento_stock;

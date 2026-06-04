@@ -28,10 +28,10 @@ type TitleVariant =
   | 'body-medium';
 
 const titleVariantClass: Record<TitleVariant, string> = {
-  'header-4': 'text-3xl font-semibold tracking-tight text-slate-900',
-  'header-5': 'text-2xl font-semibold tracking-tight text-slate-900',
-  'header-6': 'text-xl font-semibold tracking-tight text-slate-900',
-  'body-medium': 'text-base font-medium text-slate-900',
+  'header-4': 'text-3xl font-semibold tracking-tight text-foreground',
+  'header-5': 'text-2xl font-semibold tracking-tight text-foreground',
+  'header-6': 'text-xl font-semibold tracking-tight text-foreground',
+  'body-medium': 'text-base font-medium text-foreground',
 };
 
 interface BreadcrumbProps {
@@ -128,7 +128,7 @@ export const Breadcrumb: React.FC<BreadcrumbProps> = ({
             type="button"
             variant="ghost"
             size="icon"
-            className="mt-0.5 shrink-0 text-emerald-700 hover:text-emerald-800 hover:bg-emerald-50"
+            className="mt-0.5 shrink-0 text-emerald-700 hover:text-emerald-800 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:text-emerald-300 dark:hover:bg-emerald-950/50"
             onClick={() => navigate(backTo)}
             data-testid="breadcrumb-back-button"
             aria-label="Volver"

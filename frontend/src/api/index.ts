@@ -8,6 +8,7 @@ export * from '@/api/empresas';
 export * from '@/api/unidadesMedida';
 export * from '@/api/tiposProducto';
 export * from '@/api/productoPresentaciones';
+export * from '@/api/inventario';
 export * from '@/api/usuarioRoles';
 export * from '@/api/menuConfig';
 export { useAuth, useMenu } from '@/api/useAuthBridge';

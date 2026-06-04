@@ -47,7 +47,7 @@ export const TabList: React.FC<TabListProps> = ({
     <div className={className}>
       <ul 
         role="tablist" 
-        className="mb-6 flex justify-center border-b border-slate-200"
+        className="mb-6 flex justify-center border-b border-border"
       >
         {tabs.map((tab) => {
           const isActive = tab.id === activeTab;

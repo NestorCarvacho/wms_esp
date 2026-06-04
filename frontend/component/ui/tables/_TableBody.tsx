@@ -11,7 +11,7 @@ import {
   TableCell as UiTableCell,
 } from '@/components/ui/shadcn/table';
 import { cn } from '@/lib/utils';
-import { TABLE_PALETTE, ROW_BORDER_STYLE } from './Table.constants';
+import { TABLE_ROW_BORDER_CLASS } from './Table.constants';
 import { resolveCellContent, getAlignmentClasses, getColumnWidth } from './Table.utils';
 import { TableCell } from './_TableCell';
 import { ExpandedRowDetails } from './ExpandedRowDetails';
@@ -60,10 +60,10 @@ export function TableContainer<T extends Record<string, any>>({
         <UiTableHeader>
           <UiTableRow className="text-left hover:bg-transparent">
             {expandable?.showExpandColumn !== false && expandable && (
-              <UiTableHead className="w-10" style={ROW_BORDER_STYLE} />
+              <UiTableHead className={cn('w-10', TABLE_ROW_BORDER_CLASS)} />
             )}
             {selectable && (
-              <UiTableHead className="w-10" style={ROW_BORDER_STYLE}>
+              <UiTableHead className={cn('w-10', TABLE_ROW_BORDER_CLASS)}>
                 <Checkbox
                   checked={allVisibleSelected}
                   onChange={() => !disabled && onToggleSelectAll()}
@@ -103,29 +103,32 @@ export function TableContainer<T extends Record<string, any>>({
                   aria-sort={ariaSort as React.AriaAttributes['aria-sort']}
                   scope="col"
                   className={cn(
-                    'h-auto py-2 font-medium text-slate-900 select-none whitespace-nowrap',
+                    'h-auto py-2 font-medium text-foreground select-none whitespace-nowrap',
+                    TABLE_ROW_BORDER_CLASS,
                     interactiveClass,
                     alignClass,
-                    'focus:outline-none focus:ring-2',
+                    'focus:outline-none focus:ring-2 focus:ring-ring',
                   )}
                   aria-disabled={disabled || undefined}
                   style={{
-                    ...ROW_BORDER_STYLE,
                     width: column.width || `${columnWidth}px`,
                     minWidth: `${columnWidth}px`,
                     maxWidth: column.width || `${columnWidth}px`,
                   }}
                 >
                   <div className={`flex gap-1 items-center ${justifyClass}`}>
-                    <Text variant="subheader-medium" color={TABLE_PALETTE.headerText} className="truncate">
+                    <Text variant="subheader-medium" className="truncate text-foreground">
                       {column.header}
                     </Text>
                     {column.sortable && (
                       <IconScout
                         name={isActive ? (sort.direction === 'asc' ? 'arrowUp' : 'arrowDown') : 'arrowUp'}
                         size="lg"
-                        color={TABLE_PALETTE.arrow}
-                        className={cn('transition-transform', !isActive && 'opacity-40')}
+                        color="currentColor"
+                        className={cn(
+                          'text-muted-foreground transition-transform',
+                          !isActive && 'opacity-40',
+                        )}
                       />
                     )}
                   </div>
@@ -180,8 +183,11 @@ export function TableBody<T extends Record<string, any>>({
     <UiTableBody>
       {data.length === 0 && (
         <UiTableRow className="hover:bg-transparent">
-          <UiTableCell colSpan={colSpan} className="py-4 text-center" style={ROW_BORDER_STYLE}>
-            <Text variant="subheader-regular" color={TABLE_PALETTE.rowText}>
+          <UiTableCell
+            colSpan={colSpan}
+            className={cn('py-4 text-center', TABLE_ROW_BORDER_CLASS)}
+          >
+            <Text variant="subheader-regular" className="text-muted-foreground">
               {emptyMessage}
             </Text>
           </UiTableCell>
@@ -195,10 +201,7 @@ export function TableBody<T extends Record<string, any>>({
 
         return (
           <React.Fragment key={String(id)}>
-            <UiTableRow
-              className="hover:bg-[var(--row-hover)]"
-              style={ROW_BORDER_STYLE}
-            >
+            <UiTableRow className={cn('hover:bg-muted/50', TABLE_ROW_BORDER_CLASS)}>
               {expandable?.showExpandColumn !== false && expandable && (
                 <UiTableCell className="py-2">
                   {canExpand && (
@@ -214,7 +217,7 @@ export function TableBody<T extends Record<string, any>>({
                         name={isExpanded ? 'angleUp' : 'angleDown'}
                         size="lg"
                         color="currentColor"
-                        className="text-orange-600"
+                        className="text-orange-600 dark:text-orange-400"
                       />
                     </button>
                   )}
@@ -244,12 +247,12 @@ export function TableBody<T extends Record<string, any>>({
                   <UiTableCell
                     key={String(column.key)}
                     className={cn(
-                      'py-2',
+                      'py-2 text-foreground',
+                      TABLE_ROW_BORDER_CLASS,
                       bodyAlignClass,
                       strategy === 'truncate' && 'max-w-0 overflow-hidden',
                     )}
                     style={{
-                      ...ROW_BORDER_STYLE,
                       width: column.width || `${columnWidth}px`,
                       minWidth: `${columnWidth}px`,
                       maxWidth: column.width || `${columnWidth}px`,
@@ -264,7 +267,7 @@ export function TableBody<T extends Record<string, any>>({
             </UiTableRow>
             {showExpandable && isExpanded && (
               <UiTableRow className="hover:bg-transparent">
-                <UiTableCell colSpan={colSpan} className="py-0" style={ROW_BORDER_STYLE}>
+                <UiTableCell colSpan={colSpan} className={cn('py-0', TABLE_ROW_BORDER_CLASS)}>
                   <div className="pl-24">
                     <ExpandedRowDetails fields={expandable.getExpandedFields(row)} />
                   </div>

@@ -41,14 +41,16 @@ export const TableCell: React.FC<TableCellProps> = ({
     <div
       ref={ref}
       data-cell-text
-      className={`block w-full min-w-0 overflow-hidden text-ellipsis whitespace-nowrap ${textAlignClass}`}
+      className={`block w-full min-w-0 overflow-hidden text-ellipsis whitespace-nowrap text-foreground ${textAlignClass}`}
     >
       {children}
     </div>
   );
 
   if (strategy !== 'truncate') {
-    return <div className="w-full min-w-0 whitespace-normal break-words">{children}</div>;
+    return (
+      <div className="w-full min-w-0 whitespace-normal break-words text-foreground">{children}</div>
+    );
   }
 
   const showTooltip = measured && isTruncated && tooltipText.length > 0;

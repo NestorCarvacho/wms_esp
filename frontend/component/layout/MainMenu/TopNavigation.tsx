@@ -32,7 +32,8 @@ const TopNavigation: React.FC = () => {
     <header
       className={cn(
         'fixed top-0 left-0 right-0 z-50',
-        'bg-slate-900 text-slate-100 shadow-md border-b border-slate-800',
+        'bg-white text-slate-900 shadow-md border-b border-slate-200',
+        'dark:bg-slate-900 dark:text-slate-100 dark:border-slate-800',
       )}
       data-testid="top-navigation"
     >
@@ -68,7 +69,7 @@ const TopNavigation: React.FC = () => {
 
       {!isMobileMenuOpen && (activeMenuItem || isConfigMenuOpen) && (
         <div
-          className="fixed inset-x-0 bottom-0 bg-slate-900/20 backdrop-blur-[1px] z-[35]"
+          className="fixed inset-x-0 bottom-0 bg-slate-900/10 dark:bg-slate-900/20 backdrop-blur-[1px] z-[35]"
           style={{ top: 'var(--total-nav-height)' }}
           data-testid="mega-menu-content-overlay"
           aria-hidden

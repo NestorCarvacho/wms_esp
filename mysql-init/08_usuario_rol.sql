@@ -50,7 +50,10 @@ SELECT r.id, p.id, 1
 FROM rol r
 INNER JOIN permiso p ON p.empresa_id = r.empresa_id
 WHERE r.empresa_id = @empresa_id AND r.nombre = 'Recepción'
-  AND p.codigo IN ('bodegas.leer', 'zonas_bodega.leer', 'tipos_zona.leer');
+  AND p.codigo IN (
+    'bodegas.leer', 'zonas_bodega.leer', 'tipos_zona.leer',
+    'productos.leer', 'inventario.leer', 'inventario.recepcionar', 'inventario.configurar'
+  );
 
 -- Despacho: bodegas y zonas
 INSERT IGNORE INTO rol_permiso (rol_id, permiso_id, activo)
@@ -58,7 +61,10 @@ SELECT r.id, p.id, 1
 FROM rol r
 INNER JOIN permiso p ON p.empresa_id = r.empresa_id
 WHERE r.empresa_id = @empresa_id AND r.nombre = 'Despacho'
-  AND p.codigo IN ('bodegas.leer', 'zonas_bodega.leer', 'tipos_zona.leer');
+  AND p.codigo IN (
+    'bodegas.leer', 'zonas_bodega.leer', 'tipos_zona.leer',
+    'productos.leer', 'inventario.leer', 'inventario.despachar'
+  );
 
 -- Consulta Inventario: solo lectura catálogo
 INSERT IGNORE INTO rol_permiso (rol_id, permiso_id, activo)
@@ -68,7 +74,8 @@ INNER JOIN permiso p ON p.empresa_id = r.empresa_id
 WHERE r.empresa_id = @empresa_id AND r.nombre = 'Consulta Inventario'
   AND p.codigo IN (
     'productos.leer', 'unidades_medida.leer', 'tipos_producto.leer',
-    'producto_presentacion.leer', 'bodegas.leer', 'tipos_zona.leer', 'zonas_bodega.leer'
+    'producto_presentacion.leer', 'bodegas.leer', 'tipos_zona.leer', 'zonas_bodega.leer',
+    'inventario.leer'
   );
 
 -- Inventario Completo: CRUD catálogo (sin administración)
@@ -84,7 +91,9 @@ WHERE r.empresa_id = @empresa_id AND r.nombre = 'Inventario Completo'
     'producto_presentacion.leer', 'producto_presentacion.crear', 'producto_presentacion.editar', 'producto_presentacion.eliminar',
     'bodegas.leer', 'bodegas.crear', 'bodegas.editar', 'bodegas.eliminar',
     'tipos_zona.leer', 'tipos_zona.crear', 'tipos_zona.editar', 'tipos_zona.eliminar',
-    'zonas_bodega.leer', 'zonas_bodega.crear', 'zonas_bodega.editar', 'zonas_bodega.eliminar'
+    'zonas_bodega.leer', 'zonas_bodega.crear', 'zonas_bodega.editar', 'zonas_bodega.eliminar',
+    'inventario.leer', 'inventario.recepcionar', 'inventario.trasladar',
+    'inventario.despachar', 'inventario.configurar'
   );
 
 -- Vincular permisos de tipos_producto al rol Administrador

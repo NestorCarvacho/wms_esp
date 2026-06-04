@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Text } from '@/components/ui/text/Text';
-import { TABLE_PALETTE, PAGINATION_CONFIG, MIN_TABLE_WIDTH, CHECKBOX_COLUMN_WIDTH, COLUMN_PADDING, DEFAULT_COLUMN_WIDTH, ACTIONS_COLUMN_WIDTH } from './Table.constants';
+import { PAGINATION_CONFIG, MIN_TABLE_WIDTH, CHECKBOX_COLUMN_WIDTH, COLUMN_PADDING, DEFAULT_COLUMN_WIDTH, ACTIONS_COLUMN_WIDTH } from './Table.constants';
 import type { TableColumn, PageToken, PaginationWindowArgs, AlignmentClasses, ColumnAlign } from './Table.types';
 
 // Re-export for convenience
@@ -57,7 +57,7 @@ export function resolveCellContent(rawValue: any): React.ReactNode {
   // Nullish / empty string -> empty span maintaining line height
   if (rawValue === null || rawValue === undefined || rawValue === '') {
     return (
-      <Text variant="subheader-regular" color={TABLE_PALETTE.rowText} as="span">
+      <Text variant="subheader-regular" className="text-foreground" as="span">
         {''}
       </Text>
     );
@@ -66,7 +66,7 @@ export function resolveCellContent(rawValue: any): React.ReactNode {
   // Primitive scalars
   if (type === 'string' || type === 'number' || type === 'boolean' || type === 'bigint') {
     return (
-      <Text variant="subheader-regular" color={TABLE_PALETTE.rowText} as="span">
+      <Text variant="subheader-regular" className="text-foreground" as="span">
         {String(rawValue)}
       </Text>
     );
@@ -75,7 +75,7 @@ export function resolveCellContent(rawValue: any): React.ReactNode {
   // Date objects
   if (rawValue instanceof Date) {
     return (
-      <Text variant="subheader-regular" color={TABLE_PALETTE.rowText} as="span">
+      <Text variant="subheader-regular" className="text-foreground" as="span">
         {rawValue.toString()}
       </Text>
     );
@@ -86,13 +86,13 @@ export function resolveCellContent(rawValue: any): React.ReactNode {
     try {
       const serialized = String(rawValue);
       return (
-        <Text variant="subheader-regular" color={TABLE_PALETTE.rowText} as="span">
+        <Text variant="subheader-regular" className="text-foreground" as="span">
           {serialized}
         </Text>
       );
     } catch {
       return (
-        <Text variant="subheader-regular" color={TABLE_PALETTE.rowText} as="span">
+        <Text variant="subheader-regular" className="text-foreground" as="span">
           {''}
         </Text>
       );
@@ -101,7 +101,7 @@ export function resolveCellContent(rawValue: any): React.ReactNode {
 
   // Generic fallback (symbol / function etc.) – stringify
   return (
-    <Text variant="subheader-regular" color={TABLE_PALETTE.rowText} as="span">
+    <Text variant="subheader-regular" className="text-foreground" as="span">
       {String(rawValue)}
     </Text>
   );

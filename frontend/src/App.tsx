@@ -2,6 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import type { ReactNode } from 'react';
 
 import { AuthProvider } from '@/context/AuthContext';
+import { ThemeProvider } from '@/context/ThemeContext';
 import { UIProvider } from '@/context/UIContext';
 import { registerCrudPanels } from './components/crud/registerCrudPanels';
 
@@ -21,6 +22,7 @@ import { BodegasPage } from '@/pages/BodegasPage';
 import { TiposZonaPage } from '@/pages/TiposZonaPage';
 import { TiposProductoPage } from '@/pages/TiposProductoPage';
 import { ZonasBodegaPage } from '@/pages/ZonasBodegaPage';
+import { InventarioIndexRedirect, InventarioPage } from '@/pages/InventarioPage';
 
 import { UsuariosPage } from '@/pages/UsuariosPage';
 
@@ -39,17 +41,15 @@ import { TooltipProvider } from '@/components/ui/shadcn/tooltip';
 
 registerCrudPanels();
 
-function guarded(path: keyof typeof ROUTE_PERMISSIONS, element: ReactNode) {
+function guarded(path: string, element: ReactNode) {
   const permission = ROUTE_PERMISSIONS[path];
-  return (
-    <PermissionRoute permission={permission}>
-      {element}
-    </PermissionRoute>
-  );
+  if (!permission) return element;
+  return <PermissionRoute permission={permission}>{element}</PermissionRoute>;
 }
 
 export default function App() {
   return (
+    <ThemeProvider>
     <AuthProvider>
       <UIProvider>
         <TooltipProvider delayDuration={200} skipDelayDuration={0}>
@@ -75,6 +75,16 @@ export default function App() {
             <Route path="bodegas" element={guarded('/bodegas', <BodegasPage />)} />
             <Route path="tipos-zona" element={guarded('/tipos-zona', <TiposZonaPage />)} />
             <Route path="zonas-bodega" element={guarded('/zonas-bodega', <ZonasBodegaPage />)} />
+            <Route path="inventario" element={<InventarioIndexRedirect />} />
+            <Route path="inventario/stock" element={guarded('/inventario/stock', <InventarioPage vista="stock" />)} />
+            <Route path="inventario/movimientos" element={guarded('/inventario/movimientos', <InventarioPage vista="movimientos" />)} />
+            <Route path="inventario/recepcion" element={guarded('/inventario/recepcion', <InventarioPage vista="recepcion" />)} />
+            <Route path="inventario/traslado" element={guarded('/inventario/traslado', <InventarioPage vista="traslado" />)} />
+            <Route path="inventario/despacho" element={guarded('/inventario/despacho', <InventarioPage vista="despacho" />)} />
+            <Route
+              path="inventario/configuracion"
+              element={guarded('/inventario/configuracion', <InventarioPage vista="configuracion" />)}
+            />
 
             <Route path="usuarios" element={guarded('/usuarios', <UsuariosPage />)} />
 
@@ -103,5 +113,6 @@ export default function App() {
         </TooltipProvider>
       </UIProvider>
     </AuthProvider>
+    </ThemeProvider>
   );
 }

@@ -1,5 +1,6 @@
 // Componentes
 export { default as SearchBar } from './SearchBar';
+export { default as ThemeToggle } from './ThemeToggle';
 export { default as UserDropdown } from './UserDropdown';
 export { default as MenuDropdown } from './MenuDropdown';
 export { default as ToolsBar } from './ToolsBar';

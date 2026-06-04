@@ -53,6 +53,15 @@ RULES: list[tuple[str, list[tuple[str, str]]]] = [
         ("actualizar_tipo_producto", "tipos_producto.editar"),
         ("eliminar_tipo_producto", "tipos_producto.eliminar"),
     ]),
+    ("inventario.py", [
+        ("listar_stock", "inventario.leer"),
+        ("listar_movimientos", "inventario.leer"),
+        ("recepcionar", "inventario.recepcionar"),
+        ("trasladar", "inventario.trasladar"),
+        ("despachar", "inventario.despachar"),
+        ("obtener_config_bodega", "inventario.leer"),
+        ("actualizar_config_bodega", "inventario.configurar"),
+    ]),
     ("producto_presentacion.py", [
         ("listar_presentaciones", "producto_presentacion.leer"),
         ("crear_presentacion", "producto_presentacion.crear"),

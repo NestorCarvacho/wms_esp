@@ -69,7 +69,7 @@ const MenuItem: React.FC<MenuItemProps> = ({
       <DropdownMenuContent
         align={align}
         sideOffset={8}
-        className="w-auto min-w-[420px] max-w-[90vw] p-0 border-slate-200 shadow-lg"
+        className="w-auto min-w-[420px] max-w-[90vw] p-0 border-border shadow-lg"
         onMouseEnter={clearTimer}
         onMouseLeave={onClose}
         onCloseAutoFocus={(e) => e.preventDefault()}
@@ -102,7 +102,12 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
   };
 
   return (
-    <div className={cn('desktop-options-bar border-t border-slate-800 bg-slate-50')}>
+    <div
+      className={cn(
+        'desktop-options-bar border-t border-slate-200 bg-slate-50',
+        'dark:border-slate-800 dark:bg-slate-800/50',
+      )}
+    >
       <div className="max-w-full px-4">
         <div className="flex items-center justify-between options-bar-height">
           <div className="flex-1 flex justify-center gap-1">
@@ -129,7 +134,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
                 onClose={handleConfigMenuLeave}
                 clearTimer={clearConfigTimer}
                 icon={
-                  <span className="inline-flex items-center gap-0.5 text-slate-700">
+                  <span className="inline-flex items-center gap-0.5 text-slate-700 dark:text-slate-200">
                     <Settings className="h-4 w-4" />
                     <ChevronDown className="h-4 w-4" />
                   </span>

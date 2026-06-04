@@ -13,8 +13,8 @@ import { useCrudEmpresaFilterCard } from '@/crud/useCrudEmpresaFilterCard';
 import { usePermissions } from '@/hooks/usePermissions';
 import type { Permiso, Rol } from '@/types/api';
 import {
-  ACCION_LABELS,
   accionesEnCatalogo,
+  labelAccion,
   agruparPermisosPorModulo,
   celdaPorAccion,
 } from '@/utils/permisoMatrix';
@@ -204,8 +204,8 @@ export function AsignarPermisosPage() {
           : 'Seleccione un rol'
       }
     >
-      <Card elevation={1} padding="12px 16px" className="mb-4 bg-neutral-50">
-        <Text variant="body-medium" color="#444">
+      <Card elevation={1} padding="12px 16px" className="mb-4 bg-muted/40">
+        <Text variant="body-medium" className="text-foreground">
           Los <strong>permisos se asignan al rol</strong>, no al cargo. El cargo es solo el puesto
           organizacional. Para dar acceso a una persona, edítela en{' '}
           <strong>Usuarios</strong> y asígnele uno o más roles.
@@ -226,28 +226,28 @@ export function AsignarPermisosPage() {
       />
 
       {!rolId && !loadingCatalogo && (
-        <Text variant="body-medium" color="#666">
+        <Text variant="body-medium" className="text-muted-foreground">
           Elija empresa y rol para ver la matriz de permisos por página y acción.
         </Text>
       )}
 
       {rolId && (
         <>
-          <div className="overflow-x-auto border rounded-lg mb-4">
-            <table className="w-full text-sm border-collapse min-w-[640px]">
+          <div className="overflow-x-auto border border-border rounded-lg mb-4 bg-card">
+            <table className="w-full text-sm border-collapse min-w-[640px] text-foreground">
               <thead>
-                <tr className="bg-neutral-100 border-b">
-                  <th className="text-left p-3 font-medium sticky left-0 bg-neutral-100 z-10">
+                <tr className="bg-muted/60 border-b border-border">
+                  <th className="text-left p-3 font-medium text-foreground sticky left-0 bg-muted/60 z-10">
                     Página / módulo
                   </th>
                   {columnas.map((accion) => (
                     <th key={accion} className="p-3 font-medium text-center whitespace-nowrap">
                       <div className="flex flex-col items-center gap-1">
-                        <span>{ACCION_LABELS[accion] ?? accion}</span>
+                        <span>{labelAccion(accion)}</span>
                         {puedeEditar && (
                           <button
                             type="button"
-                            className="text-xs text-primary-600 hover:underline"
+                            className="text-xs text-blue-600 hover:underline dark:text-blue-400"
                             onClick={() => toggleColumna(accion, true)}
                           >
                             Todos
@@ -264,15 +264,17 @@ export function AsignarPermisosPage() {
               <tbody>
                 {loadingRol && (
                   <tr>
-                    <td colSpan={columnas.length + 2} className="p-4 text-center text-neutral-500">
+                    <td colSpan={columnas.length + 2} className="p-4 text-center text-muted-foreground">
                       Cargando permisos del rol…
                     </td>
                   </tr>
                 )}
                 {!loadingRol &&
                   filas.map((fila) => (
-                    <tr key={fila.modulo} className="border-b hover:bg-neutral-50">
-                      <td className="p-3 font-medium sticky left-0 bg-white z-10">{fila.label}</td>
+                    <tr key={fila.modulo} className="border-b border-border hover:bg-muted/40">
+                      <td className="p-3 font-medium text-foreground sticky left-0 bg-card z-10">
+                        {fila.label}
+                      </td>
                       {columnas.map((accion) => {
                         const celda = celdaPorAccion(fila, accion);
                         return (
@@ -287,7 +289,7 @@ export function AsignarPermisosPage() {
                                 title={celda.codigo}
                               />
                             ) : (
-                              <span className="text-neutral-300">—</span>
+                              <span className="text-muted-foreground/50">—</span>
                             )}
                           </td>
                         );
@@ -296,14 +298,14 @@ export function AsignarPermisosPage() {
                         <td className="p-3 text-center">
                           <button
                             type="button"
-                            className="text-xs text-primary-600 hover:underline mr-2"
+                            className="text-xs text-blue-600 hover:underline dark:text-blue-400 mr-2"
                             onClick={() => toggleFila(fila.modulo, true)}
                           >
                             Todo
                           </button>
                           <button
                             type="button"
-                            className="text-xs text-neutral-500 hover:underline"
+                            className="text-xs text-muted-foreground hover:underline"
                             onClick={() => toggleFila(fila.modulo, false)}
                           >
                             Ninguno

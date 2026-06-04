@@ -67,21 +67,31 @@ const SearchBar: React.FC<SearchBarProps> = ({
               }
             }}
             className={cn(
-              'h-9 w-full rounded-lg border-0 bg-slate-800/80 pl-10 pr-3 text-sm text-white',
-              'placeholder:text-slate-400 focus:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-500',
+              'h-9 w-full rounded-lg border pl-10 pr-3 text-sm',
+              'border-slate-200 bg-slate-100 text-slate-900 placeholder:text-slate-500',
+              'focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-400',
+              'dark:border-0 dark:bg-slate-800/80 dark:text-white dark:placeholder:text-slate-400',
+              'dark:focus:bg-slate-800 dark:focus:ring-slate-500',
             )}
             data-testid="desktop-selector"
           />
           {open && filtered.length > 0 && (
             <ul
-              className="absolute left-0 right-0 top-full z-50 mt-1 max-h-64 overflow-auto rounded-lg border border-slate-700 bg-slate-800 py-1 shadow-lg"
+              className={cn(
+                'absolute left-0 right-0 top-full z-50 mt-1 max-h-64 overflow-auto rounded-lg border py-1 shadow-lg',
+                'border-slate-200 bg-white',
+                'dark:border-slate-700 dark:bg-slate-800',
+              )}
               role="listbox"
             >
               {filtered.map((opt) => (
                 <li key={opt.value}>
                   <button
                     type="button"
-                    className="w-full px-3 py-2 text-left text-sm text-slate-200 hover:bg-slate-700"
+                    className={cn(
+                      'w-full px-3 py-2 text-left text-sm',
+                      'text-slate-800 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-700',
+                    )}
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={() => handleSelect(opt.value)}
                   >
@@ -119,18 +129,29 @@ const SearchBar: React.FC<SearchBarProps> = ({
           }
         }}
         className={cn(
-          'h-9 w-full rounded-lg border border-slate-700 bg-slate-800/50 pl-10 pr-3 text-sm text-white',
-          'placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-600',
+          'h-9 w-full rounded-lg border pl-10 pr-3 text-sm',
+          'border-slate-200 bg-slate-100 text-slate-900 placeholder:text-slate-500',
+          'focus:outline-none focus:ring-2 focus:ring-slate-400',
+          'dark:border-slate-700 dark:bg-slate-800/50 dark:text-white dark:placeholder:text-slate-500',
+          'dark:focus:ring-slate-600',
         )}
         data-testid="sidebar-selector"
       />
       {open && filtered.length > 0 && (
-        <ul className="absolute left-0 right-0 top-full z-50 mt-1 max-h-48 overflow-auto rounded-lg border border-slate-700 bg-slate-800 py-1 shadow-lg">
+        <ul
+          className={cn(
+            'absolute left-0 right-0 top-full z-50 mt-1 max-h-48 overflow-auto rounded-lg border py-1 shadow-lg',
+            'border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800',
+          )}
+        >
           {filtered.map((opt) => (
             <li key={opt.value}>
               <button
                 type="button"
-                className="w-full px-3 py-2 text-left text-sm text-slate-200 hover:bg-slate-700"
+                className={cn(
+                  'w-full px-3 py-2 text-left text-sm',
+                  'text-slate-800 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-700',
+                )}
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => handleSelect(opt.value)}
               >

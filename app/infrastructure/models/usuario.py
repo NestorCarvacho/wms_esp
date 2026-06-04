@@ -281,3 +281,55 @@ class UnidadMedida(Base):
 
     def __repr__(self):
         return f"<UnidadMedida(id={self.id}, nombre='{self.nombre}', empresa_id={self.empresa_id}, codigo='{self.codigo}')>"
+
+
+class StockZona(Base):
+    """Cantidad de producto en una zona (ubicación física)."""
+    __tablename__ = "stock_zona"
+
+    id = Column(BigInteger, primary_key=True, index=True)
+    zona_bodega_id = Column(BigInteger, ForeignKey("zona_bodega.id"), nullable=False, index=True)
+    producto_id = Column(BigInteger, ForeignKey("producto.id"), nullable=False, index=True)
+    cantidad = Column(Numeric(18, 6), nullable=False, default=0)
+    actualizado_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    zona_bodega = relationship("ZonaBodega")
+    producto = relationship("Producto")
+
+
+class MovimientoInventario(Base):
+    """Historial de recepciones, traslados y despachos."""
+    __tablename__ = "movimiento_inventario"
+
+    id = Column(BigInteger, primary_key=True, index=True)
+    empresa_id = Column(BigInteger, ForeignKey("empresa.id"), nullable=False, index=True)
+    usuario_id = Column(BigInteger, ForeignKey("usuario.id"), nullable=False)
+    tipo = Column(String(30), nullable=False)
+    producto_id = Column(BigInteger, ForeignKey("producto.id"), nullable=False)
+    cantidad = Column(Numeric(18, 6), nullable=False)
+    presentacion_id = Column(BigInteger, ForeignKey("producto_presentacion.id"), nullable=True)
+    venta_por_presentacion = Column(Boolean, default=False)
+    zona_origen_id = Column(BigInteger, ForeignKey("zona_bodega.id"), nullable=True)
+    zona_destino_id = Column(BigInteger, ForeignKey("zona_bodega.id"), nullable=True)
+    documento_tipo = Column(String(50), nullable=True)
+    documento_folio = Column(String(100), nullable=True)
+    observaciones = Column(Text, nullable=True)
+    creado_at = Column(DateTime, default=datetime.utcnow)
+    activo = Column(Boolean, default=True)
+
+    usuario = relationship("Usuario")
+    producto = relationship("Producto")
+    zona_origen = relationship("ZonaBodega", foreign_keys=[zona_origen_id])
+    zona_destino = relationship("ZonaBodega", foreign_keys=[zona_destino_id])
+
+
+class BodegaConfig(Base):
+    """Parámetros operativos de bodega (zona de recepción por defecto)."""
+    __tablename__ = "bodega_config"
+
+    bodega_id = Column(BigInteger, ForeignKey("bodega.id"), primary_key=True)
+    zona_recepcion_default_id = Column(BigInteger, ForeignKey("zona_bodega.id"), nullable=True)
+    actualizado_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    bodega = relationship("Bodega")
+    zona_recepcion = relationship("ZonaBodega")

@@ -22,7 +22,7 @@ const SubItemHeader: React.FC<SubItemHeaderProps> = ({ subItem }) => {
   return (
     <div className="grid grid-cols-[20px_1fr] gap-x-2 mb-3">
       <MenuIcon name={iconToUse} size={16} className="text-slate-500" />
-      <h3 className="text-sm font-semibold text-slate-900">{subItem.title}</h3>
+      <h3 className="text-sm font-semibold text-foreground">{subItem.title}</h3>
     </div>
   );
 };
@@ -43,8 +43,8 @@ const MenuLink: React.FC<MenuLinkProps> = ({ node }) => {
     <Link
       to={normalizeUrl(node.url)}
       className={cn(
-        'block py-1.5 text-sm text-slate-600 transition-colors',
-        'hover:text-slate-900 focus-visible:outline-none focus-visible:text-emerald-700',
+        'block py-1.5 text-sm text-muted-foreground transition-colors',
+        'hover:text-foreground focus-visible:outline-none focus-visible:text-emerald-600 dark:focus-visible:text-emerald-400',
       )}
       data-testid="menu-link-menudropdown"
     >

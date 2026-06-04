@@ -469,3 +469,77 @@ export interface ZonaBodegaActualizar {
   nombre?: string | null;
   activo?: number;
 }
+
+export interface StockZonaItem {
+  zona_bodega_id: number;
+  zona_nombre: string;
+  bodega_id: number;
+  bodega_nombre?: string | null;
+  tipo_zona_nombre?: string | null;
+  producto_id: number;
+  producto_sku: string;
+  producto_nombre: string;
+  unidad_medida_nombre?: string | null;
+  cantidad: number;
+}
+
+export interface PaginatedStockZona {
+  total: number;
+  pagina: number;
+  por_pagina: number;
+  stock: StockZonaItem[];
+}
+
+export interface MovimientoInventarioItem {
+  id: number;
+  tipo: string;
+  producto_id: number;
+  producto_sku?: string | null;
+  producto_nombre?: string | null;
+  cantidad: number;
+  zona_origen_id?: number | null;
+  zona_origen_nombre?: string | null;
+  zona_destino_id?: number | null;
+  zona_destino_nombre?: string | null;
+  documento_tipo?: string | null;
+  documento_folio?: string | null;
+  observaciones?: string | null;
+  usuario_email?: string | null;
+  creado_at?: string | null;
+}
+
+export interface PaginatedMovimientosInventario {
+  total: number;
+  pagina: number;
+  por_pagina: number;
+  movimientos: MovimientoInventarioItem[];
+}
+
+export interface InventarioOperacionPayload {
+  producto_id: number;
+  cantidad: number;
+  zona_origen_id: number;
+  zona_destino_id: number;
+  presentacion_id?: number | null;
+  venta_por_presentacion?: boolean;
+  documento_tipo?: string | null;
+  documento_folio?: string | null;
+  observaciones?: string | null;
+}
+
+export interface RecepcionPayload {
+  bodega_id: number;
+  producto_id: number;
+  cantidad: number;
+  zona_destino_id?: number | null;
+  presentacion_id?: number | null;
+  venta_por_presentacion?: boolean;
+  documento_tipo?: string | null;
+  documento_folio?: string | null;
+  observaciones?: string | null;
+}
+
+export interface BodegaConfigInventario {
+  bodega_id: number;
+  zona_recepcion_default_id?: number | null;
+}

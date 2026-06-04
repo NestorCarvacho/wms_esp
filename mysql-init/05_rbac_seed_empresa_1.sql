@@ -48,7 +48,12 @@ INSERT INTO permiso (empresa_id, codigo, descripcion, activo) VALUES
 (@empresa_id, 'zonas_bodega.leer',       'Ver zonas de bodega', 1),
 (@empresa_id, 'zonas_bodega.crear',      'Crear zonas de bodega', 1),
 (@empresa_id, 'zonas_bodega.editar',     'Editar zonas de bodega', 1),
-(@empresa_id, 'zonas_bodega.eliminar',   'Eliminar zonas de bodega', 1)
+(@empresa_id, 'zonas_bodega.eliminar',   'Eliminar zonas de bodega', 1),
+(@empresa_id, 'inventario.leer',         'Ver stock y movimientos de inventario', 1),
+(@empresa_id, 'inventario.recepcionar',  'Registrar recepciones de mercancía', 1),
+(@empresa_id, 'inventario.trasladar',    'Trasladar stock entre ubicaciones', 1),
+(@empresa_id, 'inventario.despachar',    'Registrar despachos de mercancía', 1),
+(@empresa_id, 'inventario.configurar',   'Configurar zona de recepción por bodega', 1)
 ON DUPLICATE KEY UPDATE
   descripcion = VALUES(descripcion),
   activo = 1;

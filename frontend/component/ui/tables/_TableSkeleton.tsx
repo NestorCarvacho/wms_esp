@@ -1,6 +1,7 @@
-import { ROW_BORDER_STYLE, SKELETON_ROWS_COUNT, SKELETON_COLORS } from './Table.constants';
+import { TABLE_ROW_BORDER_CLASS, SKELETON_ROWS_COUNT } from './Table.constants';
 import { getColumnWidth } from './Table.utils';
 import type { TableColumn } from './Table.types';
+import { cn } from '@/lib/utils';
 
 
 export interface TableSkeletonProps<T> {
@@ -21,13 +22,10 @@ export function TableSkeleton<T extends Record<string, any>>({
   return (
     <tbody data-testid="table-skeleton-body">
       {Array.from({ length: SKELETON_ROWS_COUNT }).map((_, rowIndex) => (
-        <tr key={`sk-${rowIndex}`} className="animate-pulse" style={ROW_BORDER_STYLE}>
+        <tr key={`sk-${rowIndex}`} className={cn('animate-pulse', TABLE_ROW_BORDER_CLASS)}>
           {selectable && (
             <td className="px-4 py-1">
-              <div
-                className="h-5 w-5 rounded"
-                style={{ backgroundColor: SKELETON_COLORS.box }}
-              />
+              <div className="h-5 w-5 rounded bg-muted" />
             </td>
           )}
           {columns.map((column, columnIndex) => {
@@ -40,17 +38,13 @@ export function TableSkeleton<T extends Record<string, any>>({
             return (
               <td
                 key={`skc-${String(column.key)}-${columnIndex}`}
-                className={`px-4 py-1 ${bodyAlignClass}`}
+                className={cn('px-4 py-1', TABLE_ROW_BORDER_CLASS, bodyAlignClass)}
                 style={{
-                  ...ROW_BORDER_STYLE,
                   width: column.width || `${columnWidth}px`,
                   minWidth: `${columnWidth}px`,
                 }}
               >
-                <div
-                  className="h-6 rounded"
-                  style={{ width: barWidth, backgroundColor: SKELETON_COLORS.bar }}
-                />
+                <div className="h-6 rounded bg-muted" style={{ width: barWidth }} />
               </td>
             );
           })}

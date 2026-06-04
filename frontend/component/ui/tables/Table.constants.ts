@@ -1,20 +1,12 @@
 /**
- * Paleta tablas WMS (shadcn Table + tokens Tailwind).
+ * Constantes tablas WMS (shadcn Table + tokens Tailwind).
  */
-export const TABLE_PALETTE = {
-  border: '#e2e8f0',
-  headerText: '#0f172a',
-  arrow: '#64748b',
-  rowText: '#334155',
-  rowHover: '#f1f5f9',
-} as const;
+export const TABLE_ROW_BORDER_CLASS = 'border-b border-border';
 
 /**
- * Default row border style
+ * @deprecated Usar `TABLE_ROW_BORDER_CLASS` en className.
  */
-export const ROW_BORDER_STYLE: React.CSSProperties = {
-  borderBottom: `1px solid ${TABLE_PALETTE.border}`,
-};
+export const ROW_BORDER_STYLE: React.CSSProperties = {};
 
 /**
  * Available page size options for pagination
@@ -64,11 +56,3 @@ export const MIN_TABLE_WIDTH = 600;
  * Number of skeleton rows to display during loading
  */
 export const SKELETON_ROWS_COUNT = 10;
-
-/**
- * Skeleton loading animation colors
- */
-export const SKELETON_COLORS = {
-  box: '#e2e8f0',
-  bar: '#e2e8f0',
-} as const;

@@ -32,6 +32,12 @@ const ROUTE_PERMISSIONS: Record<string, string> = {
   '/bodegas': 'bodegas.leer',
   '/tipos-zona': 'tipos_zona.leer',
   '/zonas-bodega': 'zonas_bodega.leer',
+  '/inventario/stock': 'inventario.leer',
+  '/inventario/movimientos': 'inventario.leer',
+  '/inventario/recepcion': 'inventario.recepcionar',
+  '/inventario/traslado': 'inventario.trasladar',
+  '/inventario/despacho': 'inventario.despachar',
+  '/inventario/configuracion': 'inventario.configurar',
   '/usuarios': 'usuarios.leer',
   '/cargos': 'cargos.leer',
   '/roles': 'roles.leer',
@@ -95,6 +101,72 @@ export function buildWmsMenu(
     },
     {
       id: 2,
+      title: 'Inventario operativo',
+      children: [
+        {
+          title: 'Consultas',
+          icon: 'table',
+          children: [
+            {
+              id: 'inv-stock',
+              title: 'Stock por ubicación',
+              url: '/inventario/stock',
+              permission: 'inventario.leer',
+              routeMetadata: { iconName: 'table', breadcrumbTitle: 'Stock por ubicación' },
+            },
+            {
+              id: 'inv-movimientos',
+              title: 'Historial de movimientos',
+              url: '/inventario/movimientos',
+              permission: 'inventario.leer',
+              routeMetadata: { iconName: 'table', breadcrumbTitle: 'Historial de movimientos' },
+            },
+          ],
+        },
+        {
+          title: 'Operaciones',
+          icon: 'layers',
+          children: [
+            {
+              id: 'inv-recepcion',
+              title: 'Recepción',
+              url: '/inventario/recepcion',
+              permission: 'inventario.recepcionar',
+              routeMetadata: { iconName: 'layers', breadcrumbTitle: 'Recepción' },
+            },
+            {
+              id: 'inv-traslado',
+              title: 'Traslado',
+              url: '/inventario/traslado',
+              permission: 'inventario.trasladar',
+              routeMetadata: { iconName: 'layers', breadcrumbTitle: 'Traslado' },
+            },
+            {
+              id: 'inv-despacho',
+              title: 'Despacho',
+              url: '/inventario/despacho',
+              permission: 'inventario.despachar',
+              routeMetadata: { iconName: 'layers', breadcrumbTitle: 'Despacho' },
+            },
+          ],
+        },
+        {
+          title: 'Configuración',
+          icon: 'setting',
+          children: [
+            {
+              id: 'inv-config',
+              title: 'Zona de recepción',
+              url: '/inventario/configuracion',
+              permission: 'inventario.configurar',
+              routeMetadata: { iconName: 'setting', breadcrumbTitle: 'Zona de recepción' },
+            },
+          ],
+        },
+      ],
+    },
+    {
+      id: 3,
       title: 'Administración',
       children: [
         {

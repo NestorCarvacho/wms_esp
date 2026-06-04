@@ -16,6 +16,9 @@
 
 .main-content-padding {
   padding-top: var(--total-nav-height);
+  min-height: 100vh;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
 }
 
 .desktop-options-bar {

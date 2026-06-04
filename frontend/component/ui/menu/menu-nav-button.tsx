@@ -19,13 +19,15 @@ export function MenuNavButton({
       data-active={isActive}
       className={cn(
         'inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-        'text-slate-700 hover:bg-slate-200/80',
-        isActive && 'bg-slate-200 text-slate-900',
+        'text-slate-700 hover:bg-slate-200/80 dark:text-slate-200 dark:hover:bg-slate-700/80',
+        isActive && 'bg-slate-200 text-slate-900 dark:bg-slate-700 dark:text-white',
       )}
     >
       {icon}
       {children && <span>{children}</span>}
-      {showDropdownIcon && <ChevronDown className="h-4 w-4 text-slate-500" aria-hidden />}
+      {showDropdownIcon && (
+        <ChevronDown className="h-4 w-4 text-slate-500 dark:text-slate-400" aria-hidden />
+      )}
     </span>
   );
 }
