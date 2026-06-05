@@ -37,6 +37,8 @@ MIGRATION_FILES = [
     "08_usuario_rol.sql",
     "10_provision_rbac_empresas.sql",
     "09_grant_superadmin_usuario_1.sql",
+    "12_inventario_operativo.sql",
+    "13_fix_permiso_inventario_codigos.sql",
 ]
 
 # Errores MySQL benignos al re-ejecutar scripts idempotentes.
@@ -181,6 +183,10 @@ def run_diagnostics(cursor) -> None:
         ("Tabla usuario_rol", "SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='usuario_rol'"),
         ("Columna empresa.es_empresa_maestra", "SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='empresa' AND COLUMN_NAME='es_empresa_maestra'"),
         ("Columna rol.cargo_id (legacy)", "SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='rol' AND COLUMN_NAME='cargo_id'"),
+        ("Tabla stock_zona", "SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='stock_zona'"),
+        ("Tabla movimiento_inventario", "SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='movimiento_inventario'"),
+        ("Tabla bodega_config", "SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='bodega_config'"),
+        ("Permisos inventario.* activos", "SELECT COUNT(*) FROM permiso WHERE activo=1 AND codigo LIKE 'inventario.%'"),
         ("Permisos empresa 1", "SELECT COUNT(*) FROM permiso WHERE empresa_id=1 AND activo=1"),
         ("Roles empresa 1", "SELECT COUNT(*) FROM rol WHERE empresa_id=1 AND activo=1"),
         ("Usuarios con usuario_rol", "SELECT COUNT(DISTINCT usuario_id) FROM usuario_rol WHERE activo=1"),

@@ -42,8 +42,16 @@ railway run python scripts/apply_railway_migrations.py --diagnose
 | 5 | `08_usuario_rol.sql` | Tabla `usuario_rol` + roles operativos |
 | 6 | `10_provision_rbac_empresas.sql` | Copia RBAC a otras empresas (bloques 0–6) |
 | 7 | `09_grant_superadmin_usuario_1.sql` | Superadmin por email (bloques 1–10) |
+| 8 | `12_inventario_operativo.sql` | Stock por zona, movimientos, config bodega, permisos `inventario.*` |
+| 9 | `13_fix_permiso_inventario_codigos.sql` | Desactiva alias `recepcion.*` / `reportes.*` y asegura `inventario.*` |
 
 **No usar** en Railway con datos: `01_setup.sql`, `03_rbac_hierarchy.sql`.
+
+Solo un archivo:
+
+```bash
+railway run python scripts/apply_railway_migrations.py --file 12_inventario_operativo.sql
+```
 
 ## Después de migrar
 
