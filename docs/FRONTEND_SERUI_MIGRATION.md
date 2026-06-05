@@ -26,7 +26,7 @@ Sistema de componentes: **[shadcn/ui](https://ui.shadcn.com)** en `component/ui/
 
 `src/assets/styles/colors.ts` exporta `colorClass` (Tailwind) y `palette` (hex solo para estilos inline legacy).
 
-## Añadir componentes
+## Añadir componentes 
 
 ```bash
 cd frontend
