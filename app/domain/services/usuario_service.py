@@ -42,6 +42,10 @@ class UsuarioService:
 
         cargo_id: int | None = None,
 
+        ordenar_por: str | None = None,
+
+        orden: str | None = None,
+
     ) -> Dict[str, Any]:
 
         usuarios, total = await self.repository.listar(
@@ -63,6 +67,10 @@ class UsuarioService:
             buscar=buscar,
 
             cargo_id=cargo_id,
+
+            ordenar_por=ordenar_por,
+
+            orden=orden,
 
         )
 

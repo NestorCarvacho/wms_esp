@@ -6,6 +6,7 @@ from app.infrastructure.repositories.tipo_zona_crud_repository import TipoZonaCR
 from app.domain.services.tipo_zona_service import TipoZonaService
 from app.api.v1.dependencies import obtener_usuario_autenticado, requiere_permiso, es_super_admin
 from app.api.v1.empresa_contexto import ContextoEmpresa, kwargs_listado, obtener_contexto_empresa, contexto_requiere_permiso
+from app.api.v1.listado_query import orden_listado
 from app.schemas.tipo_zona import TipoZonaCrearDTO, TipoZonaActualizarDTO, RespuestaAPIDTO
 
 router = APIRouter(prefix="/api/v1/tipos-zona", tags=["Tipos de Zona"])
@@ -20,6 +21,7 @@ async def listar_tipos_zona(
     pagina: int = 1,
     por_pagina: int = 10,
     buscar: str | None = None,
+    orden_params: dict = Depends(orden_listado),
     ctx: ContextoEmpresa = Depends(obtener_contexto_empresa),
     service: TipoZonaService = Depends(obtener_tipo_zona_service)
 ):
@@ -30,6 +32,7 @@ async def listar_tipos_zona(
             por_pagina=por_pagina,
             buscar=buscar,
             **kwargs_listado(ctx),
+            **orden_params,
         )
         return RespuestaAPIDTO(
             exito=True,

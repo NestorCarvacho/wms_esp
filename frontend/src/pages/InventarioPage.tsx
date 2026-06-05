@@ -182,23 +182,52 @@ export function InventarioPage({ vista }: InventarioPageProps) {
   };
 
   const stockColumns = [
-    { key: 'bodega', header: 'Bodega', render: (r: StockZonaItem) => r.bodega_nombre ?? '—' },
-    { key: 'zona', header: 'Ubicación', render: (r: StockZonaItem) => r.zona_nombre },
-    { key: 'sku', header: 'SKU', render: (r: StockZonaItem) => r.producto_sku },
-    { key: 'producto', header: 'Producto', render: (r: StockZonaItem) => r.producto_nombre },
+    {
+      key: 'bodega',
+      header: 'Bodega',
+      sortable: true,
+      render: (r: StockZonaItem) => r.bodega_nombre ?? '—',
+    },
+    { key: 'zona', header: 'Ubicación', sortable: true, render: (r: StockZonaItem) => r.zona_nombre },
+    { key: 'sku', header: 'SKU', sortable: true, render: (r: StockZonaItem) => r.producto_sku },
+    {
+      key: 'producto',
+      header: 'Producto',
+      sortable: true,
+      render: (r: StockZonaItem) => r.producto_nombre,
+    },
     {
       key: 'cantidad',
       header: 'Cantidad',
+      sortable: true,
+      align: 'right' as const,
       render: (r: StockZonaItem) =>
         `${r.cantidad} ${r.unidad_medida_nombre ?? ''}`.trim(),
     },
   ];
 
   const movColumns = [
-    { key: 'fecha', header: 'Fecha', render: (r: { creado_at?: string | null }) => r.creado_at?.slice(0, 19) ?? '—' },
-    { key: 'tipo', header: 'Tipo', render: (r: { tipo: string }) => r.tipo },
-    { key: 'producto', header: 'Producto', render: (r: { producto_nombre?: string | null; producto_sku?: string | null }) => `${r.producto_sku ?? ''} ${r.producto_nombre ?? ''}`.trim() },
-    { key: 'cantidad', header: 'Cant.', render: (r: { cantidad: number }) => r.cantidad },
+    {
+      key: 'fecha',
+      header: 'Fecha',
+      sortable: true,
+      render: (r: { creado_at?: string | null }) => r.creado_at?.slice(0, 19) ?? '—',
+    },
+    { key: 'tipo', header: 'Tipo', sortable: true, render: (r: { tipo: string }) => r.tipo },
+    {
+      key: 'producto',
+      header: 'Producto',
+      sortable: true,
+      render: (r: { producto_nombre?: string | null; producto_sku?: string | null }) =>
+        `${r.producto_sku ?? ''} ${r.producto_nombre ?? ''}`.trim(),
+    },
+    {
+      key: 'cantidad',
+      header: 'Cant.',
+      sortable: true,
+      align: 'right' as const,
+      render: (r: { cantidad: number }) => r.cantidad,
+    },
     { key: 'origen', header: 'Origen', render: (r: { zona_origen_nombre?: string | null }) => r.zona_origen_nombre ?? '—' },
     { key: 'destino', header: 'Destino', render: (r: { zona_destino_nombre?: string | null }) => r.zona_destino_nombre ?? '—' },
     { key: 'usuario', header: 'Usuario', render: (r: { usuario_email?: string | null }) => r.usuario_email ?? '—' },
@@ -237,6 +266,7 @@ export function InventarioPage({ vista }: InventarioPageProps) {
               isLoading={stockTable.loading}
               pagination={stockTable.pagination}
               emptyMessage="Sin stock registrado"
+              {...stockTable.sortProps}
             />
           </Card>
         </>
@@ -251,6 +281,7 @@ export function InventarioPage({ vista }: InventarioPageProps) {
             isLoading={movTable.loading}
             pagination={movTable.pagination}
             emptyMessage="Sin movimientos"
+            {...movTable.sortProps}
           />
         </Card>
       )}

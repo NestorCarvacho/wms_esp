@@ -88,7 +88,7 @@ export function EmpresasPage() {
         pagination={table.pagination}
         onSearch={table.handleSearch}
         searchPlaceholder="Buscar empresa..."
-        serverSideSort
+        {...table.sortProps}
         emptyMessage="No hay empresas."
         actions={tableActions}
       />

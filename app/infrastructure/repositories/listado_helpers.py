@@ -1,5 +1,5 @@
-"""Helpers para listados paginados con búsqueda."""
-from sqlalchemy import or_
+"""Helpers para listados paginados con búsqueda y orden."""
+from sqlalchemy import asc, desc, or_
 
 
 def filtro_empresa(
@@ -35,3 +35,35 @@ def condicion_buscar(model, buscar: str | None, *fields: str):
         if column is not None:
             clauses.append(column.like(pattern))
     return or_(*clauses) if clauses else None
+
+
+def aplicar_orden(
+    stmt,
+    *,
+    columnas: dict[str, object],
+    ordenar_por: str | None,
+    orden: str | None = None,
+    default: object | None = None,
+    default_orden: str = "asc",
+):
+    """
+    Aplica ORDER BY validando el campo contra un mapa permitido.
+    Si no hay ordenar_por, usa `default` con `default_orden`.
+    """
+    col = None
+    direction = (orden or "asc").strip().lower()
+
+    if ordenar_por and ordenar_por in columnas:
+        col = columnas[ordenar_por]
+    elif default is not None:
+        col = default
+        if ordenar_por is None:
+            direction = default_orden.strip().lower()
+
+    if col is None:
+        return stmt
+
+    if direction not in ("asc", "desc"):
+        direction = "asc"
+
+    return stmt.order_by(desc(col) if direction == "desc" else asc(col))

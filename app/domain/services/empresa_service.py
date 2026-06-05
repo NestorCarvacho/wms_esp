@@ -18,6 +18,8 @@ class EmpresaService:
         por_pagina: int = 10,
         solo_activas: bool = False,
         buscar: str | None = None,
+        ordenar_por: str | None = None,
+        orden: str | None = None,
     ) -> Dict[str, Any]:
         """
         Lista empresas con paginación.
@@ -36,6 +38,8 @@ class EmpresaService:
                 por_pagina=por_pagina,
                 solo_activas=solo_activas,
                 buscar=buscar,
+                ordenar_por=ordenar_por,
+                orden=orden,
             )
             
             return {

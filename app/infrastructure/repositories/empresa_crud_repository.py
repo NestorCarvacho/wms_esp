@@ -7,7 +7,7 @@ from sqlalchemy import select, update, and_, func
 from sqlalchemy.exc import SQLAlchemyError
 from datetime import datetime
 from app.infrastructure.models.usuario import Empresa
-from app.infrastructure.repositories.listado_helpers import condicion_buscar
+from app.infrastructure.repositories.listado_helpers import aplicar_orden, condicion_buscar
 
 
 class EmpresaCRUDRepository:
@@ -22,6 +22,8 @@ class EmpresaCRUDRepository:
         por_pagina: int = 10,
         solo_activas: bool = False,
         buscar: str | None = None,
+        ordenar_por: str | None = None,
+        orden: str | None = None,
     ) -> tuple[list[Empresa], int]:
         """
         Lista empresas con paginación.
@@ -44,14 +46,27 @@ class EmpresaCRUDRepository:
                 count_stmt = count_stmt.where(buscar_cond)
             total = (await self.session.execute(count_stmt)).scalar() or 0
 
-            offset = (pagina - 1) * por_pagina
-            stmt = select(Empresa)
+            stmt_base = select(Empresa)
             if solo_activas:
-                stmt = stmt.where(Empresa.esta_activa == True)
+                stmt_base = stmt_base.where(Empresa.esta_activa == True)
             if buscar_cond is not None:
-                stmt = stmt.where(buscar_cond)
-            
-            stmt = stmt.offset(offset).limit(por_pagina).order_by(Empresa.id)
+                stmt_base = stmt_base.where(buscar_cond)
+
+            stmt_base = aplicar_orden(
+                stmt_base,
+                columnas={
+                    "id": Empresa.id,
+                    "nombre": Empresa.nombre,
+                    "codigo": Empresa.codigo,
+                    "activo": Empresa.esta_activa,
+                },
+                ordenar_por=ordenar_por,
+                orden=orden,
+                default=Empresa.nombre,
+            )
+
+            offset = (pagina - 1) * por_pagina
+            stmt = stmt_base.offset(offset).limit(por_pagina)
             
             result = await self.session.execute(stmt)
             empresas = result.scalars().all()

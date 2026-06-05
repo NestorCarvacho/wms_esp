@@ -4,7 +4,7 @@ from sqlalchemy import select, update, and_, func
 from sqlalchemy.orm import selectinload
 from sqlalchemy.exc import SQLAlchemyError
 from app.infrastructure.models.usuario import ZonaBodega, Bodega
-from app.infrastructure.repositories.listado_helpers import condicion_buscar, filtro_empresa
+from app.infrastructure.repositories.listado_helpers import aplicar_orden, condicion_buscar, filtro_empresa
 
 
 class ZonaBodegaCRUDRepository:
@@ -27,6 +27,8 @@ class ZonaBodegaCRUDRepository:
         empresas_scope_ids: list[int] | None = None,
         bodega_id: int | None = None,
         buscar: str | None = None,
+        ordenar_por: str | None = None,
+        orden: str | None = None,
     ) -> tuple[list[ZonaBodega], int]:
         try:
             stmt_base = self._base_query().join(Bodega, ZonaBodega.bodega_id == Bodega.id)
@@ -53,6 +55,19 @@ class ZonaBodegaCRUDRepository:
             if buscar_cond is not None:
                 count_stmt = count_stmt.where(buscar_cond)
             total = (await self.session.execute(count_stmt)).scalar() or 0
+
+            stmt_base = aplicar_orden(
+                stmt_base,
+                columnas={
+                    "id": ZonaBodega.id,
+                    "nombre": ZonaBodega.nombre,
+                    "activo": ZonaBodega.activo,
+                    "bodega_id": ZonaBodega.bodega_id,
+                },
+                ordenar_por=ordenar_por,
+                orden=orden,
+                default=ZonaBodega.nombre,
+            )
 
             offset = (pagina - 1) * por_pagina
             result = await self.session.execute(stmt_base.offset(offset).limit(por_pagina))

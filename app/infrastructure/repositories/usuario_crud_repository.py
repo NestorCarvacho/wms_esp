@@ -9,7 +9,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from datetime import datetime
 from app.infrastructure.models.usuario import Usuario
 from app.core.security import hash_password
-from app.infrastructure.repositories.listado_helpers import condicion_buscar, filtro_empresa
+from app.infrastructure.repositories.listado_helpers import aplicar_orden, condicion_buscar, filtro_empresa
 
 
 class UsuarioCRUDRepository:
@@ -29,6 +29,8 @@ class UsuarioCRUDRepository:
         empresas_scope_ids: list[int] | None = None,
         buscar: str | None = None,
         cargo_id: int | None = None,
+        ordenar_por: str | None = None,
+        orden: str | None = None,
     ) -> tuple[list[Usuario], int]:
         """
         Lista usuarios de una empresa con paginación.
@@ -75,7 +77,21 @@ class UsuarioCRUDRepository:
 
             count_result = await self.session.execute(count_stmt)
             total = count_result.scalar() or 0
-            
+
+            stmt_base = aplicar_orden(
+                stmt_base,
+                columnas={
+                    "id": Usuario.id,
+                    "email": Usuario.email,
+                    "activo": Usuario.activo,
+                    "empresa_id": Usuario.empresa_id,
+                    "cargo_id": Usuario.cargo_id,
+                },
+                ordenar_por=ordenar_por,
+                orden=orden,
+                default=Usuario.email,
+            )
+
             # Listar con paginación
             offset = (pagina - 1) * por_pagina
             stmt = stmt_base.offset(offset).limit(por_pagina)

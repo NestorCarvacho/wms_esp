@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.dependencies import requiere_permiso
 from app.api.v1.empresa_contexto import ContextoEmpresa, kwargs_listado, resolver_empresa_creacion, contexto_requiere_permiso
+from app.api.v1.listado_query import orden_listado
 from app.domain.services.permiso_service import PermisoService
 from app.infrastructure.database import get_db_session
 from app.infrastructure.repositories.permiso_crud_repository import PermisoCRUDRepository
@@ -22,6 +23,7 @@ async def listar_permisos(
     pagina: int = 1,
     por_pagina: int = 10,
     buscar: str | None = None,
+    orden_params: dict = Depends(orden_listado),
     ctx: ContextoEmpresa = Depends(contexto_requiere_permiso("permisos.leer")),
     service: PermisoService = Depends(obtener_permiso_service)
 ):
@@ -32,6 +34,7 @@ async def listar_permisos(
             por_pagina=por_pagina,
             buscar=buscar,
             **kwargs_listado(ctx),
+            **orden_params,
         )
         return RespuestaAPIDTO(exito=True, datos=resultado, mensaje=f"Se encontraron {resultado['total']} permisos").dict()
     except Exception as e:

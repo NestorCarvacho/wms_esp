@@ -4,7 +4,7 @@ from sqlalchemy import select, update, and_, func
 from sqlalchemy.orm import selectinload
 from sqlalchemy.exc import SQLAlchemyError
 from app.infrastructure.models.usuario import TipoZona
-from app.infrastructure.repositories.listado_helpers import condicion_buscar, filtro_empresa
+from app.infrastructure.repositories.listado_helpers import aplicar_orden, condicion_buscar, filtro_empresa
 
 
 class TipoZonaCRUDRepository:
@@ -20,6 +20,8 @@ class TipoZonaCRUDRepository:
         empresa_id_filtro: int | None = None,
         empresas_scope_ids: list[int] | None = None,
         buscar: str | None = None,
+        ordenar_por: str | None = None,
+        orden: str | None = None,
     ) -> tuple[list[TipoZona], int]:
         try:
             stmt_base = select(TipoZona).options(selectinload(TipoZona.empresa))
@@ -37,6 +39,19 @@ class TipoZonaCRUDRepository:
             if buscar_cond is not None:
                 count_stmt = count_stmt.where(buscar_cond)
             total = (await self.session.execute(count_stmt)).scalar() or 0
+
+            stmt_base = aplicar_orden(
+                stmt_base,
+                columnas={
+                    "id": TipoZona.id,
+                    "nombre": TipoZona.nombre,
+                    "activo": TipoZona.activo,
+                    "empresa_id": TipoZona.empresa_id,
+                },
+                ordenar_por=ordenar_por,
+                orden=orden,
+                default=TipoZona.nombre,
+            )
 
             offset = (pagina - 1) * por_pagina
             result = await self.session.execute(stmt_base.offset(offset).limit(por_pagina))

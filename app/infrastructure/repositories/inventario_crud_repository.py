@@ -4,7 +4,7 @@ from sqlalchemy import select, update, insert, func, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from sqlalchemy.exc import SQLAlchemyError
-from app.infrastructure.repositories.listado_helpers import filtro_empresa
+from app.infrastructure.repositories.listado_helpers import aplicar_orden, filtro_empresa
 from app.infrastructure.models.usuario import (
     StockZona,
     MovimientoInventario,
@@ -132,6 +132,8 @@ class InventarioCRUDRepository:
         es_super_admin: bool = False,
         empresa_id_filtro: int | None = None,
         empresas_scope_ids: list[int] | None = None,
+        ordenar_por: str | None = None,
+        orden: str | None = None,
     ) -> tuple[list[dict], int]:
         stmt_base = (
             select(StockZona)
@@ -159,6 +161,20 @@ class InventarioCRUDRepository:
 
         count_stmt = select(func.count()).select_from(stmt_base.subquery())
         total = (await self.session.execute(count_stmt)).scalar() or 0
+
+        stmt_base = aplicar_orden(
+            stmt_base,
+            columnas={
+                "producto": Producto.nombre,
+                "cantidad": StockZona.cantidad,
+                "sku": Producto.sku,
+                "bodega": Bodega.nombre,
+                "zona": ZonaBodega.nombre,
+            },
+            ordenar_por=ordenar_por,
+            orden=orden,
+            default=Producto.nombre,
+        )
 
         offset = (pagina - 1) * por_pagina
         rows = (await self.session.execute(stmt_base.offset(offset).limit(por_pagina))).scalars().all()
@@ -193,9 +209,12 @@ class InventarioCRUDRepository:
         es_super_admin: bool = False,
         empresa_id_filtro: int | None = None,
         empresas_scope_ids: list[int] | None = None,
+        ordenar_por: str | None = None,
+        orden: str | None = None,
     ) -> tuple[list[MovimientoInventario], int]:
         stmt = (
             select(MovimientoInventario)
+            .join(Producto, MovimientoInventario.producto_id == Producto.id)
             .options(
                 selectinload(MovimientoInventario.producto),
                 selectinload(MovimientoInventario.usuario),
@@ -203,7 +222,6 @@ class InventarioCRUDRepository:
                 selectinload(MovimientoInventario.zona_destino).selectinload(ZonaBodega.tipo_zona),
             )
             .where(MovimientoInventario.activo == True)
-            .order_by(MovimientoInventario.creado_at.desc())
         )
         empresa_cond = filtro_empresa(
             MovimientoInventario,
@@ -221,6 +239,21 @@ class InventarioCRUDRepository:
 
         count_stmt = select(func.count()).select_from(stmt.subquery())
         total = (await self.session.execute(count_stmt)).scalar() or 0
+
+        stmt = aplicar_orden(
+            stmt,
+            columnas={
+                "fecha": MovimientoInventario.creado_at,
+                "tipo": MovimientoInventario.tipo,
+                "cantidad": MovimientoInventario.cantidad,
+                "producto": Producto.nombre,
+            },
+            ordenar_por=ordenar_por,
+            orden=orden,
+            default=MovimientoInventario.creado_at,
+            default_orden="desc",
+        )
+
         offset = (pagina - 1) * por_pagina
         rows = (await self.session.execute(stmt.offset(offset).limit(por_pagina))).scalars().all()
         return rows, total

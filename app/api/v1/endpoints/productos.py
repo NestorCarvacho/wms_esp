@@ -13,6 +13,7 @@ from app.domain.services.producto_service import ProductoService
 from app.domain.services.producto_importacion_service import ProductoImportacionService
 from app.api.v1.dependencies import obtener_usuario_autenticado, requiere_permiso, es_super_admin
 from app.api.v1.empresa_contexto import ContextoEmpresa, kwargs_listado, obtener_contexto_empresa, resolver_empresa_creacion, contexto_requiere_permiso
+from app.api.v1.listado_query import orden_listado
 from app.schemas.producto import (
     ProductoCrearDTO,
     ProductoActualizarDTO,
@@ -49,6 +50,7 @@ async def listar_Productos(
     buscar: str | None = None,
     unidad_medida_id: int | None = Query(None, description="Filtrar por unidad de medida"),
     tipo_producto_id: int | None = Query(None, description="Filtrar por tipo de producto"),
+    orden_params: dict = Depends(orden_listado),
     ctx: ContextoEmpresa = Depends(contexto_requiere_permiso("productos.leer")),
     service: ProductoService = Depends(obtener_producto_service)
 ):
@@ -78,6 +80,7 @@ async def listar_Productos(
             unidad_medida_id=unidad_medida_id,
             tipo_producto_id=tipo_producto_id,
             **kwargs_listado(ctx),
+            **orden_params,
         )
         
         return RespuestaAPIDTO(

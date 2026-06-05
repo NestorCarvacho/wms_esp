@@ -11,6 +11,7 @@ from app.api.v1.empresa_contexto import (
     obtener_contexto_empresa, contexto_requiere_permiso,
     resolver_empresa_creacion,
 )
+from app.api.v1.listado_query import orden_listado
 from app.schemas.tipo_producto import TipoProductoCrearDTO, TipoProductoActualizarDTO, RespuestaAPIDTO
 
 router = APIRouter(prefix="/api/v1/tipos-producto", tags=["Tipos de Producto"])
@@ -27,6 +28,7 @@ async def listar_tipos_producto(
     pagina: int = 1,
     por_pagina: int = 10,
     buscar: str | None = None,
+    orden_params: dict = Depends(orden_listado),
     ctx: ContextoEmpresa = Depends(obtener_contexto_empresa),
     service: TipoProductoService = Depends(obtener_tipo_producto_service)
 ):
@@ -37,6 +39,7 @@ async def listar_tipos_producto(
             por_pagina=por_pagina,
             buscar=buscar,
             **kwargs_listado(ctx),
+            **orden_params,
         )
         return RespuestaAPIDTO(
             exito=True,

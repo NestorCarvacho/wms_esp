@@ -10,6 +10,7 @@ from app.infrastructure.repositories.unidadMedida_crud_repository import UnidadM
 from app.domain.services.unidadMedidad_service import UnidadMedidaService
 from app.api.v1.dependencies import obtener_usuario_autenticado, requiere_permiso, es_super_admin
 from app.api.v1.empresa_contexto import ContextoEmpresa, kwargs_listado, obtener_contexto_empresa, resolver_empresa_creacion, contexto_requiere_permiso
+from app.api.v1.listado_query import orden_listado
 from app.schemas.unidadMedida import (
     UnidadMedidaCrearDTO,
     UnidadMedidaActualizarDTO,
@@ -40,6 +41,7 @@ async def listar_Productos(
     pagina: int = 1,
     por_pagina: int = 10,
     buscar: str | None = None,
+    orden_params: dict = Depends(orden_listado),
     ctx: ContextoEmpresa = Depends(contexto_requiere_permiso("unidades_medida.leer")),
     service: UnidadMedidaService = Depends(obtener_unidad_medida_service)
 ):
@@ -67,6 +69,7 @@ async def listar_Productos(
             por_pagina=por_pagina,
             buscar=buscar,
             **kwargs_listado(ctx),
+            **orden_params,
         )
         
         return RespuestaAPIDTO(

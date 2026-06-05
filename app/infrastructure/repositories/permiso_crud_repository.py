@@ -7,7 +7,7 @@ from sqlalchemy.orm import selectinload
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.infrastructure.models.usuario import Permiso
-from app.infrastructure.repositories.listado_helpers import condicion_buscar, filtro_empresa
+from app.infrastructure.repositories.listado_helpers import aplicar_orden, condicion_buscar, filtro_empresa
 
 
 class PermisoCRUDRepository:
@@ -23,6 +23,8 @@ class PermisoCRUDRepository:
         empresa_id_filtro: int | None = None,
         empresas_scope_ids: list[int] | None = None,
         buscar: str | None = None,
+        ordenar_por: str | None = None,
+        orden: str | None = None,
     ) -> tuple[list[Permiso], int]:
         try:
             stmt_base = select(Permiso).options(selectinload(Permiso.empresa)).where(Permiso.activo == True)
@@ -40,6 +42,21 @@ class PermisoCRUDRepository:
                 count_stmt = count_stmt.where(buscar_cond)
 
             total = (await self.session.execute(count_stmt)).scalar() or 0
+
+            stmt_base = aplicar_orden(
+                stmt_base,
+                columnas={
+                    "id": Permiso.id,
+                    "codigo": Permiso.codigo,
+                    "descripcion": Permiso.descripcion,
+                    "activo": Permiso.activo,
+                    "empresa_id": Permiso.empresa_id,
+                },
+                ordenar_por=ordenar_por,
+                orden=orden,
+                default=Permiso.codigo,
+            )
+
             offset = (pagina - 1) * por_pagina
             result = await self.session.execute(stmt_base.offset(offset).limit(por_pagina))
             return result.scalars().all(), total

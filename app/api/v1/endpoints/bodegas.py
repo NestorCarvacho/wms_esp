@@ -10,6 +10,7 @@ from app.infrastructure.repositories.bodega_crud_repository import BodegaCRUDRep
 from app.domain.services.bodega_service import BodegaService
 from app.api.v1.dependencies import obtener_usuario_autenticado, requiere_permiso, es_super_admin
 from app.api.v1.empresa_contexto import ContextoEmpresa, kwargs_listado, obtener_contexto_empresa, contexto_requiere_permiso
+from app.api.v1.listado_query import orden_listado
 from app.schemas.bodega import (
     BodegaCrearDTO,
     BodegaActualizarDTO,
@@ -40,6 +41,7 @@ async def listar_Bodegas(
     pagina: int = 1,
     por_pagina: int = 10,
     buscar: str | None = None,
+    orden_params: dict = Depends(orden_listado),
     ctx: ContextoEmpresa = Depends(obtener_contexto_empresa),
     service: BodegaService = Depends(obtener_bodega_service)
 ):
@@ -67,6 +69,7 @@ async def listar_Bodegas(
             por_pagina=por_pagina,
             buscar=buscar,
             **kwargs_listado(ctx),
+            **orden_params,
         )
         
         return RespuestaAPIDTO(

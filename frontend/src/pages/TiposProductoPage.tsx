@@ -83,7 +83,7 @@ export function TiposProductoPage() {
         pagination={table.pagination}
         onSearch={table.handleSearch}
         searchPlaceholder="Buscar tipo..."
-        serverSideSort
+        {...table.sortProps}
         emptyMessage="No hay tipos de producto."
         actions={tableActions}
       />

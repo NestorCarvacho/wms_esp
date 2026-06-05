@@ -7,7 +7,7 @@ from sqlalchemy import select, update, and_, func
 from sqlalchemy.orm import selectinload
 from sqlalchemy.exc import SQLAlchemyError
 from app.infrastructure.models.usuario import UnidadMedida
-from app.infrastructure.repositories.listado_helpers import condicion_buscar, filtro_empresa
+from app.infrastructure.repositories.listado_helpers import aplicar_orden, condicion_buscar, filtro_empresa
 
 
 class UnidadMedidaCRUDRepository:
@@ -25,6 +25,8 @@ class UnidadMedidaCRUDRepository:
         empresa_id_filtro: int | None = None,
         empresas_scope_ids: list[int] | None = None,
         buscar: str | None = None,
+        ordenar_por: str | None = None,
+        orden: str | None = None,
     ) -> tuple[list[UnidadMedida], int]:
         """
         Lista unidades de medida de una empresa con paginación.
@@ -59,7 +61,21 @@ class UnidadMedidaCRUDRepository:
             
             count_result = await self.session.execute(count_stmt)
             total = count_result.scalar() or 0
-            
+
+            stmt_base = aplicar_orden(
+                stmt_base,
+                columnas={
+                    "id": UnidadMedida.id,
+                    "nombre": UnidadMedida.nombre,
+                    "simbolo": UnidadMedida.codigo,
+                    "activo": UnidadMedida.activo,
+                    "empresa_id": UnidadMedida.empresa_id,
+                },
+                ordenar_por=ordenar_por,
+                orden=orden,
+                default=UnidadMedida.nombre,
+            )
+
             # Listar con paginación
             offset = (pagina - 1) * por_pagina
             stmt = stmt_base.offset(offset).limit(por_pagina)

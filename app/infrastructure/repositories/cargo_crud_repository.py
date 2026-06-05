@@ -7,7 +7,7 @@ from sqlalchemy import select, update, and_, func
 from sqlalchemy.orm import selectinload
 from sqlalchemy.exc import SQLAlchemyError
 from app.infrastructure.models.usuario import Cargo
-from app.infrastructure.repositories.listado_helpers import condicion_buscar, filtro_empresa
+from app.infrastructure.repositories.listado_helpers import aplicar_orden, condicion_buscar, filtro_empresa
 
 
 class CargoCRUDRepository:
@@ -25,6 +25,8 @@ class CargoCRUDRepository:
         empresa_id_filtro: int | None = None,
         empresas_scope_ids: list[int] | None = None,
         buscar: str | None = None,
+        ordenar_por: str | None = None,
+        orden: str | None = None,
     ) -> tuple[list[Cargo], int]:
         """
         Lista cargos de una empresa con paginación.
@@ -59,7 +61,20 @@ class CargoCRUDRepository:
             
             count_result = await self.session.execute(count_stmt)
             total = count_result.scalar() or 0
-            
+
+            stmt_base = aplicar_orden(
+                stmt_base,
+                columnas={
+                    "id": Cargo.id,
+                    "nombre": Cargo.nombre,
+                    "activo": Cargo.activo,
+                    "empresa_id": Cargo.empresa_id,
+                },
+                ordenar_por=ordenar_por,
+                orden=orden,
+                default=Cargo.nombre,
+            )
+
             # Listar con paginación
             offset = (pagina - 1) * por_pagina
             stmt = stmt_base.offset(offset).limit(por_pagina)

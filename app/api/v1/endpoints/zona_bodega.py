@@ -6,6 +6,7 @@ from app.infrastructure.repositories.zona_bodega_crud_repository import ZonaBode
 from app.domain.services.zona_bodega_service import ZonaBodegaService
 from app.api.v1.dependencies import obtener_usuario_autenticado, requiere_permiso, es_super_admin
 from app.api.v1.empresa_contexto import ContextoEmpresa, kwargs_listado, obtener_contexto_empresa, contexto_requiere_permiso
+from app.api.v1.listado_query import orden_listado
 from app.schemas.zona_bodega import ZonaBodegaCrearDTO, ZonaBodegaActualizarDTO, RespuestaAPIDTO
 
 router = APIRouter(prefix="/api/v1/zonas-bodega", tags=["Zonas de Bodega"])
@@ -21,6 +22,7 @@ async def listar_zonas_bodega(
     por_pagina: int = 10,
     bodega_id: int | None = None,
     buscar: str | None = None,
+    orden_params: dict = Depends(orden_listado),
     ctx: ContextoEmpresa = Depends(obtener_contexto_empresa),
     service: ZonaBodegaService = Depends(obtener_zona_bodega_service)
 ):
@@ -32,6 +34,7 @@ async def listar_zonas_bodega(
             bodega_id=bodega_id,
             buscar=buscar,
             **kwargs_listado(ctx),
+            **orden_params,
         )
         return RespuestaAPIDTO(
             exito=True,

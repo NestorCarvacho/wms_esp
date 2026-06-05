@@ -61,6 +61,8 @@ class ZonaBodegaService:
         empresas_scope_ids: list[int] | None = None,
         bodega_id: int | None = None,
         buscar: str | None = None,
+        ordenar_por: str | None = None,
+        orden: str | None = None,
     ) -> Dict[str, Any]:
         zonas, total = await self.repository.listar(
             empresa_id=empresa_id,
@@ -71,6 +73,8 @@ class ZonaBodegaService:
             empresas_scope_ids=empresas_scope_ids,
             bodega_id=bodega_id,
             buscar=buscar,
+            ordenar_por=ordenar_por,
+            orden=orden,
         )
         return {
             "total": total,

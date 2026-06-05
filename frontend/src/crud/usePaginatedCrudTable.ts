@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { PaginatedListParams } from '@/api/listQuery';
+import type { PaginatedListParams, SortDirection } from '@/api/listQuery';
 import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from '@/api/listQuery';
 import type { TablePagination } from '@/components/ui/tables';
 
@@ -53,11 +53,15 @@ export function usePaginatedCrudTable<T>({
   const [items, setItems] = useState<T[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [sortKey, setSortKey] = useState<string | undefined>();
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
   const filterValuesKey = useMemo(
     () => serializeFilterValues(filterValues),
     [filterValues],
   );
+
+  const sortQueryKey = sortKey ? `${sortKey}:${sortDirection}` : '';
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -70,6 +74,12 @@ export function usePaginatedCrudTable<T>({
   useEffect(() => {
     setPage(DEFAULT_PAGE);
   }, [empresaFilterId, filterValuesKey]);
+
+  const handleSortChange = useCallback((key: string, direction: SortDirection) => {
+    setSortKey(key);
+    setSortDirection(direction);
+    setPage(DEFAULT_PAGE);
+  }, []);
 
   const reload = useCallback(async () => {
     setLoading(true);
@@ -88,6 +98,7 @@ export function usePaginatedCrudTable<T>({
         porPagina: pageSize,
         buscar: mergedBuscar,
         ...(empresaFilterId != null ? { empresaId: empresaFilterId } : {}),
+        ...(sortKey ? { ordenarPor: sortKey, orden: sortDirection } : {}),
         ...(restExtra && Object.keys(restExtra).length > 0 ? { extra: restExtra } : {}),
       });
       setItems(result.items);
@@ -97,7 +108,7 @@ export function usePaginatedCrudTable<T>({
     } finally {
       setLoading(false);
     }
-  }, [page, pageSize, debouncedSearch, empresaFilterId, filterValuesKey]);
+  }, [page, pageSize, debouncedSearch, empresaFilterId, filterValuesKey, sortQueryKey]);
 
   useEffect(() => {
     void reload();
@@ -116,6 +127,11 @@ export function usePaginatedCrudTable<T>({
     onPageSizeChange: handlePageSizeChange,
   };
 
+  const sortProps = {
+    serverSideSort: true,
+    onSortChange: handleSortChange,
+  } as const;
+
   return {
     items,
     total,
@@ -123,5 +139,6 @@ export function usePaginatedCrudTable<T>({
     reload,
     pagination,
     handleSearch: setSearch,
+    sortProps,
   };
 }

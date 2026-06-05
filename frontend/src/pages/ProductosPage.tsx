@@ -320,7 +320,7 @@ export function ProductosPage() {
         columns={[
           { key: 'id', header: 'ID', width: 64 },
           { key: 'nombre', header: 'Nombre', sortable: true },
-          { key: 'sku', header: 'SKU', render: (row) => <code>{row.sku}</code> },
+          { key: 'sku', header: 'SKU', sortable: true, render: (row) => <code>{row.sku}</code> },
           {
             key: 'tipo_producto_id',
             header: 'Tipo',
@@ -343,7 +343,7 @@ export function ProductosPage() {
         pagination={table.pagination}
         onSearch={table.handleSearch}
         searchPlaceholder="Buscar nombre o SKU…"
-        serverSideSort
+        {...table.sortProps}
         emptyMessage="No hay productos."
         actions={tableActions}
       />

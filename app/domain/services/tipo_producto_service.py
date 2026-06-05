@@ -17,6 +17,8 @@ class TipoProductoService:
         empresa_id_filtro: int | None = None,
         empresas_scope_ids: list[int] | None = None,
         buscar: str | None = None,
+        ordenar_por: str | None = None,
+        orden: str | None = None,
     ) -> Dict[str, Any]:
         tipos, total = await self.repository.listar(
             empresa_id=empresa_id,
@@ -26,6 +28,8 @@ class TipoProductoService:
             empresa_id_filtro=empresa_id_filtro,
             empresas_scope_ids=empresas_scope_ids,
             buscar=buscar,
+            ordenar_por=ordenar_por,
+            orden=orden,
         )
         return {
             "total": total,

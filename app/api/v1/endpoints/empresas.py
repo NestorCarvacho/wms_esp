@@ -13,6 +13,7 @@ from app.domain.services.empresa_rbac_bootstrap_service import EmpresaRbacBootst
 from app.infrastructure.repositories.empresa_administrada_repository import EmpresaAdministradaRepository
 from app.infrastructure.repositories.empresa_rbac_bootstrap_repository import EmpresaRbacBootstrapRepository
 from app.api.v1.dependencies import obtener_usuario_autenticado, requiere_permiso, es_super_admin
+from app.api.v1.listado_query import orden_listado
 from app.schemas.empresa import (
     EmpresaCrearDTO,
     EmpresaActualizarDTO,
@@ -96,6 +97,7 @@ async def listar_empresas(
     por_pagina: int = 10,
     solo_activas: bool = False,
     buscar: str | None = None,
+    orden_params: dict = Depends(orden_listado),
     usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
     es_admin: bool = Depends(validar_super_admin),
     service: EmpresaService = Depends(obtener_empresa_service)
@@ -125,6 +127,7 @@ async def listar_empresas(
             por_pagina=por_pagina,
             solo_activas=solo_activas,
             buscar=buscar,
+            **orden_params,
         )
         
         return RespuestaAPIDTO(

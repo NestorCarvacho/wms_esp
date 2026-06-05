@@ -301,7 +301,7 @@ export function InventarioOperacionEscaneo({
           onChange={(e) => setScanBuffer(e.target.value)}
           onKeyDown={onScanKeyDown}
         />
-        <Text variant="body-regular" color="#666">
+        <Text variant="body-regular" className="text-muted-foreground">
           Configure bodega y zonas arriba, luego haga clic en este campo y escanee (Enter confirma).
           Cada lectura suma 1 unidad; corrija cantidades o use Quitar en la lista.
         </Text>

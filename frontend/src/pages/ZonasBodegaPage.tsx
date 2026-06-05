@@ -212,7 +212,7 @@ export function ZonasBodegaPage() {
         pagination={table.pagination}
         onSearch={table.handleSearch}
         searchPlaceholder="Buscar zona de bodega..."
-        serverSideSort
+        {...table.sortProps}
         emptyMessage="No hay zonas de bodega registradas."
         actions={tableActions}
       />

@@ -24,6 +24,8 @@ class ProductoService:
         buscar: str | None = None,
         unidad_medida_id: int | None = None,
         tipo_producto_id: int | None = None,
+        ordenar_por: str | None = None,
+        orden: str | None = None,
     ) -> Dict[str, Any]:
         """
         Lista productos de una empresa.
@@ -47,6 +49,8 @@ class ProductoService:
             buscar=buscar,
             unidad_medida_id=unidad_medida_id,
             tipo_producto_id=tipo_producto_id,
+            ordenar_por=ordenar_por,
+            orden=orden,
         )
         
         return {

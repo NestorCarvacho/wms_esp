@@ -7,7 +7,7 @@ from sqlalchemy import select, update, and_, func
 from sqlalchemy.orm import selectinload
 from sqlalchemy.exc import SQLAlchemyError
 from app.infrastructure.models.usuario import Producto
-from app.infrastructure.repositories.listado_helpers import condicion_buscar, filtro_empresa
+from app.infrastructure.repositories.listado_helpers import aplicar_orden, condicion_buscar, filtro_empresa
 
 
 class ProductoCRUDRepository:
@@ -27,6 +27,8 @@ class ProductoCRUDRepository:
         buscar: str | None = None,
         unidad_medida_id: int | None = None,
         tipo_producto_id: int | None = None,
+        ordenar_por: str | None = None,
+        orden: str | None = None,
     ) -> tuple[list[Producto], int]:
         """
         Lista productos de una empresa con paginación.
@@ -76,7 +78,20 @@ class ProductoCRUDRepository:
             count_result = await self.session.execute(count_stmt)
             total = count_result.scalar() or 0
             
-            # Listar con paginación
+            stmt_base = aplicar_orden(
+                stmt_base,
+                columnas={
+                    "id": Producto.id,
+                    "nombre": Producto.nombre,
+                    "sku": Producto.sku,
+                    "activo": Producto.activo,
+                    "empresa_id": Producto.empresa_id,
+                },
+                ordenar_por=ordenar_por,
+                orden=orden,
+                default=Producto.nombre,
+            )
+
             offset = (pagina - 1) * por_pagina
             stmt = stmt_base.offset(offset).limit(por_pagina)
             

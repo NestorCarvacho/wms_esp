@@ -63,15 +63,100 @@ def normalize_database_url(raw: str) -> str:
     return url
 
 
-def connect():
-    load_dotenv(ROOT / ".env")
-    raw = os.getenv("DATABASE_URL")
-    if not raw:
-        print("ERROR: DATABASE_URL no está definida.", file=sys.stderr)
-        print("En Railway: railway service link MySQL && railway run python scripts/apply_railway_migrations.py")
-        sys.exit(1)
+def _is_local_host(host: str | None) -> bool:
+    return (host or "localhost") in ("localhost", "127.0.0.1")
 
-    url = make_url(normalize_database_url(raw))
+
+def _build_public_mysql_url(
+    *,
+    user: str,
+    password: str,
+    database: str,
+    host: str,
+    port: int,
+) -> str:
+    from sqlalchemy.engine import URL
+
+    return str(
+        URL.create(
+            "mysql",
+            username=user,
+            password=password,
+            host=host,
+            port=port,
+            database=database,
+        )
+    )
+
+
+def resolve_database_url() -> str:
+    """
+    Prioridad:
+    1. MYSQL_PUBLIC_URL (railway service link MySQL + railway run desde tu PC)
+    2. DATABASE_URL remota (no localhost / no *.railway.internal sin proxy)
+    3. Proxy TCP público + credenciales Railway
+    4. .env local (desarrollo)
+    """
+    public = os.getenv("MYSQL_PUBLIC_URL", "").strip()
+    if public:
+        return normalize_database_url(public)
+
+    db_url = os.getenv("DATABASE_URL", "").strip()
+    if db_url:
+        parsed = make_url(normalize_database_url(db_url))
+        host = parsed.host or "localhost"
+        if not _is_local_host(host) and "railway.internal" not in host:
+            return normalize_database_url(db_url)
+
+        proxy_host = os.getenv("RAILWAY_TCP_PROXY_DOMAIN") or os.getenv("MYSQL_TCP_PROXY_HOST")
+        proxy_port = os.getenv("RAILWAY_TCP_PROXY_PORT") or os.getenv("MYSQL_TCP_PROXY_PORT")
+        user = parsed.username or os.getenv("MYSQLUSER") or os.getenv("MYSQL_USER")
+        password = parsed.password or os.getenv("MYSQLPASSWORD") or os.getenv("MYSQL_PASSWORD") or ""
+        database = parsed.database or os.getenv("MYSQLDATABASE") or os.getenv("MYSQL_DATABASE") or "railway"
+        if proxy_host and proxy_port and user:
+            return _build_public_mysql_url(
+                user=user,
+                password=password,
+                database=database,
+                host=proxy_host,
+                port=int(proxy_port),
+            )
+
+    proxy_host = os.getenv("RAILWAY_TCP_PROXY_DOMAIN") or os.getenv("MYSQL_TCP_PROXY_HOST")
+    proxy_port = os.getenv("RAILWAY_TCP_PROXY_PORT") or os.getenv("MYSQL_TCP_PROXY_PORT")
+    user = os.getenv("MYSQLUSER") or os.getenv("MYSQL_USER")
+    password = os.getenv("MYSQLPASSWORD") or os.getenv("MYSQL_PASSWORD") or ""
+    database = os.getenv("MYSQLDATABASE") or os.getenv("MYSQL_DATABASE") or "railway"
+    if proxy_host and proxy_port and user:
+        return _build_public_mysql_url(
+            user=user,
+            password=password,
+            database=database,
+            host=proxy_host,
+            port=int(proxy_port),
+        )
+
+    load_dotenv(ROOT / ".env")
+    local = os.getenv("DATABASE_URL", "").strip()
+    if local:
+        parsed = make_url(normalize_database_url(local))
+        if os.getenv("RAILWAY_ENVIRONMENT") and _is_local_host(parsed.host):
+            print(
+                "AVISO: railway run inyectó RAILWAY_* pero se usará DATABASE_URL local "
+                f"({parsed.host}/{parsed.database}). Enlaza MySQL: railway service link MySQL",
+                file=sys.stderr,
+            )
+        return normalize_database_url(local)
+
+    print("ERROR: No hay URL de MySQL.", file=sys.stderr)
+    print("  railway service link MySQL", file=sys.stderr)
+    print("  railway run python scripts/apply_railway_migrations.py", file=sys.stderr)
+    sys.exit(1)
+
+
+def connect():
+    raw = resolve_database_url()
+    url = make_url(raw)
     return pymysql.connect(
         host=url.host or "localhost",
         port=url.port or 3306,
@@ -263,7 +348,8 @@ def main() -> None:
 
             files = [MIGRATIONS_DIR / args.file] if args.file else [MIGRATIONS_DIR / f for f in MIGRATION_FILES]
 
-            print(f"Conectado a: {make_url(normalize_database_url(os.environ['DATABASE_URL'])).database}")
+            target = make_url(resolve_database_url())
+            print(f"Conectado a: {target.host}:{target.port}/{target.database}")
 
             print("\n>> fix_rol_drop_cargo_id")
             for line in fix_rol_drop_cargo_id(cursor):

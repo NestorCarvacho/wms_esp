@@ -6,6 +6,7 @@ from app.infrastructure.repositories.inventario_crud_repository import Inventari
 from app.domain.services.inventario_operacion_service import InventarioOperacionService
 from app.api.v1.dependencies import obtener_id
 from app.api.v1.empresa_contexto import ContextoEmpresa, kwargs_listado, contexto_requiere_permiso
+from app.api.v1.listado_query import orden_listado
 from app.schemas.inventario import (
     RespuestaAPIDTO,
     RecepcionDTO,
@@ -30,6 +31,7 @@ async def listar_stock(
     bodega_id: int | None = None,
     producto_id: int | None = None,
     zona_bodega_id: int | None = None,
+    orden_params: dict = Depends(orden_listado),
     ctx: ContextoEmpresa = Depends(contexto_requiere_permiso("inventario.leer")),
     service: InventarioOperacionService = Depends(obtener_inventario_service),
 ):
@@ -42,6 +44,7 @@ async def listar_stock(
             producto_id=producto_id,
             zona_bodega_id=zona_bodega_id,
             **kwargs_listado(ctx),
+            **orden_params,
         )
         return RespuestaAPIDTO(
             exito=True,
@@ -58,6 +61,7 @@ async def listar_movimientos(
     por_pagina: int = 50,
     producto_id: int | None = None,
     tipo: str | None = Query(None, description="RECEPCION | TRASLADO | DESPACHO"),
+    orden_params: dict = Depends(orden_listado),
     ctx: ContextoEmpresa = Depends(contexto_requiere_permiso("inventario.leer")),
     service: InventarioOperacionService = Depends(obtener_inventario_service),
 ):
@@ -69,6 +73,7 @@ async def listar_movimientos(
             producto_id=producto_id,
             tipo=tipo,
             **kwargs_listado(ctx),
+            **orden_params,
         )
         return RespuestaAPIDTO(
             exito=True,

@@ -19,6 +19,8 @@ railway service link MySQL
 railway run python scripts/apply_railway_migrations.py
 ```
 
+> **Importante:** el servicio enlazado debe ser **MySQL**, no `wms_esp`. Si tienes `.env` local con `DATABASE_URL=localhost`, el script usa `MYSQL_PUBLIC_URL` de Railway y **no** tu MySQL local. Al terminar debe mostrar algo como `viaduct.proxy.rlwy.net:.../railway`, no `localhost/wms_esp`.
+
 Con otro email de superadmin:
 
 ```bash

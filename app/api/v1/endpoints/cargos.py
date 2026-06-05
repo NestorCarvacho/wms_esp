@@ -10,6 +10,7 @@ from app.infrastructure.repositories.cargo_crud_repository import CargoCRUDRepos
 from app.domain.services.cargo_service import CargoService
 from app.api.v1.dependencies import obtener_usuario_autenticado, requiere_permiso, es_super_admin
 from app.api.v1.empresa_contexto import ContextoEmpresa, kwargs_listado, obtener_contexto_empresa, resolver_empresa_creacion, contexto_requiere_permiso
+from app.api.v1.listado_query import orden_listado
 from app.schemas.cargo import (
     CargoCrearDTO,
     CargoActualizarDTO,
@@ -40,6 +41,7 @@ async def listar_cargos(
     pagina: int = 1,
     por_pagina: int = 10,
     buscar: str | None = None,
+    orden_params: dict = Depends(orden_listado),
     ctx: ContextoEmpresa = Depends(obtener_contexto_empresa),
     service: CargoService = Depends(obtener_cargo_service)
 
@@ -68,6 +70,7 @@ async def listar_cargos(
             por_pagina=por_pagina,
             buscar=buscar,
             **kwargs_listado(ctx),
+            **orden_params,
         )
         
         return RespuestaAPIDTO(

@@ -18,6 +18,8 @@ class PermisoService:
         empresa_id_filtro: int | None = None,
         empresas_scope_ids: list[int] | None = None,
         buscar: str | None = None,
+        ordenar_por: str | None = None,
+        orden: str | None = None,
     ) -> Dict[str, Any]:
         permisos, total = await self.repository.listar(
             empresa_id,
@@ -27,6 +29,8 @@ class PermisoService:
             empresa_id_filtro,
             empresas_scope_ids,
             buscar,
+            ordenar_por=ordenar_por,
+            orden=orden,
         )
         return {
             "total": total,

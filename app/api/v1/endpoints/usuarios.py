@@ -10,6 +10,7 @@ from app.infrastructure.repositories.usuario_crud_repository import UsuarioCRUDR
 from app.domain.services.usuario_service import UsuarioService
 from app.api.v1.dependencies import obtener_usuario_autenticado, requiere_permiso, es_super_admin
 from app.api.v1.empresa_contexto import ContextoEmpresa, kwargs_listado, obtener_contexto_empresa, contexto_requiere_permiso
+from app.api.v1.listado_query import orden_listado
 from app.domain.services.usuario_rol_service import UsuarioRolService
 from app.infrastructure.repositories.usuario_rol_crud_repository import UsuarioRolCRUDRepository
 from app.schemas.permiso import UsuarioRolSincronizarDTO
@@ -48,6 +49,7 @@ async def listar_usuarios(
     por_pagina: int = 10,
     buscar: str | None = None,
     cargo_id: int | None = None,
+    orden_params: dict = Depends(orden_listado),
     ctx: ContextoEmpresa = Depends(obtener_contexto_empresa),
     service: UsuarioService = Depends(obtener_usuario_service)
 
@@ -77,6 +79,7 @@ async def listar_usuarios(
             buscar=buscar,
             cargo_id=cargo_id,
             **kwargs_listado(ctx),
+            **orden_params,
         )
         
         return RespuestaAPIDTO(
