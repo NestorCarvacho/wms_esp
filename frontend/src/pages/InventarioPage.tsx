@@ -29,6 +29,7 @@ import {
   INVENTARIO_VISTA_META,
   type InventarioVista,
 } from '@/pages/inventario/inventarioViews';
+import { appPath } from '@/routes/paths';
 
 const OP_VISTAS: InventarioVista[] = ['recepcion', 'traslado', 'despacho'];
 
@@ -334,5 +335,5 @@ export function InventarioPage({ vista }: InventarioPageProps) {
 
 /** Redirige /inventario al primer destino con permiso (stock por defecto). */
 export function InventarioIndexRedirect() {
-  return <Navigate to="/inventario/stock" replace />;
+  return <Navigate to={appPath('/inventario/stock')} replace />;
 }

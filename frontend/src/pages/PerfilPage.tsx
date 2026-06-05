@@ -13,6 +13,7 @@ import { useAuthContext } from '@/context/AuthContext';
 import { ApiError } from '@/api/client';
 import { colorClass } from '@/assets/styles/colors';
 import type { PerfilUsuarioActualizar } from '@/types/api';
+import { appPath } from '@/routes/paths';
 
 const GENERO_OPTIONS = [
   { label: 'Masculino', value: 'M' },
@@ -142,7 +143,7 @@ export function PerfilPage() {
 
   return (
     <PageLayout
-      routes={[{ text: 'Inicio', onClick: () => navigate('/') }, { text: 'Mi perfil' }]}
+      routes={[{ text: 'Inicio', onClick: () => navigate(appPath()) }, { text: 'Mi perfil' }]}
       icon="user"
       supportingText="Datos de cuenta y perfil personal"
     >
@@ -201,7 +202,7 @@ export function PerfilPage() {
 
           <FormLayout.Footer
             cancelButton={
-              <PrimaryButton type="button" variant="outline" onClick={() => navigate('/')}>
+              <PrimaryButton type="button" variant="outline" onClick={() => navigate(appPath())}>
                 Volver
               </PrimaryButton>
             }

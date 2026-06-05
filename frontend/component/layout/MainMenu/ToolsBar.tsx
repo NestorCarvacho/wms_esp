@@ -2,6 +2,7 @@ import { Menu, User, ChevronDown } from 'lucide-react';
 import { NavIcon } from '@/components/ui/buttons';
 import { SearchBar, ThemeToggle, UserDropdown } from './';
 import { Link } from 'react-router-dom';
+import { appPath } from '@/routes/paths';
 import { LogoWms } from '@/components/ui/images';
 import { cn } from '@/lib/utils';
 import {
@@ -47,7 +48,7 @@ const ToolsBar: React.FC<ToolsBarProps> = ({
           aria-hidden
         />
 
-        <Link to="/" className="flex items-center gap-2 hover:opacity-90 transition-opacity">
+        <Link to={appPath()} className="flex items-center gap-2 hover:opacity-90 transition-opacity">
           <LogoWms variant="solo" className="h-7 w-auto" alt="WMS" />
           <span className="hidden sm:block text-sm font-semibold text-slate-900 dark:text-white">
             WMS
@@ -81,7 +82,7 @@ const ToolsBar: React.FC<ToolsBarProps> = ({
             userName={userName}
             onEditProfile={() => {
               handleUserMenuClose();
-              void navigate('/perfil');
+              void navigate(appPath('/perfil'));
             }}
             onLogout={() => {
               handleUserMenuClose();

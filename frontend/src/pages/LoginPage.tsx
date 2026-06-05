@@ -7,6 +7,7 @@ import { IconScout } from '@/components/ui/images/IconScout';
 import { useAuthContext } from '@/context/AuthContext';
 import { useUI } from '@/hooks/ui';
 import { ApiError } from '@/api/client';
+import { PATHS } from '@/routes/paths';
 
 export function LoginPage() {
   const { login, isAuthenticated } = useAuthContext();
@@ -16,7 +17,7 @@ export function LoginPage() {
   const [loading, setLoading] = useState(false);
 
   if (isAuthenticated) {
-    return <Navigate to="/" replace />;
+    return <Navigate to={PATHS.app} replace />;
   }
 
   async function handleSubmit(e: FormEvent) {

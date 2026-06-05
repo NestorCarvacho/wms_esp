@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import type { IconScoutName } from '@/components/ui/images/IconScout';
 import { buildWmsMenu } from '@/api/menuConfig';
 import { useAuthContext } from '@/context/AuthContext';
+import { appPath } from '@/routes/paths';
 
 export function useBreadcrumb() {
   const location = useLocation();
@@ -16,7 +17,7 @@ export function useBreadcrumb() {
       for (const section of menu.children ?? []) {
         for (const child of section.children ?? []) {
           const url = child.url?.startsWith('/') ? child.url : `/${child.url ?? ''}`;
-          if (url === location.pathname || (url === '/' && location.pathname === '/')) {
+          if (url === location.pathname) {
             return {
               icon: (child.routeMetadata?.iconName ?? 'home') as IconScoutName,
               title: child.routeMetadata?.breadcrumbTitle ?? child.title,
@@ -25,23 +26,23 @@ export function useBreadcrumb() {
                 { text: section.title },
                 { text: child.title },
               ],
-              backTo: url === '/' ? undefined : '/',
+              backTo: url === appPath() ? undefined : appPath(),
             };
           }
         }
       }
     }
 
-    if (location.pathname === '/perfil') {
+    if (location.pathname === appPath('/perfil')) {
       return {
         icon: 'user' as IconScoutName,
         title: 'Mi perfil',
         items: [{ text: 'Inicio' }, { text: 'Mi perfil' }],
-        backTo: '/',
+        backTo: appPath(),
       };
     }
 
-    if (location.pathname === '/') {
+    if (location.pathname === appPath()) {
       return {
         icon: 'home' as IconScoutName,
         title: 'Panel principal',

@@ -1,4 +1,4 @@
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import type { ReactNode } from 'react';
 
 import { AuthProvider } from '@/context/AuthContext';
@@ -11,7 +11,9 @@ import MainLayout from '@/components/layout/MainLayout';
 import { ProtectedRoute } from '@/routing/ProtectedRoute';
 import { PermissionRoute } from '@/routing/PermissionRoute';
 import { ROUTE_PERMISSIONS } from '@/api/menuConfig';
+import { appPath } from '@/routes/paths';
 
+import { LandingPage } from '@/pages/LandingPage';
 import { LoginPage } from '@/pages/LoginPage';
 
 import { DashboardPage } from '@/pages/DashboardPage';
@@ -41,6 +43,12 @@ import { TooltipProvider } from '@/components/ui/shadcn/tooltip';
 
 registerCrudPanels();
 
+function LegacyInventarioRedirect() {
+  const { pathname } = useLocation();
+  const suffix = pathname.replace(/^\/inventario/, '') || '/stock';
+  return <Navigate to={appPath(`/inventario${suffix}`)} replace />;
+}
+
 function guarded(path: string, element: ReactNode) {
   const permission = ROUTE_PERMISSIONS[path];
   if (!permission) return element;
@@ -57,9 +65,11 @@ export default function App() {
 
         <Routes>
 
+          <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
 
           <Route
+            path="app"
             element={
               <ProtectedRoute>
                 <MainLayout />
@@ -69,38 +79,42 @@ export default function App() {
 
             <Route index element={<DashboardPage />} />
 
-            <Route path="productos" element={guarded('/productos', <ProductosPage />)} />
-            <Route path="tipos-producto" element={guarded('/tipos-producto', <TiposProductoPage />)} />
+            <Route path="productos" element={guarded(appPath('/productos'), <ProductosPage />)} />
+            <Route path="tipos-producto" element={guarded(appPath('/tipos-producto'), <TiposProductoPage />)} />
 
-            <Route path="bodegas" element={guarded('/bodegas', <BodegasPage />)} />
-            <Route path="tipos-zona" element={guarded('/tipos-zona', <TiposZonaPage />)} />
-            <Route path="zonas-bodega" element={guarded('/zonas-bodega', <ZonasBodegaPage />)} />
+            <Route path="bodegas" element={guarded(appPath('/bodegas'), <BodegasPage />)} />
+            <Route path="tipos-zona" element={guarded(appPath('/tipos-zona'), <TiposZonaPage />)} />
+            <Route path="zonas-bodega" element={guarded(appPath('/zonas-bodega'), <ZonasBodegaPage />)} />
             <Route path="inventario" element={<InventarioIndexRedirect />} />
-            <Route path="inventario/stock" element={guarded('/inventario/stock', <InventarioPage vista="stock" />)} />
-            <Route path="inventario/movimientos" element={guarded('/inventario/movimientos', <InventarioPage vista="movimientos" />)} />
-            <Route path="inventario/recepcion" element={guarded('/inventario/recepcion', <InventarioPage vista="recepcion" />)} />
-            <Route path="inventario/traslado" element={guarded('/inventario/traslado', <InventarioPage vista="traslado" />)} />
-            <Route path="inventario/despacho" element={guarded('/inventario/despacho', <InventarioPage vista="despacho" />)} />
+            <Route path="inventario/stock" element={guarded(appPath('/inventario/stock'), <InventarioPage vista="stock" />)} />
+            <Route path="inventario/movimientos" element={guarded(appPath('/inventario/movimientos'), <InventarioPage vista="movimientos" />)} />
+            <Route path="inventario/recepcion" element={guarded(appPath('/inventario/recepcion'), <InventarioPage vista="recepcion" />)} />
+            <Route path="inventario/traslado" element={guarded(appPath('/inventario/traslado'), <InventarioPage vista="traslado" />)} />
+            <Route path="inventario/despacho" element={guarded(appPath('/inventario/despacho'), <InventarioPage vista="despacho" />)} />
             <Route
               path="inventario/configuracion"
-              element={guarded('/inventario/configuracion', <InventarioPage vista="configuracion" />)}
+              element={guarded(appPath('/inventario/configuracion'), <InventarioPage vista="configuracion" />)}
             />
 
-            <Route path="usuarios" element={guarded('/usuarios', <UsuariosPage />)} />
+            <Route path="usuarios" element={guarded(appPath('/usuarios'), <UsuariosPage />)} />
 
-            <Route path="cargos" element={guarded('/cargos', <CargosPage />)} />
-            <Route path="roles" element={guarded('/roles', <RolesPage />)} />
-            <Route path="asignar-permisos" element={guarded('/asignar-permisos', <AsignarPermisosPage />)} />
-            <Route path="permisos" element={guarded('/permisos', <PermisosPage />)} />
+            <Route path="cargos" element={guarded(appPath('/cargos'), <CargosPage />)} />
+            <Route path="roles" element={guarded(appPath('/roles'), <RolesPage />)} />
+            <Route path="asignar-permisos" element={guarded(appPath('/asignar-permisos'), <AsignarPermisosPage />)} />
+            <Route path="permisos" element={guarded(appPath('/permisos'), <PermisosPage />)} />
 
-            <Route path="empresas" element={guarded('/empresas', <EmpresasPage />)} />
+            <Route path="empresas" element={guarded(appPath('/empresas'), <EmpresasPage />)} />
 
-            <Route path="unidades-medida" element={guarded('/unidades-medida', <UnidadesMedidaPage />)} />
+            <Route path="unidades-medida" element={guarded(appPath('/unidades-medida'), <UnidadesMedidaPage />)} />
             <Route path="perfil" element={<PerfilPage />} />
 
-            <Route path="permisos-cargo" element={<Navigate to="/asignar-permisos" replace />} />
+            <Route path="permisos-cargo" element={<Navigate to={appPath('/asignar-permisos')} replace />} />
 
           </Route>
+
+          {/* Compatibilidad con URLs antiguas (pre-landing) */}
+          <Route path="productos" element={<Navigate to={appPath('/productos')} replace />} />
+          <Route path="inventario/*" element={<LegacyInventarioRedirect />} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
 

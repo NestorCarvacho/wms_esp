@@ -1,3 +1,5 @@
+import { appPath } from '@/routes/paths';
+
 export interface MenuLinkNode {
   id: string | number;
   title: string;
@@ -26,24 +28,24 @@ export interface MenuItem {
 }
 
 const ROUTE_PERMISSIONS: Record<string, string> = {
-  '/productos': 'productos.leer',
-  '/tipos-producto': 'tipos_producto.leer',
-  '/unidades-medida': 'unidades_medida.leer',
-  '/bodegas': 'bodegas.leer',
-  '/tipos-zona': 'tipos_zona.leer',
-  '/zonas-bodega': 'zonas_bodega.leer',
-  '/inventario/stock': 'inventario.leer',
-  '/inventario/movimientos': 'inventario.leer',
-  '/inventario/recepcion': 'inventario.recepcionar',
-  '/inventario/traslado': 'inventario.trasladar',
-  '/inventario/despacho': 'inventario.despachar',
-  '/inventario/configuracion': 'inventario.configurar',
-  '/usuarios': 'usuarios.leer',
-  '/cargos': 'cargos.leer',
-  '/roles': 'roles.leer',
-  '/asignar-permisos': 'roles.leer',
-  '/permisos': 'permisos.leer',
-  '/empresas': 'empresas.leer',
+  [appPath('/productos')]: 'productos.leer',
+  [appPath('/tipos-producto')]: 'tipos_producto.leer',
+  [appPath('/unidades-medida')]: 'unidades_medida.leer',
+  [appPath('/bodegas')]: 'bodegas.leer',
+  [appPath('/tipos-zona')]: 'tipos_zona.leer',
+  [appPath('/zonas-bodega')]: 'zonas_bodega.leer',
+  [appPath('/inventario/stock')]: 'inventario.leer',
+  [appPath('/inventario/movimientos')]: 'inventario.leer',
+  [appPath('/inventario/recepcion')]: 'inventario.recepcionar',
+  [appPath('/inventario/traslado')]: 'inventario.trasladar',
+  [appPath('/inventario/despacho')]: 'inventario.despachar',
+  [appPath('/inventario/configuracion')]: 'inventario.configurar',
+  [appPath('/usuarios')]: 'usuarios.leer',
+  [appPath('/cargos')]: 'cargos.leer',
+  [appPath('/roles')]: 'roles.leer',
+  [appPath('/asignar-permisos')]: 'roles.leer',
+  [appPath('/permisos')]: 'permisos.leer',
+  [appPath('/empresas')]: 'empresas.leer',
 };
 
 function withPermissions(node: MenuLinkNode): MenuLinkNode {
@@ -83,18 +85,18 @@ export function buildWmsMenu(
           title: 'Catálogo',
           icon: 'folderOpen',
           children: [
-            { id: 'productos', title: 'Productos', url: '/productos', routeMetadata: { iconName: 'table', breadcrumbTitle: 'Productos' } },
-            { id: 'tipos-producto', title: 'Tipos de producto', url: '/tipos-producto', routeMetadata: { iconName: 'layers', breadcrumbTitle: 'Tipos de producto' } },
-            { id: 'unidades', title: 'Unidades de medida', url: '/unidades-medida', routeMetadata: { iconName: 'layers', breadcrumbTitle: 'Unidades de medida' } },
+            { id: 'productos', title: 'Productos', url: appPath('/productos'), routeMetadata: { iconName: 'table', breadcrumbTitle: 'Productos' } },
+            { id: 'tipos-producto', title: 'Tipos de producto', url: appPath('/tipos-producto'), routeMetadata: { iconName: 'layers', breadcrumbTitle: 'Tipos de producto' } },
+            { id: 'unidades', title: 'Unidades de medida', url: appPath('/unidades-medida'), routeMetadata: { iconName: 'layers', breadcrumbTitle: 'Unidades de medida' } },
           ],
         },
         {
           title: 'Almacén',
           icon: 'building',
           children: [
-            { id: 'bodegas', title: 'Bodegas', url: '/bodegas', routeMetadata: { iconName: 'building', breadcrumbTitle: 'Bodegas' } },
-            { id: 'tipos-zona', title: 'Tipos de zona', url: '/tipos-zona', routeMetadata: { iconName: 'layers', breadcrumbTitle: 'Tipos de zona' } },
-            { id: 'zonas-bodega', title: 'Zonas de bodega', url: '/zonas-bodega', routeMetadata: { iconName: 'layers', breadcrumbTitle: 'Zonas de bodega' } },
+            { id: 'bodegas', title: 'Bodegas', url: appPath('/bodegas'), routeMetadata: { iconName: 'building', breadcrumbTitle: 'Bodegas' } },
+            { id: 'tipos-zona', title: 'Tipos de zona', url: appPath('/tipos-zona'), routeMetadata: { iconName: 'layers', breadcrumbTitle: 'Tipos de zona' } },
+            { id: 'zonas-bodega', title: 'Zonas de bodega', url: appPath('/zonas-bodega'), routeMetadata: { iconName: 'layers', breadcrumbTitle: 'Zonas de bodega' } },
           ],
         },
       ],
@@ -110,14 +112,14 @@ export function buildWmsMenu(
             {
               id: 'inv-stock',
               title: 'Stock por ubicación',
-              url: '/inventario/stock',
+              url: appPath('/inventario/stock'),
               permission: 'inventario.leer',
               routeMetadata: { iconName: 'table', breadcrumbTitle: 'Stock por ubicación' },
             },
             {
               id: 'inv-movimientos',
               title: 'Historial de movimientos',
-              url: '/inventario/movimientos',
+              url: appPath('/inventario/movimientos'),
               permission: 'inventario.leer',
               routeMetadata: { iconName: 'table', breadcrumbTitle: 'Historial de movimientos' },
             },
@@ -130,21 +132,21 @@ export function buildWmsMenu(
             {
               id: 'inv-recepcion',
               title: 'Recepción',
-              url: '/inventario/recepcion',
+              url: appPath('/inventario/recepcion'),
               permission: 'inventario.recepcionar',
               routeMetadata: { iconName: 'layers', breadcrumbTitle: 'Recepción' },
             },
             {
               id: 'inv-traslado',
               title: 'Traslado',
-              url: '/inventario/traslado',
+              url: appPath('/inventario/traslado'),
               permission: 'inventario.trasladar',
               routeMetadata: { iconName: 'layers', breadcrumbTitle: 'Traslado' },
             },
             {
               id: 'inv-despacho',
               title: 'Despacho',
-              url: '/inventario/despacho',
+              url: appPath('/inventario/despacho'),
               permission: 'inventario.despachar',
               routeMetadata: { iconName: 'layers', breadcrumbTitle: 'Despacho' },
             },
@@ -157,7 +159,7 @@ export function buildWmsMenu(
             {
               id: 'inv-config',
               title: 'Zona de recepción',
-              url: '/inventario/configuracion',
+              url: appPath('/inventario/configuracion'),
               permission: 'inventario.configurar',
               routeMetadata: { iconName: 'setting', breadcrumbTitle: 'Zona de recepción' },
             },
@@ -173,11 +175,11 @@ export function buildWmsMenu(
           title: 'Accesos',
           icon: 'usersAlt',
           children: [
-            { id: 'usuarios', title: 'Usuarios', url: '/usuarios', routeMetadata: { iconName: 'user', breadcrumbTitle: 'Usuarios' } },
-            { id: 'cargos', title: 'Cargos', url: '/cargos', routeMetadata: { iconName: 'user', breadcrumbTitle: 'Cargos' } },
-            { id: 'roles', title: 'Roles', url: '/roles', routeMetadata: { iconName: 'lock', breadcrumbTitle: 'Roles' } },
-            { id: 'asignar-permisos', title: 'Asignar permisos', url: '/asignar-permisos', routeMetadata: { iconName: 'lock', breadcrumbTitle: 'Asignar permisos' } },
-            { id: 'permisos', title: 'Permisos', url: '/permisos', routeMetadata: { iconName: 'lock', breadcrumbTitle: 'Permisos' } },
+            { id: 'usuarios', title: 'Usuarios', url: appPath('/usuarios'), routeMetadata: { iconName: 'user', breadcrumbTitle: 'Usuarios' } },
+            { id: 'cargos', title: 'Cargos', url: appPath('/cargos'), routeMetadata: { iconName: 'user', breadcrumbTitle: 'Cargos' } },
+            { id: 'roles', title: 'Roles', url: appPath('/roles'), routeMetadata: { iconName: 'lock', breadcrumbTitle: 'Roles' } },
+            { id: 'asignar-permisos', title: 'Asignar permisos', url: appPath('/asignar-permisos'), routeMetadata: { iconName: 'lock', breadcrumbTitle: 'Asignar permisos' } },
+            { id: 'permisos', title: 'Permisos', url: appPath('/permisos'), routeMetadata: { iconName: 'lock', breadcrumbTitle: 'Permisos' } },
           ],
         },
       ],
@@ -185,14 +187,14 @@ export function buildWmsMenu(
   ];
 
   const configChildren: MenuLinkNode[] = [
-    { id: 'inicio', title: 'Panel principal', url: '/', routeMetadata: { iconName: 'home', breadcrumbTitle: 'Inicio' } },
+    { id: 'inicio', title: 'Panel principal', url: appPath(), routeMetadata: { iconName: 'home', breadcrumbTitle: 'Inicio' } },
   ];
 
   if (isSuperAdmin) {
     configChildren.push({
       id: 'empresas',
       title: 'Empresas',
-      url: '/empresas',
+      url: appPath('/empresas'),
       routeMetadata: { iconName: 'building', breadcrumbTitle: 'Empresas' },
     });
   }

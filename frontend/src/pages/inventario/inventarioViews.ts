@@ -1,3 +1,5 @@
+import { appPath } from '@/routes/paths';
+
 export type InventarioVista =
   | 'stock'
   | 'movimientos'
@@ -23,10 +25,10 @@ export const INVENTARIO_VISTA_META: Record<
 };
 
 export const INVENTARIO_ROUTE_PATHS: Record<InventarioVista, string> = {
-  stock: '/inventario/stock',
-  movimientos: '/inventario/movimientos',
-  recepcion: '/inventario/recepcion',
-  traslado: '/inventario/traslado',
-  despacho: '/inventario/despacho',
-  configuracion: '/inventario/configuracion',
+  stock: appPath('/inventario/stock'),
+  movimientos: appPath('/inventario/movimientos'),
+  recepcion: appPath('/inventario/recepcion'),
+  traslado: appPath('/inventario/traslado'),
+  despacho: appPath('/inventario/despacho'),
+  configuracion: appPath('/inventario/configuracion'),
 };

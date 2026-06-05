@@ -18,6 +18,7 @@ import { ApiError } from '@/api/client';
 import { colorClass } from '@/assets/styles/colors';
 import { cn } from '@/lib/utils';
 import { displayEmpresa } from '@/utils/displayLabels';
+import { appPath } from '@/routes/paths';
 
 const EMPRESA_MAESTRA_ID = 1;
 
@@ -180,12 +181,12 @@ export function DashboardPage() {
   }, [isSuperAdmin]);
 
   const quickLinks: QuickLink[] = [
-    { to: '/productos', title: 'Productos', description: 'Catálogo y SKUs', icon: 'table' },
-    { to: '/bodegas', title: 'Bodegas', description: 'Almacenes y ubicaciones', icon: 'building' },
-    { to: '/unidades-medida', title: 'Unidades de medida', description: 'KG, UN, LT…', icon: 'layers' },
-    { to: '/usuarios', title: 'Usuarios', description: 'Accesos del sistema', icon: 'user' },
+    { to: appPath('/productos'), title: 'Productos', description: 'Catálogo y SKUs', icon: 'table' },
+    { to: appPath('/bodegas'), title: 'Bodegas', description: 'Almacenes y ubicaciones', icon: 'building' },
+    { to: appPath('/unidades-medida'), title: 'Unidades de medida', description: 'KG, UN, LT…', icon: 'layers' },
+    { to: appPath('/usuarios'), title: 'Usuarios', description: 'Accesos del sistema', icon: 'user' },
     ...(isSuperAdmin
-      ? [{ to: '/empresas', title: 'Empresas', description: 'Tenants del WMS', icon: 'building' as const }]
+      ? [{ to: appPath('/empresas'), title: 'Empresas', description: 'Tenants del WMS', icon: 'building' as const }]
       : []),
   ];
 

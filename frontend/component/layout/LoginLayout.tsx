@@ -1,6 +1,8 @@
 import React from 'react';
 import { LogoWms } from '@/components/ui/images';
 import { Card } from '@/components/ui/cards/Card';
+import { LoginBackground } from './LoginBackground';
+import { cn } from '@/lib/utils';
 
 interface LoginLayoutProps {
   children: React.ReactNode;
@@ -9,33 +11,38 @@ interface LoginLayoutProps {
 }
 
 /**
- * Layout de login (shadcn Card).
+ * Layout de login — variante de fondo en `loginBackgroundConfig.ts`.
  */
 export const LoginLayout: React.FC<LoginLayoutProps> = ({
   children,
   title = '¡Bienvenido a WMS!',
   description,
 }) => (
-  <div className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 px-4 py-12">
-    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-700/20 via-transparent to-transparent pointer-events-none" />
+  <div className="relative flex min-h-screen items-center justify-center px-4 py-12">
+    <LoginBackground />
 
     <div className="relative z-10 w-full max-w-md">
-      <Card elevation={3} padding="24px" className="border-slate-200/80 shadow-xl">
-        <div className="text-center mb-8">
+      <Card
+        elevation={2}
+        padding="28px"
+        className={cn(
+          'border border-border/60 shadow-lg',
+          'bg-card',
+        )}
+      >
+        <div className="mb-8 text-center">
           <LogoWms variant="full" />
-          <h1 className="mt-6 text-xl font-semibold text-slate-900">{title}</h1>
+          <h1 className="mt-6 text-xl font-semibold tracking-tight text-foreground">{title}</h1>
         </div>
 
         {description && (
-          <p className="text-sm text-slate-600 mb-6 text-center">{description}</p>
+          <p className="mb-6 text-center text-sm text-muted-foreground">{description}</p>
         )}
 
         {children}
       </Card>
 
-      <p className="mt-6 text-center text-xs text-slate-400">
-        WMS Multi-Tenant
-      </p>
+      <p className="mt-6 text-center text-xs text-muted-foreground">WMS Multi-Tenant</p>
     </div>
   </div>
 );
