@@ -483,6 +483,41 @@ export interface StockZonaItem {
   cantidad: number;
 }
 
+export interface InventarioHistogramaDia {
+  fecha: string;
+  recepcion: number;
+  traslado: number;
+  despacho: number;
+  total: number;
+}
+
+export interface InventarioStockDistribucionItem {
+  id: number;
+  etiqueta: string;
+  cantidad: number;
+  lineas: number;
+  porcentaje: number;
+}
+
+export interface InventarioStockDistribucion {
+  nivel: 'bodega' | 'ubicacion';
+  bodega_id: number | null;
+  total_cantidad: number;
+  items: InventarioStockDistribucionItem[];
+}
+
+export interface InventarioDashboardResumen {
+  lineas_stock: number;
+  productos_con_stock: number;
+  ubicaciones_con_stock: number;
+  movimientos_hoy: number;
+  movimientos_semana: number;
+  movimientos_por_tipo_semana: Record<string, number>;
+  histograma_movimientos: InventarioHistogramaDia[];
+  stock_distribucion: InventarioStockDistribucion;
+  ultimos_movimientos: MovimientoInventarioItem[];
+}
+
 export interface PaginatedStockZona {
   total: number;
   pagina: number;

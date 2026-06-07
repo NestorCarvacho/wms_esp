@@ -4,6 +4,7 @@
 
 | Capacidad | API | UI |
 |-----------|-----|-----|
+| Dashboard operativo | `GET /api/v1/inventario/dashboard` | Pestaña *Dashboard* |
 | Stock por zona (`stock_zona`) | `GET /api/v1/inventario/stock` | Pestaña *Stock por ubicación* |
 | Recepción | `POST /api/v1/inventario/recepcion` | Pestaña *Operaciones* |
 | Traslado (misma bodega) | `POST /api/v1/inventario/traslado` | Pestaña *Operaciones* |
@@ -32,6 +33,15 @@ Migración: `mysql-init/12_inventario_operativo.sql` (tablas + permisos `inventa
 1. Aplicar SQL: `mysql-init/12_inventario_operativo.sql` y, si la matriz de permisos muestra filas vacías `recepcion`/`reportes`, también `mysql-init/13_fix_permiso_inventario_codigos.sql`.
 2. Reiniciar API (`uvicorn`) y frontend (`npm run dev`).
 3. Asignar permisos `inventario.*` al rol del usuario (o usar rol Admin empresa 1).
+
+## Reportes exportables
+
+| Reporte | API | Formatos | UI |
+|---------|-----|----------|-----|
+| Stock por ubicación (producto + bodega + zona) | `GET /api/v1/inventario/stock/export?formato=xlsx\|pdf` | Excel, PDF | Stock por ubicación |
+| Historial de movimientos | `GET /api/v1/inventario/movimientos/export?formato=xlsx\|pdf` | Excel, PDF | Historial |
+
+Hasta 50.000 filas por exportación; respeta filtro de empresa y orden de la tabla.
 
 ## Próximos pasos sugeridos
 

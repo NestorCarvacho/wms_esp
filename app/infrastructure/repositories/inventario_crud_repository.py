@@ -1,4 +1,5 @@
 """Repositorio de stock por zona y movimientos de inventario."""
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 from sqlalchemy import select, update, insert, func, and_
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,6 +14,7 @@ from app.infrastructure.models.usuario import (
     Bodega,
     Producto,
     ProductoPresentacion,
+    TipoZona,
 )
 
 
@@ -257,6 +259,271 @@ class InventarioCRUDRepository:
         offset = (pagina - 1) * por_pagina
         rows = (await self.session.execute(stmt.offset(offset).limit(por_pagina))).scalars().all()
         return rows, total
+
+    def _stock_stmt_base(
+        self,
+        empresa_id: int,
+        es_super_admin: bool = False,
+        empresa_id_filtro: int | None = None,
+        empresas_scope_ids: list[int] | None = None,
+    ):
+        stmt = (
+            select(StockZona)
+            .join(ZonaBodega, StockZona.zona_bodega_id == ZonaBodega.id)
+            .join(Bodega, ZonaBodega.bodega_id == Bodega.id)
+            .join(Producto, StockZona.producto_id == Producto.id)
+            .where(StockZona.cantidad > 0)
+        )
+        empresa_cond = filtro_empresa(
+            Bodega, empresa_id, es_super_admin, empresa_id_filtro, empresas_scope_ids
+        )
+        if empresa_cond is not None:
+            stmt = stmt.where(empresa_cond)
+        return stmt
+
+    def _mov_stmt_base(
+        self,
+        empresa_id: int,
+        es_super_admin: bool = False,
+        empresa_id_filtro: int | None = None,
+        empresas_scope_ids: list[int] | None = None,
+    ):
+        stmt = select(MovimientoInventario).where(MovimientoInventario.activo == True)
+        empresa_cond = filtro_empresa(
+            MovimientoInventario,
+            empresa_id,
+            es_super_admin,
+            empresa_id_filtro,
+            empresas_scope_ids,
+        )
+        if empresa_cond is not None:
+            stmt = stmt.where(empresa_cond)
+        return stmt
+
+    async def histograma_movimientos(
+        self,
+        empresa_id: int,
+        dias: int = 30,
+        es_super_admin: bool = False,
+        empresa_id_filtro: int | None = None,
+        empresas_scope_ids: list[int] | None = None,
+    ) -> list[dict]:
+        hoy_inicio = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+        desde = hoy_inicio - timedelta(days=dias - 1)
+        tipos = ("RECEPCION", "TRASLADO", "DESPACHO")
+
+        stmt = (
+            select(
+                func.date(MovimientoInventario.creado_at).label("fecha"),
+                MovimientoInventario.tipo,
+                func.count().label("cnt"),
+            )
+            .where(
+                MovimientoInventario.activo == True,
+                MovimientoInventario.creado_at >= desde,
+            )
+        )
+        empresa_cond = filtro_empresa(
+            MovimientoInventario,
+            empresa_id,
+            es_super_admin,
+            empresa_id_filtro,
+            empresas_scope_ids,
+        )
+        if empresa_cond is not None:
+            stmt = stmt.where(empresa_cond)
+        stmt = stmt.group_by(
+            func.date(MovimientoInventario.creado_at),
+            MovimientoInventario.tipo,
+        )
+
+        rows = (await self.session.execute(stmt)).all()
+        por_fecha: dict[date, dict[str, int]] = {}
+        for i in range(dias):
+            d = (desde + timedelta(days=i)).date()
+            por_fecha[d] = {t: 0 for t in tipos}
+
+        for fecha, tipo, cnt in rows:
+            fd = fecha if isinstance(fecha, date) else fecha
+            if fd in por_fecha and tipo in por_fecha[fd]:
+                por_fecha[fd][tipo] = int(cnt)
+
+        return [
+            {
+                "fecha": d.isoformat(),
+                "recepcion": por_fecha[d]["RECEPCION"],
+                "traslado": por_fecha[d]["TRASLADO"],
+                "despacho": por_fecha[d]["DESPACHO"],
+                "total": sum(por_fecha[d].values()),
+            }
+            for d in sorted(por_fecha.keys())
+        ]
+
+    async def distribucion_stock(
+        self,
+        empresa_id: int,
+        bodega_id: int | None = None,
+        es_super_admin: bool = False,
+        empresa_id_filtro: int | None = None,
+        empresas_scope_ids: list[int] | None = None,
+    ) -> dict:
+        empresa_cond = filtro_empresa(
+            Bodega, empresa_id, es_super_admin, empresa_id_filtro, empresas_scope_ids
+        )
+
+        if bodega_id is not None:
+            stmt = (
+                select(
+                    ZonaBodega.id.label("id"),
+                    func.coalesce(ZonaBodega.nombre, TipoZona.nombre, "Sin nombre").label(
+                        "etiqueta"
+                    ),
+                    func.sum(StockZona.cantidad).label("cantidad"),
+                    func.count(StockZona.id).label("lineas"),
+                )
+                .select_from(StockZona)
+                .join(ZonaBodega, StockZona.zona_bodega_id == ZonaBodega.id)
+                .join(Bodega, ZonaBodega.bodega_id == Bodega.id)
+                .outerjoin(TipoZona, ZonaBodega.tipo_zona_id == TipoZona.id)
+                .where(StockZona.cantidad > 0, Bodega.id == bodega_id)
+                .group_by(ZonaBodega.id, ZonaBodega.nombre, TipoZona.nombre)
+                .order_by(func.sum(StockZona.cantidad).desc())
+            )
+            nivel = "ubicacion"
+        else:
+            stmt = (
+                select(
+                    Bodega.id.label("id"),
+                    Bodega.nombre.label("etiqueta"),
+                    func.sum(StockZona.cantidad).label("cantidad"),
+                    func.count(StockZona.id).label("lineas"),
+                )
+                .select_from(StockZona)
+                .join(ZonaBodega, StockZona.zona_bodega_id == ZonaBodega.id)
+                .join(Bodega, ZonaBodega.bodega_id == Bodega.id)
+                .where(StockZona.cantidad > 0)
+                .group_by(Bodega.id, Bodega.nombre)
+                .order_by(func.sum(StockZona.cantidad).desc())
+            )
+            nivel = "bodega"
+
+        if empresa_cond is not None:
+            stmt = stmt.where(empresa_cond)
+
+        rows = (await self.session.execute(stmt)).all()
+        total = sum(float(r.cantidad or 0) for r in rows)
+        items = [
+            {
+                "id": int(r.id),
+                "etiqueta": r.etiqueta,
+                "cantidad": float(r.cantidad or 0),
+                "lineas": int(r.lineas or 0),
+                "porcentaje": round(float(r.cantidad or 0) / total * 100, 1) if total > 0 else 0.0,
+            }
+            for r in rows
+        ]
+        return {
+            "nivel": nivel,
+            "bodega_id": bodega_id,
+            "total_cantidad": total,
+            "items": items,
+        }
+
+    async def resumen_dashboard(
+        self,
+        empresa_id: int,
+        dias: int = 30,
+        bodega_id: int | None = None,
+        es_super_admin: bool = False,
+        empresa_id_filtro: int | None = None,
+        empresas_scope_ids: list[int] | None = None,
+    ) -> dict:
+        stock_sub = self._stock_stmt_base(
+            empresa_id, es_super_admin, empresa_id_filtro, empresas_scope_ids
+        ).subquery()
+
+        lineas_stock = (
+            await self.session.execute(select(func.count()).select_from(stock_sub))
+        ).scalar() or 0
+
+        productos_con_stock = (
+            await self.session.execute(
+                select(func.count(func.distinct(stock_sub.c.producto_id)))
+            )
+        ).scalar() or 0
+
+        ubicaciones_con_stock = (
+            await self.session.execute(
+                select(func.count(func.distinct(stock_sub.c.zona_bodega_id)))
+            )
+        ).scalar() or 0
+
+        hoy_inicio = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+        semana_inicio = hoy_inicio - timedelta(days=7)
+
+        mov_base = self._mov_stmt_base(
+            empresa_id, es_super_admin, empresa_id_filtro, empresas_scope_ids
+        )
+
+        movimientos_hoy = (
+            await self.session.execute(
+                select(func.count()).select_from(
+                    mov_base.where(MovimientoInventario.creado_at >= hoy_inicio).subquery()
+                )
+            )
+        ).scalar() or 0
+
+        mov_semana_stmt = mov_base.where(MovimientoInventario.creado_at >= semana_inicio)
+        movimientos_semana = (
+            await self.session.execute(
+                select(func.count()).select_from(mov_semana_stmt.subquery())
+            )
+        ).scalar() or 0
+
+        mov_semana_sub = mov_semana_stmt.subquery()
+        por_tipo_rows = (
+            await self.session.execute(
+                select(mov_semana_sub.c.tipo, func.count())
+                .group_by(mov_semana_sub.c.tipo)
+            )
+        ).all()
+
+        movimientos_por_tipo = {tipo: int(cnt) for tipo, cnt in por_tipo_rows}
+
+        ultimos, _ = await self.listar_movimientos(
+            empresa_id=empresa_id,
+            pagina=1,
+            por_pagina=8,
+            es_super_admin=es_super_admin,
+            empresa_id_filtro=empresa_id_filtro,
+            empresas_scope_ids=empresas_scope_ids,
+            ordenar_por="fecha",
+            orden="desc",
+        )
+
+        filtros = {
+            "es_super_admin": es_super_admin,
+            "empresa_id_filtro": empresa_id_filtro,
+            "empresas_scope_ids": empresas_scope_ids,
+        }
+        histograma = await self.histograma_movimientos(
+            empresa_id=empresa_id, dias=dias, **filtros
+        )
+        stock_distribucion = await self.distribucion_stock(
+            empresa_id=empresa_id, bodega_id=bodega_id, **filtros
+        )
+
+        return {
+            "lineas_stock": int(lineas_stock),
+            "productos_con_stock": int(productos_con_stock),
+            "ubicaciones_con_stock": int(ubicaciones_con_stock),
+            "movimientos_hoy": int(movimientos_hoy),
+            "movimientos_semana": int(movimientos_semana),
+            "movimientos_por_tipo_semana": movimientos_por_tipo,
+            "histograma_movimientos": histograma,
+            "stock_distribucion": stock_distribucion,
+            "ultimos_movimientos": ultimos,
+        }
 
     async def get_bodega_config(self, bodega_id: int) -> BodegaConfig | None:
         result = await self.session.execute(

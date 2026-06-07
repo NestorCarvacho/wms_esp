@@ -239,6 +239,22 @@ class InventarioOperacionService:
             await self.repository.rollback()
             raise
 
+    async def resumen_dashboard(self, empresa_id: int, **kwargs) -> dict:
+        raw = await self.repository.resumen_dashboard(empresa_id=empresa_id, **kwargs)
+        return {
+            "lineas_stock": raw["lineas_stock"],
+            "productos_con_stock": raw["productos_con_stock"],
+            "ubicaciones_con_stock": raw["ubicaciones_con_stock"],
+            "movimientos_hoy": raw["movimientos_hoy"],
+            "movimientos_semana": raw["movimientos_semana"],
+            "movimientos_por_tipo_semana": raw["movimientos_por_tipo_semana"],
+            "histograma_movimientos": raw["histograma_movimientos"],
+            "stock_distribucion": raw["stock_distribucion"],
+            "ultimos_movimientos": [
+                _serializar_movimiento(m) for m in raw["ultimos_movimientos"]
+            ],
+        }
+
     async def listar_stock(self, empresa_id: int, **kwargs) -> dict:
         items, total = await self.repository.listar_stock(empresa_id=empresa_id, **kwargs)
         return {

@@ -1,34 +1,46 @@
 import { useEffect, useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { listarBodegas } from '@/api/bodegas';
 import {
   actualizarConfigInventarioBodega,
+  exportarMovimientosInventario,
+  exportarStockInventario,
   listarMovimientosInventario,
   listarStockInventario,
   obtenerConfigInventarioBodega,
+  obtenerDashboardInventario,
+  type InventarioExportFormat,
 } from '@/api/inventario';
+import { InventarioDashboardCharts } from '@/components/inventario/InventarioDashboardCharts';
 import { InventarioOperacionEscaneo } from '@/components/inventario/InventarioOperacionEscaneo';
+import { InventarioOperativoNav } from '@/components/inventario/InventarioOperativoNav';
 import { listarProductos } from '@/api/productos';
 import { listarZonasBodega } from '@/api/zonasBodega';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { PrimaryButton } from '@/components/ui/buttons';
 import { Card } from '@/components/ui/cards';
 import { Table } from '@/components/ui/tables';
+import { Text } from '@/components/ui/text/Text';
+import { colorClass } from '@/assets/styles/colors';
 import { CrudEmpresaFilterCard } from '@/components/crud/CrudEmpresaFilterCard';
 import { useCrudEmpresaFilterCard } from '@/crud/useCrudEmpresaFilterCard';
 import { usePaginatedCrudTable } from '@/crud/usePaginatedCrudTable';
 import { useCrudUi } from '@/crud/useCrudUi';
 import type {
   Bodega,
+  InventarioDashboardResumen,
   MovimientoInventarioItem,
   Producto,
   StockZonaItem,
   ZonaBodega,
 } from '@/types/api';
 import {
+  INVENTARIO_NAV_ITEMS,
+  INVENTARIO_ROUTE_PATHS,
   INVENTARIO_VISTA_META,
   type InventarioVista,
 } from '@/pages/inventario/inventarioViews';
+import { usePermissions } from '@/hooks/usePermissions';
 import { appPath } from '@/routes/paths';
 
 const OP_VISTAS: InventarioVista[] = ['recepcion', 'traslado', 'despacho'];
@@ -44,8 +56,13 @@ interface InventarioPageProps {
 export function InventarioPage({ vista }: InventarioPageProps) {
   const meta = INVENTARIO_VISTA_META[vista];
   const { notifyApiError, notifySuccess } = useCrudUi();
+  const { tienePermiso } = usePermissions();
   const listFilter = useCrudEmpresaFilterCard();
   const empresaIdParam = listFilter.empresaIdParam;
+  const [dashboard, setDashboard] = useState<InventarioDashboardResumen | null>(null);
+  const [dashboardLoading, setDashboardLoading] = useState(vista === 'dashboard');
+  const [chartBodegaId, setChartBodegaId] = useState('');
+  const [dashboardBodegas, setDashboardBodegas] = useState<Bodega[]>([]);
 
   const stockTable = usePaginatedCrudTable<StockZonaItem>({
     empresaFilterId: empresaIdParam,
@@ -68,9 +85,95 @@ export function InventarioPage({ vista }: InventarioPageProps) {
     onError: (err) => notifyApiError(err, 'Error al cargar movimientos'),
   });
 
+  const [exporting, setExporting] = useState<InventarioExportFormat | null>(null);
+
+  const buildExportParams = (table: { sortKey?: string; sortDirection?: 'asc' | 'desc' }) => ({
+    empresaId: empresaIdParam,
+    ...(table.sortKey
+      ? { ordenarPor: table.sortKey, orden: table.sortDirection ?? ('asc' as const) }
+      : {}),
+  });
+
+  async function handleExportStock(formato: InventarioExportFormat) {
+    setExporting(formato);
+    try {
+      await exportarStockInventario(formato, buildExportParams(stockTable));
+      notifySuccess(
+        formato === 'xlsx' ? 'Reporte Excel descargado' : 'Reporte PDF descargado',
+      );
+    } catch (err) {
+      notifyApiError(err, 'No se pudo exportar el stock');
+    } finally {
+      setExporting(null);
+    }
+  }
+
+  async function handleExportMovimientos(formato: InventarioExportFormat) {
+    setExporting(formato);
+    try {
+      await exportarMovimientosInventario(formato, buildExportParams(movTable));
+      notifySuccess(
+        formato === 'xlsx' ? 'Reporte Excel descargado' : 'Reporte PDF descargado',
+      );
+    } catch (err) {
+      notifyApiError(err, 'No se pudo exportar movimientos');
+    } finally {
+      setExporting(null);
+    }
+  }
+
   const [bodegas, setBodegas] = useState<Bodega[]>([]);
   const [zonas, setZonas] = useState<ZonaBodega[]>([]);
   const [productos, setProductos] = useState<Producto[]>([]);
+
+  useEffect(() => {
+    if (vista !== 'dashboard') return;
+    setChartBodegaId('');
+  }, [vista, empresaIdParam]);
+
+  useEffect(() => {
+    if (vista !== 'dashboard') return;
+    let cancelled = false;
+    listarBodegas({
+      pagina: 1,
+      porPagina: 500,
+      ...(empresaIdParam != null ? { empresaId: empresaIdParam } : {}),
+    })
+      .then((res) => {
+        if (!cancelled) setDashboardBodegas(res.bodegas);
+      })
+      .catch(() => {
+        if (!cancelled) setDashboardBodegas([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [vista, empresaIdParam]);
+
+  useEffect(() => {
+    if (vista !== 'dashboard') return;
+    let cancelled = false;
+    setDashboardLoading(true);
+    obtenerDashboardInventario({
+      empresaId: empresaIdParam,
+      bodegaId: chartBodegaId ? Number(chartBodegaId) : undefined,
+    })
+      .then((data) => {
+        if (!cancelled) setDashboard(data);
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          notifyApiError(err, 'Error al cargar el dashboard');
+          setDashboard(null);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setDashboardLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [vista, empresaIdParam, chartBodegaId, notifyApiError]);
 
   useEffect(() => {
     if (!needsMaestros(vista)) return;
@@ -244,16 +347,117 @@ export function InventarioPage({ vista }: InventarioPageProps) {
         { text: meta.section },
         { text: meta.title },
       ]}
-      icon="table"
+      icon={vista === 'dashboard' ? 'home' : 'table'}
     >
       <CrudEmpresaFilterCard filter={listFilter} className="mb-4" />
+      <InventarioOperativoNav active={vista} />
+
+      {vista === 'dashboard' && (
+        <>
+          {dashboardLoading ? (
+            <Text variant="body-regular" className={colorClass.muted}>
+              Cargando indicadores…
+            </Text>
+          ) : dashboard ? (
+            <div className="space-y-6">
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+                {[
+                  { label: 'Líneas de stock', value: dashboard.lineas_stock },
+                  { label: 'Productos con stock', value: dashboard.productos_con_stock },
+                  { label: 'Ubicaciones', value: dashboard.ubicaciones_con_stock },
+                  { label: 'Movimientos hoy', value: dashboard.movimientos_hoy },
+                  { label: 'Mov. últimos 7 días', value: dashboard.movimientos_semana },
+                ].map((kpi) => (
+                  <Card key={kpi.label} elevation={1} padding="16px">
+                    <Text variant="header-6" className={colorClass.brand}>
+                      {kpi.value}
+                    </Text>
+                    <Text variant="small-regular" className={colorClass.muted}>
+                      {kpi.label}
+                    </Text>
+                  </Card>
+                ))}
+              </div>
+
+              {dashboard.histograma_movimientos && dashboard.stock_distribucion && (
+                <InventarioDashboardCharts
+                  histograma={dashboard.histograma_movimientos}
+                  stockDistribucion={dashboard.stock_distribucion}
+                  bodegas={dashboardBodegas}
+                  chartBodegaId={chartBodegaId}
+                  onChartBodegaChange={setChartBodegaId}
+                  selectClass={selectClass}
+                />
+              )}
+
+              <Card elevation={1} padding="20px">
+                <Text variant="body-medium" className={colorClass.brandLight}>
+                  Accesos rápidos
+                </Text>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {INVENTARIO_NAV_ITEMS.filter(
+                    (item) => item.vista !== 'dashboard' && tienePermiso(item.permission),
+                  ).map((item) => (
+                    <Link key={item.vista} to={item.path}>
+                      <PrimaryButton type="button" variant="outline">
+                        {item.label}
+                      </PrimaryButton>
+                    </Link>
+                  ))}
+                </div>
+              </Card>
+
+              <Card elevation={1} padding="20px">
+                <div className="mb-3 flex items-center justify-between gap-2">
+                  <Text variant="body-medium" className={colorClass.brandLight}>
+                    Últimos movimientos
+                  </Text>
+                  {tienePermiso('inventario.leer') && (
+                    <Link to={INVENTARIO_ROUTE_PATHS.movimientos}>
+                      <PrimaryButton type="button" variant="outline">
+                        Ver historial
+                      </PrimaryButton>
+                    </Link>
+                  )}
+                </div>
+                <Table
+                  columns={movColumns}
+                  data={dashboard.ultimos_movimientos}
+                  totalRows={dashboard.ultimos_movimientos.length}
+                  searchable={false}
+                  emptyMessage="Sin movimientos recientes"
+                />
+              </Card>
+            </div>
+          ) : null}
+        </>
+      )}
 
       {vista === 'stock' && (
         <>
-          <div className="mb-3 flex justify-end">
+          <div className="mb-3 flex flex-wrap justify-end gap-2">
+            <PrimaryButton
+              type="button"
+              variant="outline"
+              isLoading={exporting === 'xlsx'}
+              disabled={exporting !== null}
+              onClick={() => void handleExportStock('xlsx')}
+            >
+              Exportar Excel
+            </PrimaryButton>
+            <PrimaryButton
+              type="button"
+              variant="outline"
+              isLoading={exporting === 'pdf'}
+              disabled={exporting !== null}
+              onClick={() => void handleExportStock('pdf')}
+            >
+              Exportar PDF
+            </PrimaryButton>
             <PrimaryButton
               type="button"
               isLoading={stockTable.loading}
+              disabled={exporting !== null}
               onClick={() => void stockTable.reload()}
             >
               Actualizar inventario
@@ -274,6 +478,27 @@ export function InventarioPage({ vista }: InventarioPageProps) {
       )}
 
       {vista === 'movimientos' && (
+        <>
+          <div className="mb-3 flex flex-wrap justify-end gap-2">
+            <PrimaryButton
+              type="button"
+              variant="outline"
+              isLoading={exporting === 'xlsx'}
+              disabled={exporting !== null}
+              onClick={() => void handleExportMovimientos('xlsx')}
+            >
+              Exportar Excel
+            </PrimaryButton>
+            <PrimaryButton
+              type="button"
+              variant="outline"
+              isLoading={exporting === 'pdf'}
+              disabled={exporting !== null}
+              onClick={() => void handleExportMovimientos('pdf')}
+            >
+              Exportar PDF
+            </PrimaryButton>
+          </div>
         <Card>
           <Table
             columns={movColumns}
@@ -285,6 +510,7 @@ export function InventarioPage({ vista }: InventarioPageProps) {
             {...movTable.sortProps}
           />
         </Card>
+        </>
       )}
 
       {(vista === 'recepcion' || vista === 'traslado' || vista === 'despacho') && (
@@ -335,5 +561,5 @@ export function InventarioPage({ vista }: InventarioPageProps) {
 
 /** Redirige /inventario al primer destino con permiso (stock por defecto). */
 export function InventarioIndexRedirect() {
-  return <Navigate to={appPath('/inventario/stock')} replace />;
+  return <Navigate to={appPath('/inventario/dashboard')} replace />;
 }

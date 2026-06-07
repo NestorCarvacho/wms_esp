@@ -140,5 +140,7 @@ export function usePaginatedCrudTable<T>({
     pagination,
     handleSearch: setSearch,
     sortProps,
+    sortKey,
+    sortDirection,
   };
 }

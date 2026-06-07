@@ -45,7 +45,7 @@ registerCrudPanels();
 
 function LegacyInventarioRedirect() {
   const { pathname } = useLocation();
-  const suffix = pathname.replace(/^\/inventario/, '') || '/stock';
+  const suffix = pathname.replace(/^\/inventario/, '') || '/dashboard';
   return <Navigate to={appPath(`/inventario${suffix}`)} replace />;
 }
 
@@ -86,6 +86,7 @@ export default function App() {
             <Route path="tipos-zona" element={guarded(appPath('/tipos-zona'), <TiposZonaPage />)} />
             <Route path="zonas-bodega" element={guarded(appPath('/zonas-bodega'), <ZonasBodegaPage />)} />
             <Route path="inventario" element={<InventarioIndexRedirect />} />
+            <Route path="inventario/dashboard" element={guarded(appPath('/inventario/dashboard'), <InventarioPage vista="dashboard" />)} />
             <Route path="inventario/stock" element={guarded(appPath('/inventario/stock'), <InventarioPage vista="stock" />)} />
             <Route path="inventario/movimientos" element={guarded(appPath('/inventario/movimientos'), <InventarioPage vista="movimientos" />)} />
             <Route path="inventario/recepcion" element={guarded(appPath('/inventario/recepcion'), <InventarioPage vista="recepcion" />)} />

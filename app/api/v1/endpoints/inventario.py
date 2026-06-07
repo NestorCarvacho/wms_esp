@@ -1,9 +1,13 @@
 """Endpoints de inventario operativo (stock, movimientos, operaciones)."""
+from io import BytesIO
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.infrastructure.database import get_db_session
 from app.infrastructure.repositories.inventario_crud_repository import InventarioCRUDRepository
 from app.domain.services.inventario_operacion_service import InventarioOperacionService
+from app.domain.services.inventario_reporte_service import InventarioReporteService
 from app.api.v1.dependencies import obtener_id
 from app.api.v1.empresa_contexto import ContextoEmpresa, kwargs_listado, contexto_requiere_permiso
 from app.api.v1.listado_query import orden_listado
@@ -22,6 +26,31 @@ async def obtener_inventario_service(
     session: AsyncSession = Depends(get_db_session),
 ) -> InventarioOperacionService:
     return InventarioOperacionService(InventarioCRUDRepository(session))
+
+
+async def obtener_inventario_reporte_service(
+    session: AsyncSession = Depends(get_db_session),
+) -> InventarioReporteService:
+    return InventarioReporteService(InventarioOperacionService(InventarioCRUDRepository(session)))
+
+
+@router.get("/dashboard", response_model=RespuestaAPIDTO, status_code=status.HTTP_200_OK)
+async def dashboard_inventario(
+    bodega_id: int | None = None,
+    dias: int = Query(30, ge=7, le=90),
+    ctx: ContextoEmpresa = Depends(contexto_requiere_permiso("inventario.leer")),
+    service: InventarioOperacionService = Depends(obtener_inventario_service),
+):
+    try:
+        datos = await service.resumen_dashboard(
+            empresa_id=ctx.empresa_usuario_id,
+            bodega_id=bodega_id,
+            dias=dias,
+            **kwargs_listado(ctx),
+        )
+        return RespuestaAPIDTO(exito=True, datos=datos, mensaje="Resumen de inventario operativo").dict()
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
 @router.get("/stock", response_model=RespuestaAPIDTO, status_code=status.HTTP_200_OK)
@@ -80,6 +109,80 @@ async def listar_movimientos(
             datos=resultado,
             mensaje=f"Se encontraron {resultado['total']} movimientos",
         ).dict()
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
+@router.get(
+    "/stock/export",
+    summary="Exportar stock por ubicación (Excel o PDF)",
+    status_code=status.HTTP_200_OK,
+)
+async def exportar_stock(
+    formato: str = Query("xlsx", description="xlsx o pdf"),
+    bodega_id: int | None = None,
+    producto_id: int | None = None,
+    zona_bodega_id: int | None = None,
+    orden_params: dict = Depends(orden_listado),
+    ctx: ContextoEmpresa = Depends(contexto_requiere_permiso("inventario.leer")),
+    service: InventarioReporteService = Depends(obtener_inventario_reporte_service),
+):
+    fmt = formato.strip().lower()
+    if fmt not in ("xlsx", "pdf"):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="formato debe ser xlsx o pdf")
+    try:
+        contenido, media_type, filename = await service.exportar_stock(
+            empresa_id=ctx.empresa_usuario_id,
+            formato=fmt,  # type: ignore[arg-type]
+            bodega_id=bodega_id,
+            producto_id=producto_id,
+            zona_bodega_id=zona_bodega_id,
+            **kwargs_listado(ctx),
+            **orden_params,
+        )
+        return StreamingResponse(
+            BytesIO(contenido),
+            media_type=media_type,
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
+@router.get(
+    "/movimientos/export",
+    summary="Exportar historial de movimientos (Excel o PDF)",
+    status_code=status.HTTP_200_OK,
+)
+async def exportar_movimientos(
+    formato: str = Query("xlsx", description="xlsx o pdf"),
+    producto_id: int | None = None,
+    tipo: str | None = Query(None, description="RECEPCION | TRASLADO | DESPACHO"),
+    orden_params: dict = Depends(orden_listado),
+    ctx: ContextoEmpresa = Depends(contexto_requiere_permiso("inventario.leer")),
+    service: InventarioReporteService = Depends(obtener_inventario_reporte_service),
+):
+    fmt = formato.strip().lower()
+    if fmt not in ("xlsx", "pdf"):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="formato debe ser xlsx o pdf")
+    try:
+        contenido, media_type, filename = await service.exportar_movimientos(
+            empresa_id=ctx.empresa_usuario_id,
+            formato=fmt,  # type: ignore[arg-type]
+            producto_id=producto_id,
+            tipo=tipo,
+            **kwargs_listado(ctx),
+            **orden_params,
+        )
+        return StreamingResponse(
+            BytesIO(contenido),
+            media_type=media_type,
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
