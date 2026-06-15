@@ -39,6 +39,8 @@ class EmpresaRbacBootstrapService:
         empresa_destino_id: int,
         usuario: dict | None = None,
         empresa_plantilla_id: int = PLANTILLA_EMPRESA_ID,
+        es_super_admin: bool = False,
+        empresa_maestra_id: int | None = None,
     ) -> dict[str, Any]:
         if empresa_destino_id == empresa_plantilla_id:
             raise ValueError("La empresa plantilla ya tiene el catálogo RBAC base")
@@ -55,8 +57,13 @@ class EmpresaRbacBootstrapService:
         if permisos_plantilla == 0:
             raise ValueError("La empresa plantilla no tiene permisos configurados")
 
-        if usuario is not None:
+        if usuario is not None and not es_super_admin:
             await self._validar_acceso(usuario, empresa_destino_id)
+
+        if empresa_maestra_id is not None:
+            await self.repository.vincular_empresa_administrada(
+                empresa_maestra_id, empresa_destino_id
+            )
 
         try:
             permisos_antes = await self.repository.contar_permisos(empresa_destino_id)
@@ -78,6 +85,13 @@ class EmpresaRbacBootstrapService:
                 permiso_ids = await self.repository.ids_por_codigos(empresa_destino_id, codigos)
                 await self.repository.reemplazar_rol_permiso(rol_destino.id, permiso_ids)
 
+            cargos_provisionados = await self._provisionar_cargos(
+                empresa_plantilla_id, empresa_destino_id
+            )
+            usuarios_roles_sincronizados = await self._sincronizar_usuarios_sin_roles(
+                empresa_destino_id
+            )
+
             await self.repository.commit()
             permisos_despues = await self.repository.contar_permisos(empresa_destino_id)
 
@@ -88,8 +102,63 @@ class EmpresaRbacBootstrapService:
                 "permisos_creados": permisos_creados,
                 "total_permisos": permisos_despues,
                 "roles_provisionados": roles_provisionados,
+                "cargos_provisionados": cargos_provisionados,
+                "usuarios_roles_sincronizados": usuarios_roles_sincronizados,
                 "ya_existia_catalogo": permisos_antes > 0,
             }
         except Exception:
             await self.repository.rollback()
             raise
+
+    async def _provisionar_cargos(
+        self, empresa_plantilla_id: int, empresa_destino_id: int
+    ) -> int:
+        cargos_plantilla = await self.repository.listar_cargos_activos(empresa_plantilla_id)
+        provisionados = 0
+
+        if cargos_plantilla:
+            for cargo_plantilla in cargos_plantilla:
+                cargo_destino = await self.repository.asegurar_cargo(
+                    empresa_destino_id, cargo_plantilla.nombre
+                )
+                provisionados += 1
+                for rol_nombre in await self.repository.nombres_roles_de_cargo(
+                    cargo_plantilla.id
+                ):
+                    rol_destino = await self.repository.obtener_rol_por_nombre(
+                        empresa_destino_id, rol_nombre
+                    )
+                    if rol_destino:
+                        await self.repository.asegurar_permiso_cargo(
+                            cargo_destino.id, rol_destino.id
+                        )
+        else:
+            cargo_destino = await self.repository.asegurar_cargo(
+                empresa_destino_id, "Administrador"
+            )
+            provisionados = 1
+            rol_admin = await self.repository.obtener_rol_por_nombre(
+                empresa_destino_id, "Administrador"
+            )
+            if rol_admin:
+                await self.repository.asegurar_permiso_cargo(
+                    cargo_destino.id, rol_admin.id
+                )
+
+        return provisionados
+
+    async def _sincronizar_usuarios_sin_roles(self, empresa_id: int) -> int:
+        sincronizados = 0
+        pendientes = await self.repository.usuarios_sin_roles_con_cargo(empresa_id)
+        for usuario_id, cargo_id in pendientes:
+            rol_ids = await self.repository.roles_de_cargo(cargo_id, empresa_id)
+            if not rol_ids:
+                rol_admin = await self.repository.obtener_rol_por_nombre(
+                    empresa_id, "Administrador"
+                )
+                if rol_admin:
+                    rol_ids = [rol_admin.id]
+            if rol_ids:
+                await self.repository.asignar_roles_usuario(usuario_id, rol_ids)
+                sincronizados += 1
+        return sincronizados

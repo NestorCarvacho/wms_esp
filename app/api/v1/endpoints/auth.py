@@ -2,16 +2,25 @@
 Endpoints de Autenticación (Capa de Presentación).
 Login, registro, refresh token.
 """
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.infrastructure.database import get_db_session
 from app.infrastructure.repositories.usuario_repository import UsuarioRepository
 from app.domain.services.auth_service import AuthService
 from app.schemas.usuario import (
-    LoginRequestDTO, TokenResponseDTO, UsuarioRespuestaDTO, RespuestaAPIDTO, UsuarioCrearDTO
+    LoginRequestDTO,
+    TokenResponseDTO,
+    UsuarioRespuestaDTO,
+    RespuestaAPIDTO,
+    UsuarioCrearDTO,
+    ForgotPasswordDTO,
+    ResetPasswordDTO,
+    ChangePasswordDTO,
 )
 from app.core.security import decode_access_token
-from app.api.v1.dependencies import obtener_empresa_id
+from app.core.config import PASSWORD_RESET_IP_LIMIT, PASSWORD_RESET_IP_WINDOW_MINUTES
+from app.core.rate_limit import enforce_rate_limit
+from app.api.v1.dependencies import obtener_empresa_id, obtener_usuario_autenticado, obtener_id
 
 #revisar error "detail": "Error interno: 'nombre_completo'"
 # TODO: Implementar validación para email único por empresa
@@ -173,6 +182,84 @@ async def login(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error interno: {str(e)}"
+        )
+
+
+@router.post("/olvido-contrasena", response_model=RespuestaAPIDTO)
+async def olvido_contrasena(
+    dto: ForgotPasswordDTO,
+    request: Request,
+    session: AsyncSession = Depends(get_db_session),
+):
+    """Solicita enlace de recuperación (siempre responde igual por seguridad)."""
+    enforce_rate_limit(
+        request,
+        scope="olvido-contrasena",
+        max_requests=PASSWORD_RESET_IP_LIMIT,
+        window_minutes=PASSWORD_RESET_IP_WINDOW_MINUTES,
+    )
+    try:
+        auth_service = AuthService(UsuarioRepository(session), session)
+        await auth_service.solicitar_recuperacion(dto.email)
+        return RespuestaAPIDTO(
+            exito=True,
+            mensaje="Si el email está registrado, recibirá instrucciones en los próximos minutos.",
+        ).model_dump()
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error interno: {str(e)}",
+        )
+
+
+@router.post("/restablecer-contrasena", response_model=RespuestaAPIDTO)
+async def restablecer_contrasena(
+    dto: ResetPasswordDTO,
+    session: AsyncSession = Depends(get_db_session),
+):
+    try:
+        auth_service = AuthService(UsuarioRepository(session), session)
+        await auth_service.restablecer_contrasena(dto.token, dto.contrasena)
+        return RespuestaAPIDTO(
+            exito=True,
+            mensaje="Contraseña actualizada correctamente. Ya puede iniciar sesión.",
+        ).model_dump()
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error interno: {str(e)}",
+        )
+
+
+@router.post("/cambiar-contrasena", response_model=RespuestaAPIDTO)
+async def cambiar_contrasena(
+    dto: ChangePasswordDTO,
+    usuario_id: int = Depends(obtener_id),
+    empresa_id: int = Depends(obtener_empresa_id),
+    session: AsyncSession = Depends(get_db_session),
+):
+    try:
+        auth_service = AuthService(UsuarioRepository(session), session)
+        await auth_service.cambiar_contrasena(
+            usuario_id,
+            empresa_id,
+            dto.contrasena_actual,
+            dto.contrasena_nueva,
+        )
+        return RespuestaAPIDTO(
+            exito=True,
+            mensaje="Contraseña cambiada correctamente.",
+        ).model_dump()
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error interno: {str(e)}",
         )
 
 

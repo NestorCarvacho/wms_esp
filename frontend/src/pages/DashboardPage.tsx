@@ -19,6 +19,7 @@ import { colorClass } from '@/assets/styles/colors';
 import { cn } from '@/lib/utils';
 import { displayEmpresa } from '@/utils/displayLabels';
 import { appPath } from '@/routes/paths';
+import { APP_NAME } from '@/config/appBrand';
 
 const EMPRESA_MAESTRA_ID = 1;
 
@@ -186,7 +187,7 @@ export function DashboardPage() {
     { to: appPath('/unidades-medida'), title: 'Unidades de medida', description: 'KG, UN, LT…', icon: 'layers' },
     { to: appPath('/usuarios'), title: 'Usuarios', description: 'Accesos del sistema', icon: 'user' },
     ...(isSuperAdmin
-      ? [{ to: appPath('/empresas'), title: 'Empresas', description: 'Tenants del WMS', icon: 'building' as const }]
+      ? [{ to: appPath('/empresas'), title: 'Empresas', description: `Tenants de ${APP_NAME}`, icon: 'building' as const }]
       : []),
   ];
 

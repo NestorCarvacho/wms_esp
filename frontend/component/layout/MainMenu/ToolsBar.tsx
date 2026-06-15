@@ -4,6 +4,7 @@ import { SearchBar, ThemeToggle, UserDropdown } from './';
 import { Link } from 'react-router-dom';
 import { appPath } from '@/routes/paths';
 import { LogoWms } from '@/components/ui/images';
+import { APP_NAME, APP_TAGLINE } from '@/config/appBrand';
 import { cn } from '@/lib/utils';
 import {
   DropdownMenu,
@@ -49,9 +50,9 @@ const ToolsBar: React.FC<ToolsBarProps> = ({
         />
 
         <Link to={appPath()} className="flex items-center gap-2 hover:opacity-90 transition-opacity">
-          <LogoWms variant="solo" className="h-7 w-auto" alt="WMS" />
+          <LogoWms variant="solo" className="h-7 w-auto" alt={APP_NAME} />
           <span className="hidden sm:block text-sm font-semibold text-slate-900 dark:text-white">
-            WMS
+            {APP_NAME}
           </span>
         </Link>
       </div>

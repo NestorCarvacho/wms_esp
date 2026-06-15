@@ -7,6 +7,7 @@ Servicio CRUD de Usuarios (Capa de Negocio).
 from typing import Dict, Any
 
 from app.infrastructure.repositories.usuario_crud_repository import UsuarioCRUDRepository
+from app.infrastructure.repositories.usuario_rol_crud_repository import UsuarioRolCRUDRepository
 
 from app.schemas.usuario import UsuarioRespuestaDTO, UsuarioListaDTO
 
@@ -16,9 +17,13 @@ from app.domain.services.display_helpers import format_empresa_nombre
 
 class UsuarioService:
 
-    def __init__(self, repository: UsuarioCRUDRepository):
-
+    def __init__(
+        self,
+        repository: UsuarioCRUDRepository,
+        rol_repository: UsuarioRolCRUDRepository | None = None,
+    ):
         self.repository = repository
+        self.rol_repository = rol_repository
 
     
 
@@ -162,6 +167,11 @@ class UsuarioService:
 
         )
 
+        if self.rol_repository and cargo_id:
+            await self.rol_repository.heredar_roles_desde_cargo(
+                nuevo_usuario.id, cargo_id, empresa_id
+            )
+
         
 
         return {
@@ -237,6 +247,12 @@ class UsuarioService:
         if not usuario_actualizado:
 
             raise ValueError("Usuario no encontrado")
+
+        nuevo_cargo_id = campos.get("cargo_id")
+        if self.rol_repository and nuevo_cargo_id is not None:
+            await self.rol_repository.heredar_roles_desde_cargo(
+                usuario_id, nuevo_cargo_id, target_empresa_id
+            )
 
         
 

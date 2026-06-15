@@ -6,14 +6,14 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.openapi.utils import get_openapi
-from app.core.config import APP_NAME, APP_VERSION, CORS_ORIGINS, DEBUG
+from app.core.config import APP_NAME, APP_TAGLINE, APP_VERSION, CORS_ORIGINS, DEBUG
 from app.api.v1.endpoints import auth, bodegas, productos, unidadesMedidas, usuarios, empresas, cargos, roles, perfil_usuario, permiso_cargo, permisos, rol_permiso, tipo_zona, zona_bodega, tipo_producto, producto_presentacion, inventario
 
 # Crear instancia de FastAPI
 app = FastAPI(
     title=APP_NAME,
     version=APP_VERSION,
-    description="WMS Multi-Tenant API - Warehouse Management System. Sistema de gestión de almacén multi-empresa con autenticación JWT.",
+    description=f"{APP_NAME} API — {APP_TAGLINE}. Sistema de gestión de almacén multi-empresa con autenticación JWT.",
     debug=DEBUG,
     openapi_tags=[
         {

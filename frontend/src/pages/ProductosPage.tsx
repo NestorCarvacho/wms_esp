@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ChevronDown, Loader2 } from 'lucide-react';
 import {
   descargarPlantillaProductos,
   eliminarProducto,
@@ -10,6 +11,13 @@ import { listarUnidadesMedida } from '@/api/unidadesMedida';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { Card } from '@/components/ui/cards/Card';
 import { PrimaryButton } from '@/components/ui/buttons';
+import { Button } from '@/components/ui/shadcn/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/shadcn/dropdown-menu';
 import { Table } from '@/components/ui/tables';
 import { StatusPill } from '@/app/Feedback';
 import { Text } from '@/components/ui/text/Text';
@@ -250,20 +258,42 @@ export function ProductosPage() {
       supportingText={`${table.total} registrados`}
     >
       <div className="flex flex-wrap justify-end gap-2 mb-4">
-        <PrimaryButton
-          variant="outline"
-          onClick={handleDownloadTemplate}
-          isLoading={downloadingTemplate}
-        >
-          Descargar plantilla
-        </PrimaryButton>
-        <PrimaryButton
-          variant="outline"
-          isLoading={importing}
-          onClick={() => fileInputRef.current?.click()}
-        >
-          Importar Excel
-        </PrimaryButton>
+        <DropdownMenu modal={false}>
+          <DropdownMenuTrigger asChild>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={importing || downloadingTemplate}
+              className="rounded-full font-medium gap-1.5"
+            >
+              {importing || downloadingTemplate ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : null}
+              Carga masiva
+              <ChevronDown className="h-4 w-4 opacity-70" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="min-w-[11rem]">
+            <DropdownMenuItem
+              className="cursor-pointer"
+              disabled={downloadingTemplate}
+              onSelect={() => {
+                void handleDownloadTemplate();
+              }}
+            >
+              Descargar plantilla
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="cursor-pointer"
+              disabled={importing}
+              onSelect={() => {
+                fileInputRef.current?.click();
+              }}
+            >
+              Importar Excel
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
         <input
           ref={fileInputRef}
           type="file"

@@ -3,6 +3,7 @@ import { LogoWms } from '@/components/ui/images';
 import { Card } from '@/components/ui/cards/Card';
 import { LoginBackground } from './LoginBackground';
 import { cn } from '@/lib/utils';
+import { APP_NAME, APP_TAGLINE } from '@/config/appBrand';
 
 interface LoginLayoutProps {
   children: React.ReactNode;
@@ -15,7 +16,7 @@ interface LoginLayoutProps {
  */
 export const LoginLayout: React.FC<LoginLayoutProps> = ({
   children,
-  title = '¡Bienvenido a WMS!',
+  title = `¡Bienvenido a ${APP_NAME}!`,
   description,
 }) => (
   <div className="relative flex min-h-screen items-center justify-center px-4 py-12">
@@ -42,7 +43,7 @@ export const LoginLayout: React.FC<LoginLayoutProps> = ({
         {children}
       </Card>
 
-      <p className="mt-6 text-center text-xs text-muted-foreground">WMS Multi-Tenant</p>
+      <p className="mt-6 text-center text-xs text-muted-foreground">{APP_NAME} · {APP_TAGLINE}</p>
     </div>
   </div>
 );

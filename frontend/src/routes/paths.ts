@@ -10,6 +10,8 @@ export function appPath(path: string = ''): string {
 export const PATHS = {
   landing: '/',
   login: '/login',
+  forgotPassword: '/olvido-contrasena',
+  resetPassword: '/restablecer-contrasena',
   app: APP_BASE,
   perfil: appPath('/perfil'),
   productos: appPath('/productos'),

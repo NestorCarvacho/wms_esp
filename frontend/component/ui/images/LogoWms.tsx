@@ -26,7 +26,7 @@ interface LogoWmsProps {
 export const LogoWms: React.FC<LogoWmsProps> = ({
   variant = 'full',
   className,
-  alt = 'WMS',
+  alt = 'Khepri Software',
 }) => (
   <img
     src={SOURCES[variant]}

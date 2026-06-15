@@ -6,6 +6,7 @@ import { Text } from '@/components/ui/text';
 import { ChangePasswordData } from '@/schemas/account';
 import { IconScout } from '@/components/ui/images/IconScout';
 import { colorClass } from '@/assets/styles/colors';
+import { cn } from '@/lib/utils';
 
 
 interface ChangePasswordFormProps {
@@ -63,8 +64,7 @@ export const ChangePasswordForm: React.FC<ChangePasswordFormProps> = ({
         <Text
           variant="body-medium"
           onClick={onBackToLogin}
-          className="cursor-pointer transition-colors hover:opacity-80"
-          className={colorClass.brand}
+          className={cn('cursor-pointer transition-colors hover:opacity-80', colorClass.brand)}
         >
           Regresar
         </Text>

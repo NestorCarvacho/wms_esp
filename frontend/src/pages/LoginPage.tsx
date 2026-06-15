@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { LoginLayout } from '@/components/layout/LoginLayout';
 import { LabelInput } from '@/components/ui/inputs';
 import { PrimaryButton } from '@/components/ui/buttons';
@@ -7,6 +7,7 @@ import { IconScout } from '@/components/ui/images/IconScout';
 import { useAuthContext } from '@/context/AuthContext';
 import { useUI } from '@/hooks/ui';
 import { ApiError } from '@/api/client';
+import { APP_NAME, APP_TAGLINE } from '@/config/appBrand';
 import { PATHS } from '@/routes/paths';
 
 export function LoginPage() {
@@ -36,7 +37,7 @@ export function LoginPage() {
   }
 
   return (
-    <LoginLayout title="WMS Multi-Tenant" description="Inicia sesión para gestionar tu almacén">
+    <LoginLayout title={APP_NAME} description={APP_TAGLINE}>
       <form onSubmit={handleSubmit} className="space-y-6 mt-4">
         <LabelInput
           id="email"
@@ -56,6 +57,12 @@ export function LoginPage() {
           onChange={setContrasena}
           required
         />
+
+        <div className="text-right">
+          <Link to={PATHS.forgotPassword} className="text-sm text-blue-600 hover:underline">
+            ¿Olvidó su contraseña?
+          </Link>
+        </div>
 
         <PrimaryButton type="submit" colorVariant="success" isLoading={loading} fullWidth>
           Iniciar sesión

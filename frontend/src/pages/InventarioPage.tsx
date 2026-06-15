@@ -17,7 +17,7 @@ import { InventarioOperativoNav } from '@/components/inventario/InventarioOperat
 import { listarProductos } from '@/api/productos';
 import { listarZonasBodega } from '@/api/zonasBodega';
 import { PageLayout } from '@/components/layout/PageLayout';
-import { PrimaryButton } from '@/components/ui/buttons';
+import { PrimaryButton, ExportDropdown } from '@/components/ui/buttons';
 import { Card } from '@/components/ui/cards';
 import { Table } from '@/components/ui/tables';
 import { Text } from '@/components/ui/text/Text';
@@ -44,6 +44,11 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { appPath } from '@/routes/paths';
 
 const OP_VISTAS: InventarioVista[] = ['recepcion', 'traslado', 'despacho'];
+
+const INVENTARIO_EXPORT_OPTIONS = [
+  { id: 'xlsx', label: 'Excel (.xlsx)' },
+  { id: 'pdf', label: 'PDF (.pdf)' },
+] as const;
 
 function needsMaestros(vista: InventarioVista): boolean {
   return OP_VISTAS.includes(vista) || vista === 'configuracion';
@@ -436,24 +441,13 @@ export function InventarioPage({ vista }: InventarioPageProps) {
       {vista === 'stock' && (
         <>
           <div className="mb-3 flex flex-wrap justify-end gap-2">
-            <PrimaryButton
-              type="button"
-              variant="outline"
-              isLoading={exporting === 'xlsx'}
-              disabled={exporting !== null}
-              onClick={() => void handleExportStock('xlsx')}
-            >
-              Exportar Excel
-            </PrimaryButton>
-            <PrimaryButton
-              type="button"
-              variant="outline"
-              isLoading={exporting === 'pdf'}
-              disabled={exporting !== null}
-              onClick={() => void handleExportStock('pdf')}
-            >
-              Exportar PDF
-            </PrimaryButton>
+            <ExportDropdown
+              triggerLabel="Exportar"
+              options={[...INVENTARIO_EXPORT_OPTIONS]}
+              activeOptionId={exporting}
+              disabled={stockTable.loading}
+              onSelect={(id) => void handleExportStock(id as InventarioExportFormat)}
+            />
             <PrimaryButton
               type="button"
               isLoading={stockTable.loading}
@@ -480,24 +474,13 @@ export function InventarioPage({ vista }: InventarioPageProps) {
       {vista === 'movimientos' && (
         <>
           <div className="mb-3 flex flex-wrap justify-end gap-2">
-            <PrimaryButton
-              type="button"
-              variant="outline"
-              isLoading={exporting === 'xlsx'}
-              disabled={exporting !== null}
-              onClick={() => void handleExportMovimientos('xlsx')}
-            >
-              Exportar Excel
-            </PrimaryButton>
-            <PrimaryButton
-              type="button"
-              variant="outline"
-              isLoading={exporting === 'pdf'}
-              disabled={exporting !== null}
-              onClick={() => void handleExportMovimientos('pdf')}
-            >
-              Exportar PDF
-            </PrimaryButton>
+            <ExportDropdown
+              triggerLabel="Exportar"
+              options={[...INVENTARIO_EXPORT_OPTIONS]}
+              activeOptionId={exporting}
+              disabled={movTable.loading}
+              onSelect={(id) => void handleExportMovimientos(id as InventarioExportFormat)}
+            />
           </div>
         <Card>
           <Table

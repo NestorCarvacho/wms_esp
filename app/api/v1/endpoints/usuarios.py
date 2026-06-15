@@ -29,8 +29,10 @@ router = APIRouter(prefix="/api/v1/usuarios", tags=["Usuarios"])
 # ============ DEPENDENCIAS ============
 async def obtener_usuario_service(session: AsyncSession = Depends(get_db_session)) -> UsuarioService:
     """Factory para instanciar el servicio de usuarios."""
-    repository = UsuarioCRUDRepository(session)
-    return UsuarioService(repository)
+    return UsuarioService(
+        UsuarioCRUDRepository(session),
+        UsuarioRolCRUDRepository(session),
+    )
 
 
 async def obtener_usuario_rol_service(session: AsyncSession = Depends(get_db_session)) -> UsuarioRolService:

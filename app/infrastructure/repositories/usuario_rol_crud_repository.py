@@ -3,7 +3,7 @@ from sqlalchemy import delete, select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.infrastructure.models.usuario import Rol, Usuario, UsuarioRol
+from app.infrastructure.models.usuario import Cargo, PermisoCargo, Rol, Usuario, UsuarioRol
 
 
 class UsuarioRolCRUDRepository:
@@ -66,3 +66,27 @@ class UsuarioRolCRUDRepository:
         except SQLAlchemyError as e:
             await self.session.rollback()
             raise Exception(f"Error al sincronizar roles del usuario: {str(e)}") from e
+
+    async def heredar_roles_desde_cargo(
+        self, usuario_id: int, cargo_id: int, empresa_id: int
+    ) -> list[int]:
+        stmt = (
+            select(PermisoCargo.rol_id)
+            .join(Cargo, PermisoCargo.cargo_id == Cargo.id)
+            .join(Rol, PermisoCargo.rol_id == Rol.id)
+            .where(
+                PermisoCargo.cargo_id == cargo_id,
+                Cargo.empresa_id == empresa_id,
+                Cargo.activo == True,
+                Rol.activo == True,
+                PermisoCargo.activo == True,
+            )
+        )
+        result = await self.session.execute(stmt)
+        rol_ids_cargo = sorted({row[0] for row in result.all()})
+        if not rol_ids_cargo:
+            return await self.listar_roles_por_usuario(usuario_id, empresa_id)
+
+        actuales = await self.listar_roles_por_usuario(usuario_id, empresa_id)
+        merged = sorted(set(actuales) | set(rol_ids_cargo))
+        return await self.sincronizar_roles_usuario(usuario_id, empresa_id, merged)

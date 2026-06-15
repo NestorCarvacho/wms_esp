@@ -259,6 +259,38 @@ class LoginRequestDTO(BaseModel):
         }
 
 
+def _validar_contrasena_fuerte(v: str) -> str:
+    if len(v) < 8:
+        raise ValueError("La contraseña debe tener al menos 8 caracteres")
+    if not any(c.isupper() for c in v):
+        raise ValueError("La contraseña debe contener al menos una mayúscula")
+    if not any(c.isdigit() for c in v):
+        raise ValueError("La contraseña debe contener al menos un número")
+    return v
+
+
+class ForgotPasswordDTO(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordDTO(BaseModel):
+    token: str = Field(..., min_length=10)
+    contrasena: str = Field(..., min_length=8, max_length=72)
+
+    @validator("contrasena")
+    def validar_contrasena(cls, v):
+        return _validar_contrasena_fuerte(v)
+
+
+class ChangePasswordDTO(BaseModel):
+    contrasena_actual: str = Field(..., max_length=72)
+    contrasena_nueva: str = Field(..., min_length=8, max_length=72)
+
+    @validator("contrasena_nueva")
+    def validar_contrasena(cls, v):
+        return _validar_contrasena_fuerte(v)
+
+
 class TokenResponseDTO(BaseModel):
     """DTO para respuesta con token JWT."""
     acceso_token: str

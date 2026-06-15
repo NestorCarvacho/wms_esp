@@ -54,6 +54,10 @@ class Usuario(Base):
     password_hash = Column(String(255), nullable=False)
     activo = Column(Boolean, default=True)
     ultimo_login = Column(DateTime, nullable=True)
+    intentos_fallidos = Column(Integer, default=0, nullable=False)
+    bloqueado_hasta = Column(DateTime, nullable=True)
+    bloqueos_temporales = Column(Integer, default=0, nullable=False)
+    bloqueado_permanente = Column(Boolean, default=False, nullable=False)
     fecha_creacion = Column(DateTime, default=datetime.utcnow)
     fecha_actualizacion = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -65,6 +69,23 @@ class Usuario(Base):
     
     def __repr__(self):
         return f"<Usuario(id={self.id}, email='{self.email}', empresa_id={self.empresa_id})>"
+
+
+class PasswordResetToken(Base):
+    """Token de un solo uso para recuperación de contraseña."""
+    __tablename__ = "password_reset_token"
+
+    id = Column(BigInteger, primary_key=True, index=True)
+    usuario_id = Column(BigInteger, ForeignKey("usuario.id", ondelete="CASCADE"), nullable=False, index=True)
+    token_hash = Column(String(64), nullable=False, index=True)
+    expira_at = Column(DateTime, nullable=False)
+    usado_at = Column(DateTime, nullable=True)
+    creado_at = Column(DateTime, default=datetime.utcnow)
+
+    usuario = relationship("Usuario")
+
+    def __repr__(self):
+        return f"<PasswordResetToken(usuario_id={self.usuario_id}, expira_at={self.expira_at})>"
 
 
 class PerfilUsuario(Base):

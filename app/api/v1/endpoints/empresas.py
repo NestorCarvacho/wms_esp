@@ -241,18 +241,18 @@ async def crear_empresa(
             rut=dto.rut
         )
 
-        try:
-            await rbac_service.provisionar(
-                empresa_destino_id=resultado["id"],
-                usuario=usuario_autenticado,
-            )
-        except ValueError:
-            pass
+        rbac = await rbac_service.provisionar(
+            empresa_destino_id=resultado["id"],
+            usuario=usuario_autenticado,
+            es_super_admin=True,
+            empresa_maestra_id=usuario_autenticado.get("empresa_id"),
+        )
+        resultado["rbac"] = rbac
         
         return RespuestaAPIDTO(
             exito=True,
             datos=resultado,
-            mensaje="Empresa creada exitosamente"
+            mensaje="Empresa creada y catálogo RBAC provisionado correctamente"
         ).dict()
     except ValueError as ve:
         raise HTTPException(
@@ -288,6 +288,8 @@ async def provisionar_rbac_empresa(
         resultado = await rbac_service.provisionar(
             empresa_destino_id=id,
             usuario=usuario_autenticado,
+            es_super_admin=True,
+            empresa_maestra_id=usuario_autenticado.get("empresa_id"),
         )
         return RespuestaAPIDTO(
             exito=True,

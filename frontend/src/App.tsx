@@ -15,6 +15,9 @@ import { appPath } from '@/routes/paths';
 
 import { LandingPage } from '@/pages/LandingPage';
 import { LoginPage } from '@/pages/LoginPage';
+import { ForgotPasswordPage } from '@/pages/ForgotPasswordPage';
+import { ResetPasswordPage } from '@/pages/ResetPasswordPage';
+import { NotFoundPage } from '@/pages/NotFoundPage';
 
 import { DashboardPage } from '@/pages/DashboardPage';
 
@@ -67,6 +70,8 @@ export default function App() {
 
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/olvido-contrasena" element={<ForgotPasswordPage />} />
+          <Route path="/restablecer-contrasena" element={<ResetPasswordPage />} />
 
           <Route
             path="app"
@@ -117,7 +122,7 @@ export default function App() {
           <Route path="productos" element={<Navigate to={appPath('/productos')} replace />} />
           <Route path="inventario/*" element={<LegacyInventarioRedirect />} />
 
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<NotFoundPage />} />
 
         </Routes>
 

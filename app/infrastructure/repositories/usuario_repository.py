@@ -63,6 +63,32 @@ class UsuarioRepository:
         )
         result = await self.session.execute(stmt)
         return result.scalars().first()
+
+    async def obtener_por_email_login(self, email: str) -> Usuario | None:
+        stmt = (
+            select(Usuario)
+            .options(
+                selectinload(Usuario.perfil),
+                selectinload(Usuario.empresa),
+                selectinload(Usuario.cargo),
+            )
+            .where(Usuario.email == email)
+        )
+        result = await self.session.execute(stmt)
+        return result.scalars().first()
+
+    async def obtener_por_id_login(self, usuario_id: int) -> Usuario | None:
+        stmt = (
+            select(Usuario)
+            .options(
+                selectinload(Usuario.perfil),
+                selectinload(Usuario.empresa),
+                selectinload(Usuario.cargo),
+            )
+            .where(Usuario.id == usuario_id)
+        )
+        result = await self.session.execute(stmt)
+        return result.scalars().first()
     
     async def obtener_por_id(self, id: int, empresa_id: int) -> Usuario | None:
         """

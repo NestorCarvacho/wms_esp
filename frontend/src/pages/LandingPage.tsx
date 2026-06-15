@@ -25,6 +25,7 @@ import { PrimaryButton } from '@/components/ui/buttons';
 import { Card } from '@/components/ui/cards';
 import { useAuthContext } from '@/context/AuthContext';
 import { PATHS } from '@/routes/paths';
+import { APP_NAME, APP_TAGLINE } from '@/config/appBrand';
 import { cn } from '@/lib/utils';
 
 const BENEFITS = [
@@ -146,7 +147,7 @@ function DashboardMock() {
           <span className="h-2.5 w-2.5 rounded-full bg-red-400" />
           <span className="h-2.5 w-2.5 rounded-full bg-amber-400" />
           <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
-          <span className="ml-2 text-xs font-medium text-muted-foreground">WMS · Stock por ubicación</span>
+          <span className="ml-2 text-xs font-medium text-muted-foreground">{APP_NAME} · Stock por ubicación</span>
         </div>
         <div className="grid grid-cols-3 gap-px bg-border/40 p-px">
           {[
@@ -228,8 +229,8 @@ export function LandingPage() {
       <header className="sticky top-0 z-20 border-b border-border/50 bg-background/85 backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
           <Link to={PATHS.landing} className="flex items-center gap-2 hover:opacity-90">
-            <LogoWms variant="solo" className="h-8 w-auto" alt="WMS" />
-            <span className="hidden text-sm font-semibold sm:inline">WMS</span>
+            <LogoWms variant="solo" className="h-8 w-auto" alt={APP_NAME} />
+            <span className="hidden text-sm font-semibold sm:inline">{APP_NAME}</span>
           </Link>
 
           <nav className="hidden items-center gap-6 text-sm text-muted-foreground md:flex">
@@ -262,11 +263,11 @@ export function LandingPage() {
             <div>
               <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
                 <Cloud className="h-3.5 w-3.5" />
-                WMS 100% en la nube · Multi-empresa
+                {APP_NAME} · {APP_TAGLINE}
               </p>
               <h1 className="text-3xl font-bold leading-tight tracking-tight md:text-4xl lg:text-[2.75rem]">
-                Software WMS para empresas:{' '}
-                <span className="text-emerald-600 dark:text-emerald-400">trazabilidad total</span> de tu bodega
+                Trazabilidad total{' '}
+                <span className="text-emerald-600 dark:text-emerald-400">de tu bodega</span>
               </h1>
               <p className="mt-5 text-base leading-relaxed text-muted-foreground md:text-lg">
                 Controla cada flujo de mercadería — desde el ingreso hasta el despacho — con visibilidad en
@@ -348,7 +349,7 @@ export function LandingPage() {
               <div>
                 <h2 className="text-2xl font-bold tracking-tight md:text-3xl">¿Qué ofrecemos?</h2>
                 <p className="mt-4 leading-relaxed text-muted-foreground">
-                  WMS Multi-Tenant es una plataforma de inventario operativo en la nube, diseñada para
+                  {APP_NAME} es una plataforma de inventario operativo en la nube, diseñada para
                   operaciones que necesitan escalar sin perder control. Integra catálogo, bodegas, recepción,
                   traslado, despacho y reportería en un solo flujo — sin sistemas desconectados ni procesos
                   manuales.
@@ -433,7 +434,7 @@ export function LandingPage() {
         {/* Para quién — Flexy */}
         <section id="audiencia" className="border-t border-border/60 bg-muted/30 py-16 dark:bg-muted/10 md:py-20">
           <div className="mx-auto max-w-6xl px-4">
-            <h2 className="text-center text-2xl font-bold tracking-tight md:text-3xl">¿Para quién es WMS?</h2>
+            <h2 className="text-center text-2xl font-bold tracking-tight md:text-3xl">¿Para quién es {APP_NAME}?</h2>
             <p className="mx-auto mt-3 max-w-xl text-center text-muted-foreground">
               Operaciones que necesitan visibilidad real, no solo saldos contables.
             </p>
@@ -482,7 +483,7 @@ export function LandingPage() {
           <div className="mx-auto max-w-3xl px-4 text-center">
             <h2 className="text-2xl font-bold md:text-3xl">¿Listo para tomar el control de tu bodega?</h2>
             <p className="mx-auto mt-4 max-w-lg text-emerald-100/90">
-              Sin migraciones traumáticas. Accede con tu cuenta o solicita una demo a tu administrador WMS.
+              Sin migraciones traumáticas. Accede con tu cuenta o solicita una demo a tu administrador de {APP_NAME}.
               Visibilidad total desde el primer día.
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
@@ -495,7 +496,7 @@ export function LandingPage() {
                   <ArrowRight className="h-4 w-4" />
                 </PrimaryButton>
               </Link>
-              <a href="mailto:contacto@wms.com">
+              <a href="mailto:contacto@kheprisoftware.com">
                 <PrimaryButton
                   type="button"
                   variant="outline"
@@ -513,8 +514,8 @@ export function LandingPage() {
         <div className="mx-auto max-w-6xl px-4">
           <div className="flex flex-col items-center justify-between gap-6 sm:flex-row">
             <div className="flex items-center gap-2">
-              <LogoWms variant="solo" className="h-7 w-auto opacity-80" alt="WMS" />
-              <span className="text-sm font-medium">WMS Multi-Tenant</span>
+              <LogoWms variant="solo" className="h-7 w-auto opacity-80" alt={APP_NAME} />
+              <span className="text-sm font-medium">{APP_NAME}</span>
             </div>
             <div className="flex flex-wrap justify-center gap-6 text-sm text-muted-foreground">
               <button type="button" onClick={() => scrollTo('beneficios')} className="hover:text-foreground">
@@ -524,7 +525,7 @@ export function LandingPage() {
                 Módulos
               </button>
               <a href="mailto:contacto@wms.com" className="hover:text-foreground hover:underline">
-                contacto@wms.com
+                contacto@kheprisoftware.com
               </a>
               <Link to={PATHS.login} className="hover:text-foreground hover:underline">
                 Ingresar
@@ -532,7 +533,7 @@ export function LandingPage() {
             </div>
           </div>
           <p className="mt-6 text-center text-xs text-muted-foreground sm:text-left">
-            © {new Date().getFullYear()} WMS Multi-Tenant · Plataforma de inventario operativo en la nube
+            © {new Date().getFullYear()} {APP_NAME} · {APP_TAGLINE}
           </p>
         </div>
       </footer>

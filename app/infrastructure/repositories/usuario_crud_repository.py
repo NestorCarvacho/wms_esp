@@ -189,6 +189,12 @@ class UsuarioCRUDRepository:
                     datos_filtrados[k] = v
                 elif v is not None:
                     datos_filtrados[k] = v
+
+            if datos_filtrados.get("activo") is True:
+                datos_filtrados["bloqueado_permanente"] = False
+                datos_filtrados["intentos_fallidos"] = 0
+                datos_filtrados["bloqueado_hasta"] = None
+                datos_filtrados["bloqueos_temporales"] = 0
             
             if not datos_filtrados:
                 return usuario
