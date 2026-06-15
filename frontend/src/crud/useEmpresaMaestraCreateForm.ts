@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { listarEmpresasParaFiltro } from '@/api/empresas';
+import { listarEmpresasActivasParaCreacion } from '@/api/empresas';
 import { useAuthContext } from '@/context/AuthContext';
 import type { Empresa } from '@/types/api';
 import { empresaComboBoxOption } from '@/utils/displayLabels';
@@ -32,11 +32,11 @@ export function useEmpresaMaestraCreateForm() {
     if (!isSuperAdmin) return;
     let cancelled = false;
     setLoading(true);
-    listarEmpresasParaFiltro()
-      .then((res) => {
+    listarEmpresasActivasParaCreacion()
+      .then((items) => {
         if (cancelled) return;
-        setEmpresas(res.empresas);
-        setEmpresaId((prev) => resolveDefaultEmpresaId(res.empresas, jwtEmpresaId, prev));
+        setEmpresas(items);
+        setEmpresaId((prev) => resolveDefaultEmpresaId(items, jwtEmpresaId, prev));
       })
       .catch(() => {
         if (!cancelled) setEmpresas([]);

@@ -201,7 +201,7 @@ class EmpresaService:
         try:
             await self.repository.eliminar(empresa_id)
             return {
-                "mensaje": f"Empresa con ID {empresa_id} eliminada correctamente"
+                "mensaje": f"Empresa con ID {empresa_id} inhabilitada correctamente"
             }
         except ValueError as ve:
             raise ve

@@ -57,7 +57,7 @@ export function useEmpresaMaestraFilter() {
 
   const filterOptions = useMemo(
     () => [
-      { label: 'Todas las empresas administradas', value: '' },
+      { label: 'Todas las empresas activas', value: '' },
       ...empresas.map((e) => {
         const opt = empresaComboBoxOption(e);
         return { label: opt.label, value: String(e.id), searchTokens: opt.searchTokens };

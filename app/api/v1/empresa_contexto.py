@@ -69,6 +69,7 @@ async def resolver_empresa_creacion(
     maestra_service = EmpresaMaestraService(EmpresaAdministradaRepository(session))
     try:
         await maestra_service.validar_acceso(empresa_usuario_id, empresa_id_body)
+        await maestra_service.assert_operativa_para_escritura(empresa_id_body)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e)) from e
     return empresa_id_body

@@ -3,6 +3,8 @@ import type { TableAction } from '@/components/ui/tables';
 export function createCrudTableActions<T>(handlers: {
   onEdit: (row: T) => void;
   onDelete: (row: T) => void;
+  canDelete?: (row: T) => boolean;
+  deleteLabel?: string;
 }): TableAction<T>[] {
   return [
     {
@@ -13,10 +15,11 @@ export function createCrudTableActions<T>(handlers: {
     },
     {
       id: 'delete',
-      label: 'Eliminar',
+      label: handlers.deleteLabel ?? 'Eliminar',
       icon: 'trash',
       variant: 'destructive',
       onClick: handlers.onDelete,
+      hidden: handlers.canDelete ? (row) => !handlers.canDelete!(row) : undefined,
     },
   ];
 }

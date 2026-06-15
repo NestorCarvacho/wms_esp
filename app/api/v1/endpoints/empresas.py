@@ -3,7 +3,7 @@ Endpoints CRUD de Empresas (Capa de Presentación).
 5 endpoints: GET (listar), GET (detalle), POST (crear), PUT (actualizar), DELETE (eliminar).
 Solo accesible por super admin.
 """
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.infrastructure.database import get_db_session
 from app.infrastructure.repositories.empresa_crud_repository import EmpresaCRUDRepository
@@ -64,6 +64,10 @@ def validar_super_admin(es_admin: bool = Depends(es_super_admin)):
     status_code=status.HTTP_200_OK,
 )
 async def listar_empresas_administradas(
+    incluir_inactivas: bool = Query(
+        False,
+        description="Incluir empresas inhabilitadas (selector de empresa maestra)",
+    ),
     usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
     service: EmpresaMaestraService = Depends(obtener_empresa_maestra_service),
 ):
@@ -73,7 +77,10 @@ async def listar_empresas_administradas(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Solo usuarios de empresa maestra pueden listar empresas administradas",
             )
-        resultado = await service.listar_administradas(usuario_autenticado.get("empresa_id"))
+        resultado = await service.listar_administradas(
+            usuario_autenticado.get("empresa_id"),
+            incluir_inactivas=incluir_inactivas,
+        )
         return RespuestaAPIDTO(
             exito=True,
             datos=resultado,
@@ -376,7 +383,7 @@ async def actualizar_empresa(
 @router.delete(
     "/{id}",
     response_model=RespuestaAPIDTO,
-    summary="Eliminar empresa",
+    summary="Inhabilitar empresa",
     status_code=status.HTTP_200_OK
 )
 async def eliminar_empresa(
@@ -387,12 +394,15 @@ async def eliminar_empresa(
 
 ):
     """
-    Elimina (desactiva) una empresa.
+    Inhabilita una empresa (no borra datos relacionados).
     
     **Comportamiento:**
     - Solo accesible por super admin
-    - Desactiva la empresa (soft delete)
-    - No elimina registros relacionados
+    - Marca la empresa como inhabilitada (`esta_activa` y `activo` en false)
+    - Productos, usuarios y demás datos permanecen en BD
+    - Dejan de aparecer en listados agregados ("Todas las empresas")
+    - Siguen visibles al seleccionar la empresa en el filtro maestra
+    - Puede reactivarse editando la empresa
     
     **Parámetros:**
     - id: ID de la empresa (path parameter)
@@ -413,7 +423,7 @@ async def eliminar_empresa(
         return RespuestaAPIDTO(
             exito=True,
             datos=resultado,
-            mensaje="Empresa eliminada exitosamente"
+            mensaje="Empresa inhabilitada exitosamente"
         ).dict()
     except ValueError as ve:
         raise HTTPException(

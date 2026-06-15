@@ -71,6 +71,13 @@ class AuthService:
         if not usuario.activo:
             raise ValueError(MSG_BLOQUEO_PERMANENTE)
 
+        empresa = usuario.empresa
+        if empresa and not bool(getattr(empresa, "es_empresa_maestra", False)):
+            if not empresa.esta_activa or not empresa.activo:
+                raise ValueError(
+                    "La empresa está inhabilitada. Comuníquese con el administrador del sistema."
+                )
+
         now = datetime.utcnow()
         if usuario.bloqueado_hasta and usuario.bloqueado_hasta > now:
             minutos = max(

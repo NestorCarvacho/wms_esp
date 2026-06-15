@@ -9,6 +9,10 @@ import { useCrudUi } from '@/crud/useCrudUi';
 import { usePaginatedCrudTable } from '@/crud/usePaginatedCrudTable';
 import type { Empresa } from '@/types/api';
 
+function puedeInhabilitar(row: Empresa): boolean {
+  return row.esta_activa && !row.es_empresa_maestra;
+}
+
 export function EmpresasPage() {
   const { isSuperAdmin } = useAuthContext();
   const { notifyApiError, confirmDelete, openSidePanel } = useCrudUi();
@@ -30,16 +34,21 @@ export function EmpresasPage() {
       });
     },
     onDelete: (row) => {
+      if (!puedeInhabilitar(row)) return;
       confirmDelete({
-        title: 'Eliminar empresa',
-        bodyText: `¿Confirma eliminar la empresa "${row.nombre}"?`,
-        successMessage: 'Empresa eliminada',
+        title: 'Inhabilitar empresa',
+        bodyText:
+          `¿Inhabilitar "${row.nombre}"? Los datos se conservan pero dejarán de ` +
+          'mostrarse en listados generales hasta que seleccione esta empresa o la reactive.',
+        successMessage: 'Empresa inhabilitada',
         onConfirm: async () => {
           await eliminarEmpresa(row.id);
           await table.reload();
         },
       });
     },
+    canDelete: puedeInhabilitar,
+    deleteLabel: 'Inhabilitar',
   });
 
   if (!isSuperAdmin) {

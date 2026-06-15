@@ -5,7 +5,6 @@ import { PrimaryButton } from '@/components/ui/buttons';
 import { useUI } from '@/hooks/ui';
 import { ApiError } from '@/api/client';
 import type { Empresa } from '@/types/api';
-import { preserveActivoBoolean } from './preserveActivo';
 
 export interface EmpresaEditPanelProps {
   empresa: Empresa;
@@ -16,6 +15,7 @@ export function EmpresaEditPanel({ empresa, onSaved }: EmpresaEditPanelProps) {
   const { closeSidePanel, showNotification } = useUI();
   const [nombre, setNombre] = useState(empresa.nombre);
   const [rut, setRut] = useState(empresa.rut ?? '');
+  const [estaActiva, setEstaActiva] = useState(Boolean(empresa.esta_activa));
   const [submitting, setSubmitting] = useState(false);
 
   async function handleSubmit(e: FormEvent) {
@@ -25,9 +25,12 @@ export function EmpresaEditPanel({ empresa, onSaved }: EmpresaEditPanelProps) {
       await actualizarEmpresa(empresa.id, {
         nombre: nombre.trim(),
         rut: rut.trim() || null,
-        esta_activa: preserveActivoBoolean(empresa.esta_activa),
+        esta_activa: estaActiva,
       });
-      showNotification({ type: 'success', message: 'Empresa actualizada correctamente' });
+      showNotification({
+        type: 'success',
+        message: estaActiva ? 'Empresa actualizada correctamente' : 'Empresa inhabilitada',
+      });
       onSaved?.();
       closeSidePanel();
     } catch (err) {
@@ -45,6 +48,19 @@ export function EmpresaEditPanel({ empresa, onSaved }: EmpresaEditPanelProps) {
       <LabelInput id="edit-codigo" label="Código" value={empresa.codigo} onChange={() => undefined} disabled />
       <LabelInput id="edit-nombre" label="Nombre" value={nombre} onChange={setNombre} required />
       <LabelInput id="edit-rut" label="RUT (opcional)" value={rut} onChange={setRut} />
+      {empresa.es_empresa_maestra ? (
+        <p className="text-sm text-muted-foreground">La empresa maestra permanece siempre activa.</p>
+      ) : (
+        <label className="flex cursor-pointer items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={estaActiva}
+            onChange={(e) => setEstaActiva(e.target.checked)}
+            className="h-4 w-4 rounded border-border"
+          />
+          Empresa activa (operativa en listados y login de sus usuarios)
+        </label>
+      )}
       <div className="flex gap-3 pt-2">
         <PrimaryButton type="button" variant="outline" onClick={closeSidePanel}>
           Cancelar

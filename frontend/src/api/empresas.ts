@@ -2,17 +2,18 @@ import { apiRequest } from '@/api/client';
 import { buildListQuery, type PaginatedListParams } from '@/api/listQuery';
 import type { Empresa, EmpresaActualizar, EmpresaCrear, PaginatedEmpresas } from '@/types/api';
 
-export async function listarEmpresasAdministradas() {
+export async function listarEmpresasAdministradas(options?: { incluirInactivas?: boolean }) {
+  const qs = options?.incluirInactivas ? '?incluir_inactivas=true' : '';
   const response = await apiRequest<{ total: number; empresas: Empresa[] }>(
-    '/api/v1/empresas/administradas',
+    `/api/v1/empresas/administradas${qs}`,
   );
   return response.datos!;
 }
 
-/** Empresas para combos de filtro (administradas, con fallback al listado general). */
+/** Empresas para el selector de empresa (incluye inhabilitadas). */
 export async function listarEmpresasParaFiltro() {
   try {
-    const res = await listarEmpresasAdministradas();
+    const res = await listarEmpresasAdministradas({ incluirInactivas: true });
     if (res.empresas.length > 0) return res;
   } catch {
     /* fallback abajo */
@@ -20,9 +21,27 @@ export async function listarEmpresasParaFiltro() {
   const res = await listarEmpresas({
     pagina: 1,
     porPagina: 500,
-    extra: { solo_activas: true },
+    extra: { solo_activas: false },
   });
   return { total: res.total, empresas: res.empresas };
+}
+
+/** Solo empresas operativas (formularios de creación). */
+export async function listarEmpresasActivasParaCreacion() {
+  try {
+    const res = await listarEmpresasAdministradas({ incluirInactivas: false });
+    if (res.empresas.length > 0) {
+      return res.empresas.filter((e) => e.esta_activa);
+    }
+  } catch {
+    /* fallback */
+  }
+  const res = await listarEmpresas({
+    pagina: 1,
+    porPagina: 500,
+    extra: { solo_activas: true },
+  });
+  return res.empresas;
 }
 
 export async function listarEmpresas(params: PaginatedListParams = {}) {

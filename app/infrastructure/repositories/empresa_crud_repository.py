@@ -166,6 +166,9 @@ class EmpresaCRUDRepository:
             
             if not datos_filtrados:
                 return empresa
+
+            if "esta_activa" in datos_filtrados:
+                datos_filtrados["activo"] = datos_filtrados["esta_activa"]
             
             # Ejecutar actualización
             stmt = update(Empresa).where(
@@ -185,30 +188,22 @@ class EmpresaCRUDRepository:
             await self.session.rollback()
             raise Exception(f"Error al actualizar empresa: {str(e)}")
     
-    async def eliminar(self, empresa_id: int) -> bool:
+    async def inhabilitar(self, empresa_id: int) -> bool:
         """
-        Desactiva una empresa (soft delete).
-        
-        Args:
-            empresa_id: ID de la empresa
-            
-        Returns:
-            True si se eliminó, False si no existe
-            
-        Raises:
-            Exception: Si hay error de base de datos
+        Inhabilita una empresa (soft delete). Los datos permanecen en BD pero
+        quedan fuera de listados agregados hasta seleccionar la empresa explícitamente.
         """
         try:
-            # Validar que la empresa existe
             empresa = await self.obtener_por_id(empresa_id)
             if not empresa:
                 raise ValueError("Empresa no encontrada")
-            
-            # Desactivar empresa
-            stmt = update(Empresa).where(
-                Empresa.id == empresa_id
-            ).values(esta_activa=False)
-            
+            if bool(getattr(empresa, "es_empresa_maestra", False)):
+                raise ValueError("No se puede inhabilitar la empresa maestra")
+
+            stmt = update(Empresa).where(Empresa.id == empresa_id).values(
+                esta_activa=False,
+                activo=False,
+            )
             await self.session.execute(stmt)
             await self.session.commit()
             return True
@@ -217,4 +212,8 @@ class EmpresaCRUDRepository:
             raise ve
         except SQLAlchemyError as e:
             await self.session.rollback()
-            raise Exception(f"Error al eliminar empresa: {str(e)}")
+            raise Exception(f"Error al inhabilitar empresa: {str(e)}") from e
+
+    async def eliminar(self, empresa_id: int) -> bool:
+        """Alias de inhabilitar (compatibilidad DELETE /empresas/{id})."""
+        return await self.inhabilitar(empresa_id)
