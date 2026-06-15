@@ -39,6 +39,7 @@ MIGRATION_FILES = [
     "09_grant_superadmin_usuario_1.sql",
     "12_inventario_operativo.sql",
     "13_fix_permiso_inventario_codigos.sql",
+    "14_auth_security.sql",
 ]
 
 # Errores MySQL benignos al re-ejecutar scripts idempotentes.
@@ -272,6 +273,8 @@ def run_diagnostics(cursor) -> None:
         ("Tabla movimiento_inventario", "SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='movimiento_inventario'"),
         ("Tabla bodega_config", "SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='bodega_config'"),
         ("Permisos inventario.* activos", "SELECT COUNT(*) FROM permiso WHERE activo=1 AND codigo LIKE 'inventario.%'"),
+        ("Columna usuario.intentos_fallidos", "SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='usuario' AND COLUMN_NAME='intentos_fallidos'"),
+        ("Tabla password_reset_token", "SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='password_reset_token'"),
         ("Permisos empresa 1", "SELECT COUNT(*) FROM permiso WHERE empresa_id=1 AND activo=1"),
         ("Roles empresa 1", "SELECT COUNT(*) FROM rol WHERE empresa_id=1 AND activo=1"),
         ("Usuarios con usuario_rol", "SELECT COUNT(DISTINCT usuario_id) FROM usuario_rol WHERE activo=1"),

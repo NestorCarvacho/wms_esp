@@ -4,7 +4,7 @@ import { SearchBar, ThemeToggle, UserDropdown } from './';
 import { Link } from 'react-router-dom';
 import { appPath } from '@/routes/paths';
 import { LogoWms } from '@/components/ui/images';
-import { APP_NAME, APP_TAGLINE } from '@/config/appBrand';
+import { APP_NAME } from '@/config/appBrand';
 import { cn } from '@/lib/utils';
 import {
   DropdownMenu,

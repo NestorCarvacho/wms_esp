@@ -1,0 +1,1 @@
+-- Obsoleto: use mysql-init/railway_14_auth/05_password_reset_token.sql

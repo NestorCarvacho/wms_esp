@@ -1,0 +1,3 @@
+-- Railway Query: UNA sentencia por ejecucion, en este orden: 01 → 02 → 03 → 04 → 05
+-- Carpeta: mysql-init/railway_14_auth/
+-- NO usar 14_auth_security.sql en la consola web (usa SET/PREPARE, no soportado).
