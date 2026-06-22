@@ -145,14 +145,14 @@ class PerfilUsuarioCrearDTO(BaseModel):
     fecha_nacimiento: Optional[date] = Field(None, description="Fecha de nacimiento")
     genero: Optional[str] = Field(None, max_length=20, description="Género (M/F/Otro)")
     telefono: Optional[str] = Field(None, max_length=30, description="Número de teléfono")
-    direccion: Optional[str] = Field(None, max_length=255, description="Dirección completa")
-    comuna: Optional[str] = Field(None, max_length=100, description="Comuna")
-    ciudad: Optional[str] = Field(None, max_length=100, description="Ciudad")
-    region: Optional[str] = Field(None, max_length=100, description="Región")
+    direccion: Optional[str] = Field(None, max_length=255, description="Calle y número")
+    region_id: Optional[int] = Field(None, description="ID de región")
+    ciudad_id: Optional[int] = Field(None, description="ID de ciudad")
+    comuna_id: Optional[int] = Field(None, description="ID de comuna")
     pais: Optional[str] = Field(None, max_length=100, description="País")
     foto_url: Optional[str] = Field(None, max_length=500, description="URL de foto de perfil")
     biografia: Optional[str] = Field(None, description="Biografía o descripción personal")
-    
+
     class Config:
         json_schema_extra = {
             "example": {
@@ -164,9 +164,9 @@ class PerfilUsuarioCrearDTO(BaseModel):
                 "genero": "M",
                 "telefono": "+56912345678",
                 "direccion": "Calle Principal 123",
-                "comuna": "Santiago",
-                "ciudad": "Santiago",
-                "region": "Metropolitana",
+                "region_id": 7,
+                "ciudad_id": 26,
+                "comuna_id": 1,
                 "pais": "Chile",
                 "foto_url": "https://example.com/foto.jpg",
                 "biografia": "Profesional con experiencia en logística"
@@ -185,13 +185,16 @@ class PerfilUsuarioRespuestaDTO(BaseModel):
     genero: Optional[str] = None
     telefono: Optional[str] = None
     direccion: Optional[str] = None
-    comuna: Optional[str] = None
-    ciudad: Optional[str] = None
-    region: Optional[str] = None
+    region_id: Optional[int] = None
+    ciudad_id: Optional[int] = None
+    comuna_id: Optional[int] = None
+    region_nombre: Optional[str] = None
+    ciudad_nombre: Optional[str] = None
+    comuna_nombre: Optional[str] = None
     pais: Optional[str] = None
     foto_url: Optional[str] = None
     biografia: Optional[str] = None
-    
+
     class Config:
         from_attributes = True
         json_schema_extra = {
@@ -205,9 +208,12 @@ class PerfilUsuarioRespuestaDTO(BaseModel):
                 "genero": "M",
                 "telefono": "+56912345678",
                 "direccion": "Calle Principal 123",
-                "comuna": "Santiago",
-                "ciudad": "Santiago",
-                "region": "Metropolitana",
+                "region_id": 7,
+                "ciudad_id": 26,
+                "comuna_id": 1,
+                "region_nombre": "Metropolitana de Santiago",
+                "ciudad_nombre": "Santiago",
+                "comuna_nombre": "Providencia",
                 "pais": "Chile",
                 "foto_url": "https://example.com/foto.jpg",
                 "biografia": "Profesional con experiencia en logística"
@@ -225,9 +231,9 @@ class PerfilUsuarioActualizarDTO(BaseModel):
     genero: Optional[str] = Field(None, max_length=20)
     telefono: Optional[str] = Field(None, max_length=30)
     direccion: Optional[str] = Field(None, max_length=255)
-    comuna: Optional[str] = Field(None, max_length=100)
-    ciudad: Optional[str] = Field(None, max_length=100)
-    region: Optional[str] = Field(None, max_length=100)
+    region_id: Optional[int] = None
+    ciudad_id: Optional[int] = None
+    comuna_id: Optional[int] = None
     pais: Optional[str] = Field(None, max_length=100)
     foto_url: Optional[str] = Field(None, max_length=500)
     biografia: Optional[str] = None

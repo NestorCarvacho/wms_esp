@@ -8,12 +8,14 @@ import { LabelInput } from '@/components/ui/inputs';
 import { ComboBox } from '@/components/ui/inputs/ComboBox';
 import { PrimaryButton } from '@/components/ui/buttons';
 import { Text } from '@/components/ui/text/Text';
-import { Feedback } from '@/app/Feedback';
 import { useAuthContext } from '@/context/AuthContext';
 import { ApiError } from '@/api/client';
 import { colorClass } from '@/assets/styles/colors';
+import { useUI } from '@/hooks/ui';
 import type { PerfilUsuarioActualizar } from '@/types/api';
 import { appPath } from '@/routes/paths';
+import { DireccionSelector } from '@/components/DireccionSelector';
+import { formatRut, rutError } from '@/utils/rut';
 
 const GENERO_OPTIONS = [
   { label: 'Masculino', value: 'M' },
@@ -33,11 +35,12 @@ function emptyIfBlank(value: string): string | null {
 
 export function PerfilPage() {
   const navigate = useNavigate();
-  const { user, isSuperAdmin } = useAuthContext();
+  const { user, isSuperAdmin, roles } = useAuthContext();
+  const { showNotification } = useUI();
+  const canEditEmail = isSuperAdmin || roles.includes('Administrador');
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
+  const [rutValidationError, setRutValidationError] = useState<string | null>(null);
   const [initialEmail, setInitialEmail] = useState('');
 
   const [email, setEmail] = useState('');
@@ -50,10 +53,12 @@ export function PerfilPage() {
   const [fechaNacimiento, setFechaNacimiento] = useState('');
   const [genero, setGenero] = useState('');
   const [telefono, setTelefono] = useState('');
-  const [direccion, setDireccion] = useState('');
-  const [comuna, setComuna] = useState('');
-  const [ciudad, setCiudad] = useState('');
-  const [region, setRegion] = useState('');
+  const [direccionData, setDireccionData] = useState<{
+    direccion?: string | null;
+    region_id?: number | null;
+    ciudad_id?: number | null;
+    comuna_id?: number | null;
+  }>({});
   const [pais, setPais] = useState('');
   const [fotoUrl, setFotoUrl] = useState('');
   const [biografia, setBiografia] = useState('');
@@ -61,7 +66,6 @@ export function PerfilPage() {
   const loadPerfil = useCallback(async () => {
     if (!user?.id) return;
     setLoading(true);
-    setError(null);
     try {
       const datos = await obtenerUsuario(user.id);
       const perfil = datos.perfil;
@@ -77,15 +81,17 @@ export function PerfilPage() {
       setFechaNacimiento(toDateInputValue(perfil?.fecha_nacimiento));
       setGenero(perfil?.genero ?? '');
       setTelefono(perfil?.telefono ?? '');
-      setDireccion(perfil?.direccion ?? '');
-      setComuna(perfil?.comuna ?? '');
-      setCiudad(perfil?.ciudad ?? '');
-      setRegion(perfil?.region ?? '');
+      setDireccionData({
+        direccion: perfil?.direccion ?? null,
+        region_id: perfil?.region_id ?? null,
+        ciudad_id: perfil?.ciudad_id ?? null,
+        comuna_id: perfil?.comuna_id ?? null,
+      });
       setPais(perfil?.pais ?? 'Chile');
       setFotoUrl(perfil?.foto_url ?? '');
       setBiografia(perfil?.biografia ?? '');
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Error al cargar el perfil');
+      showNotification({ type: 'error', message: err instanceof ApiError ? err.message : 'Error al cargar el perfil' });
     } finally {
       setLoading(false);
     }
@@ -99,12 +105,13 @@ export function PerfilPage() {
     e.preventDefault();
     if (!user?.id) return;
 
+    const rutErr = rutError(rut);
+    if (rutErr) { setRutValidationError(rutErr); return; }
+
     setSubmitting(true);
-    setError(null);
-    setSuccess(null);
 
     try {
-      if (email.trim() !== initialEmail) {
+      if (canEditEmail && email.trim() !== initialEmail) {
         await actualizarUsuario(user.id, { email: email.trim() });
         setInitialEmail(email.trim());
         setStoredUser({ ...user, email: email.trim() });
@@ -118,20 +125,20 @@ export function PerfilPage() {
         fecha_nacimiento: fechaNacimiento || null,
         genero: emptyIfBlank(genero),
         telefono: emptyIfBlank(telefono),
-        direccion: emptyIfBlank(direccion),
-        comuna: emptyIfBlank(comuna),
-        ciudad: emptyIfBlank(ciudad),
-        region: emptyIfBlank(region),
+        direccion: direccionData.direccion ?? null,
+        region_id: direccionData.region_id ?? null,
+        ciudad_id: direccionData.ciudad_id ?? null,
+        comuna_id: direccionData.comuna_id ?? null,
         pais: emptyIfBlank(pais),
         foto_url: emptyIfBlank(fotoUrl),
         biografia: emptyIfBlank(biografia),
       };
 
       await actualizarPerfilUsuario(user.id, perfilPayload);
-      setSuccess('Perfil actualizado correctamente');
+      showNotification({ type: 'success', message: 'Perfil actualizado correctamente' });
       await loadPerfil();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Error al guardar el perfil');
+      showNotification({ type: 'error', message: err instanceof ApiError ? err.message : 'Error al guardar el perfil' });
     } finally {
       setSubmitting(false);
     }
@@ -147,15 +154,22 @@ export function PerfilPage() {
       icon="user"
       supportingText="Datos de cuenta y perfil personal"
     >
-      {error && <Feedback type="error" message={error} />}
-      {success && <Feedback type="success" message={success} />}
-
       {loading ? (
         <Text variant="body-regular" className={colorClass.muted}>Cargando perfil…</Text>
       ) : (
         <FormLayout onSubmit={handleSubmit} columns={2}>
           <FormLayout.Section title="Cuenta">
-            <LabelInput id="email" label="Email" type="email" value={email} onChange={setEmail} required />
+            <LabelInput
+              id="email"
+              label="Email"
+              type="email"
+              value={email}
+              onChange={setEmail}
+              required
+              disabled={!canEditEmail}
+              readOnly={!canEditEmail}
+              helperText={!canEditEmail ? 'Solo un administrador puede cambiar el correo' : undefined}
+            />
             <LabelInput id="empresa" label="Empresa" value={empresaNombre || '—'} onChange={() => undefined} disabled />
             <LabelInput id="cargo" label="Cargo" value={cargoNombre || '—'} onChange={() => undefined} disabled />
             {isSuperAdmin && (
@@ -166,7 +180,16 @@ export function PerfilPage() {
           </FormLayout.Section>
 
           <FormLayout.Section title="Datos personales">
-            <LabelInput id="rut" label="RUT" value={rut} onChange={setRut} placeholder="12.345.678-9" />
+            <LabelInput
+              id="rut"
+              label="RUT"
+              value={rut}
+              onChange={(v) => { setRut(v); setRutValidationError(rutError(v)); }}
+              onBlur={() => { if (rut) setRut(formatRut(rut)); }}
+              placeholder="12.345.678-9"
+              hasError={!!rutValidationError}
+              errorMessage={rutValidationError ?? ''}
+            />
             <LabelInput id="nombres" label="Nombres" value={nombres} onChange={setNombres} required />
             <LabelInput id="apellidoPaterno" label="Apellido paterno" value={apellidoPaterno} onChange={setApellidoPaterno} />
             <LabelInput id="apellidoMaterno" label="Apellido materno" value={apellidoMaterno} onChange={setApellidoMaterno} />
@@ -188,10 +211,11 @@ export function PerfilPage() {
           </FormLayout.Section>
 
           <FormLayout.Section title="Dirección">
-            <LabelInput id="direccion" label="Dirección" value={direccion} onChange={setDireccion} />
-            <LabelInput id="comuna" label="Comuna" value={comuna} onChange={setComuna} />
-            <LabelInput id="ciudad" label="Ciudad" value={ciudad} onChange={setCiudad} />
-            <LabelInput id="region" label="Región" value={region} onChange={setRegion} />
+            <DireccionSelector
+              value={direccionData}
+              onChange={setDireccionData}
+              disabled={submitting}
+            />
             <LabelInput id="pais" label="País" value={pais} onChange={setPais} />
           </FormLayout.Section>
 

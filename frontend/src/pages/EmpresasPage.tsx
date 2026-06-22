@@ -38,7 +38,7 @@ export function EmpresasPage() {
       confirmDelete({
         title: 'Inhabilitar empresa',
         bodyText:
-          `¿Inhabilitar "${row.nombre}"? Los datos se conservan pero dejarán de ` +
+          `¿Inhabilitar "${row.razon_social}"? Los datos se conservan pero dejarán de ` +
           'mostrarse en listados generales hasta que seleccione esta empresa o la reactive.',
         successMessage: 'Empresa inhabilitada',
         onConfirm: async () => {
@@ -84,7 +84,19 @@ export function EmpresasPage() {
         columns={[
           { key: 'id', header: 'ID', width: 64 },
           { key: 'codigo', header: 'Código', render: (row) => <code>{row.codigo}</code> },
-          { key: 'nombre', header: 'Nombre', sortable: true },
+          {
+            key: 'razon_social',
+            header: 'Razón Social',
+            sortable: true,
+            render: (row) => (
+              <div>
+                <span>{row.razon_social}</span>
+                {row.nombre_fantasia && (
+                  <span className="block text-xs text-gray-400">{row.nombre_fantasia}</span>
+                )}
+              </div>
+            ),
+          },
           { key: 'rut', header: 'RUT', render: (row) => row.rut ?? '—' },
           {
             key: 'esta_activa',

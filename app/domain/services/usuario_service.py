@@ -125,7 +125,7 @@ class UsuarioService:
 
         data = usuario_dto.model_dump()
 
-        data["empresa_nombre"] = usuario.empresa.nombre if usuario.empresa else None
+        data["empresa_nombre"] = usuario.empresa.razon_social if usuario.empresa else None
 
         data["cargo_nombre"] = usuario.cargo.nombre if usuario.cargo else None
 

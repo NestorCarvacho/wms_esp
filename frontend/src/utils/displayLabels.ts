@@ -41,15 +41,17 @@ export function displayTipoProducto(row: {
 /** Etiqueta estándar para combos de empresa (búsqueda con texto completo). */
 export function empresaComboBoxOption(empresa: {
   codigo: string;
-  nombre: string;
+  razon_social: string;
+  nombre_fantasia?: string | null;
   id?: number;
   esta_activa?: boolean;
 }) {
   const suffix = empresa.esta_activa === false ? ' (Inhabilitada)' : '';
-  const label = `${empresa.codigo} — ${empresa.nombre}${suffix}`;
+  const display = empresa.nombre_fantasia ?? empresa.razon_social;
+  const label = `${empresa.codigo} — ${display}${suffix}`;
   return {
     label,
     value: empresa.id != null ? String(empresa.id) : '',
-    searchTokens: `${empresa.codigo} ${empresa.nombre} inhabilitada inactiva`,
+    searchTokens: `${empresa.codigo} ${empresa.razon_social} ${empresa.nombre_fantasia ?? ''} inhabilitada inactiva`,
   };
 }

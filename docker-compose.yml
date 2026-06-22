@@ -11,7 +11,6 @@ services:
     ports:
       - "3307:3306"
     volumes:
-      # Montamos el script SQL para que se ejecute al iniciar por primera vez
       - ./mysql-init:/docker-entrypoint-initdb.d
       - db_data:/var/lib/mysql
 
@@ -22,13 +21,23 @@ services:
     ports:
       - "8000:8000"
     environment:
-      DB_HOST: db
-      DB_USER: root
-      DB_PASSWORD: root_password_segura
-      DB_NAME: wms_db
-      JWT_SECRET: tu_clave_secreta_para_jwt
+      DATABASE_URL: "mysql+aiomysql://root:root_password_segura@db:3306/wms_db"
+      SECRET_KEY: tu_clave_secreta_para_jwt
+      CORS_ORIGINS: "http://localhost:4173,http://127.0.0.1:4173,http://localhost:5173,http://127.0.0.1:5173"
     depends_on:
       - db
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: http://localhost:8000
+    container_name: wms_frontend
+    restart: always
+    ports:
+      - "4173:4173"
+    depends_on:
+      - backend
 
 volumes:
   db_data:

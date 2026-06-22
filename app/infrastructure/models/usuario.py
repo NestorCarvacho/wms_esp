@@ -9,24 +9,76 @@ from datetime import datetime
 Base = declarative_base()
 
 
+# ---------------------------------------------------------------------------
+# Geografía
+# ---------------------------------------------------------------------------
+
+class Region(Base):
+    __tablename__ = "region"
+    id     = Column(Integer, primary_key=True, index=True)
+    nombre = Column(String(100), nullable=False)
+    codigo = Column(String(5), nullable=False, unique=True)
+    activo = Column(Boolean, default=True)
+
+    ciudades = relationship("Ciudad", back_populates="region")
+
+
+class Ciudad(Base):
+    __tablename__ = "ciudad"
+    id        = Column(Integer, primary_key=True, index=True)
+    region_id = Column(Integer, ForeignKey("region.id"), nullable=False, index=True)
+    nombre    = Column(String(100), nullable=False)
+    activo    = Column(Boolean, default=True)
+
+    region  = relationship("Region", back_populates="ciudades")
+    comunas = relationship("Comuna", back_populates="ciudad")
+
+
+class Comuna(Base):
+    __tablename__ = "comuna"
+    id        = Column(Integer, primary_key=True, index=True)
+    region_id = Column(Integer, ForeignKey("region.id"), nullable=False, index=True)
+    ciudad_id = Column(Integer, ForeignKey("ciudad.id"), nullable=False, index=True)
+    nombre    = Column(String(100), nullable=False)
+    activo    = Column(Boolean, default=True)
+
+    region = relationship("Region")
+    ciudad = relationship("Ciudad", back_populates="comunas")
+
+
+# ---------------------------------------------------------------------------
+# Empresa
+# ---------------------------------------------------------------------------
+
 class Empresa(Base):
     """Tabla de empresas multi-tenant."""
     __tablename__ = "empresa"
     
-    id = Column(BigInteger, primary_key=True, index=True)
-    codigo = Column(String(50), unique=True, nullable=False, index=True)
-    nombre = Column(String(255), nullable=False)
-    rut = Column(String(50), nullable=True)
-    esta_activa = Column(Boolean, default=True)
+    id               = Column(BigInteger, primary_key=True, index=True)
+    codigo           = Column(String(50), unique=True, nullable=False, index=True)
+    razon_social     = Column(String(255), nullable=False)
+    nombre_fantasia  = Column(String(255), nullable=True)
+    rut              = Column(String(50), nullable=True)
+    giro             = Column(String(255), nullable=True)
+    telefono         = Column(String(30), nullable=True)
+    correo           = Column(String(255), nullable=True)
+    sitio_web        = Column(String(255), nullable=True)
+    esta_activa      = Column(Boolean, default=True)
     es_empresa_maestra = Column(Boolean, default=False)
-    activo = Column(Boolean, default=True)
-    creado_at = Column(DateTime, default=datetime.utcnow)
-    
-    # Relaciones
+    activo           = Column(Boolean, default=True)
+    creado_at        = Column(DateTime, default=datetime.utcnow)
+    direccion        = Column(String(255), nullable=True)
+    region_id        = Column(Integer, ForeignKey("region.id"), nullable=True)
+    ciudad_id        = Column(Integer, ForeignKey("ciudad.id"), nullable=True)
+    comuna_id        = Column(Integer, ForeignKey("comuna.id"), nullable=True)
+
     usuarios = relationship("Usuario", back_populates="empresa")
-    
+    region   = relationship("Region")
+    ciudad   = relationship("Ciudad")
+    comuna   = relationship("Comuna")
+
     def __repr__(self):
-        return f"<Empresa(id={self.id}, nombre='{self.nombre}')>"
+        return f"<Empresa(id={self.id}, razon_social='{self.razon_social}')>"
 
 
 class Cargo(Base):
@@ -101,15 +153,17 @@ class PerfilUsuario(Base):
     genero = Column(String(20), nullable=True)
     telefono = Column(String(30), nullable=True)
     direccion = Column(String(255), nullable=True)
-    comuna = Column(String(100), nullable=True)
-    ciudad = Column(String(100), nullable=True)
-    region = Column(String(100), nullable=True)
-    pais = Column(String(100), nullable=True)
-    foto_url = Column(String(500), nullable=True)
+    region_id = Column(Integer, ForeignKey("region.id"), nullable=True)
+    ciudad_id = Column(Integer, ForeignKey("ciudad.id"), nullable=True)
+    comuna_id = Column(Integer, ForeignKey("comuna.id"), nullable=True)
+    pais      = Column(String(100), nullable=True)
+    foto_url  = Column(String(500), nullable=True)
     biografia = Column(Text, nullable=True)
-    
-    # Relaciones
+
     usuario = relationship("Usuario", back_populates="perfil")
+    region  = relationship("Region")
+    ciudad  = relationship("Ciudad")
+    comuna  = relationship("Comuna")
     
     def __repr__(self):
         return f"<PerfilUsuario(usuario_id={self.usuario_id}, rut='{self.rut}')>"
@@ -186,12 +240,20 @@ class Bodega(Base):
     """Tabla de bodegas por empresa."""
     __tablename__ = "bodega"
     
-    id = Column(BigInteger, primary_key=True, index=True)
+    id         = Column(BigInteger, primary_key=True, index=True)
     empresa_id = Column(BigInteger, ForeignKey("empresa.id"), nullable=False, index=True)
-    codigo = Column(String(50), nullable=False)
-    nombre = Column(String(255), nullable=False)
-    activo = Column(Boolean, default=True)
+    codigo     = Column(String(50), nullable=False)
+    nombre     = Column(String(255), nullable=False)
+    activo     = Column(Boolean, default=True)
+    direccion  = Column(String(255), nullable=True)
+    region_id  = Column(Integer, ForeignKey("region.id"), nullable=True)
+    ciudad_id  = Column(Integer, ForeignKey("ciudad.id"), nullable=True)
+    comuna_id  = Column(Integer, ForeignKey("comuna.id"), nullable=True)
+
     empresa = relationship("Empresa")
+    region  = relationship("Region")
+    ciudad  = relationship("Ciudad")
+    comuna  = relationship("Comuna")
 
     def __repr__(self):
         return f"<Bodega(id={self.id}, nombre='{self.nombre}', empresa_id={self.empresa_id})>"

@@ -61,36 +61,13 @@ class PerfilUsuarioCRUDRepository:
         genero: Optional[str] = None,
         telefono: Optional[str] = None,
         direccion: Optional[str] = None,
-        comuna: Optional[str] = None,
-        ciudad: Optional[str] = None,
-        region: Optional[str] = None,
+        region_id: Optional[int] = None,
+        ciudad_id: Optional[int] = None,
+        comuna_id: Optional[int] = None,
         pais: Optional[str] = None,
         foto_url: Optional[str] = None,
         biografia: Optional[str] = None
     ) -> PerfilUsuario:
-        """
-        Crea un nuevo perfil de usuario.
-        
-        Args:
-            usuario_id: ID del usuario asociado
-            rut: RUT del usuario
-            nombres: Nombre(s) del usuario
-            apellido_paterno: Apellido paterno
-            apellido_materno: Apellido materno
-            fecha_nacimiento: Fecha de nacimiento
-            genero: Género
-            telefono: Número de teléfono
-            direccion: Dirección
-            comuna: Comuna
-            ciudad: Ciudad
-            region: Región
-            pais: País
-            foto_url: URL de foto de perfil
-            biografia: Biografía personal
-            
-        Returns:
-            PerfilUsuario creado
-        """
         try:
             nuevo_perfil = PerfilUsuario(
                 usuario_id=usuario_id,
@@ -102,9 +79,9 @@ class PerfilUsuarioCRUDRepository:
                 genero=genero,
                 telefono=telefono,
                 direccion=direccion,
-                comuna=comuna,
-                ciudad=ciudad,
-                region=region,
+                region_id=region_id,
+                ciudad_id=ciudad_id,
+                comuna_id=comuna_id,
                 pais=pais,
                 foto_url=foto_url,
                 biografia=biografia
@@ -138,9 +115,9 @@ class PerfilUsuarioCRUDRepository:
             campos_validos = {
                 "rut", "nombres", "apellido_paterno", "apellido_materno",
                 "fecha_nacimiento", "genero", "telefono", "direccion",
-                "comuna", "ciudad", "region", "pais", "foto_url", "biografia"
+                "region_id", "ciudad_id", "comuna_id", "pais", "foto_url", "biografia"
             }
-            datos_filtrados = {k: v for k, v in datos.items() if k in campos_validos and v is not None}
+            datos_filtrados = {k: v for k, v in datos.items() if k in campos_validos}
             
             if not datos_filtrados:
                 return perfil

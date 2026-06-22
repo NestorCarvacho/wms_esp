@@ -22,6 +22,25 @@ export interface Usuario {
   permisos?: string[];
 }
 
+export interface Region {
+  id: number;
+  nombre: string;
+  codigo: string;
+}
+
+export interface Ciudad {
+  id: number;
+  region_id: number;
+  nombre: string;
+}
+
+export interface Comuna {
+  id: number;
+  region_id: number;
+  ciudad_id: number;
+  nombre: string;
+}
+
 export interface PerfilUsuario {
   usuario_id: number;
   rut?: string | null;
@@ -32,9 +51,12 @@ export interface PerfilUsuario {
   genero?: string | null;
   telefono?: string | null;
   direccion?: string | null;
-  comuna?: string | null;
-  ciudad?: string | null;
-  region?: string | null;
+  region_id?: number | null;
+  ciudad_id?: number | null;
+  comuna_id?: number | null;
+  region_nombre?: string | null;
+  ciudad_nombre?: string | null;
+  comuna_nombre?: string | null;
   pais?: string | null;
   foto_url?: string | null;
   biografia?: string | null;
@@ -49,9 +71,9 @@ export interface PerfilUsuarioActualizar {
   genero?: string | null;
   telefono?: string | null;
   direccion?: string | null;
-  comuna?: string | null;
-  ciudad?: string | null;
-  region?: string | null;
+  region_id?: number | null;
+  ciudad_id?: number | null;
+  comuna_id?: number | null;
   pais?: string | null;
   foto_url?: string | null;
   biografia?: string | null;
@@ -286,24 +308,53 @@ export interface PaginatedEmpresas {
 export interface Empresa {
   id: number;
   codigo: string;
-  nombre: string;
-  rut: string | null;
+  razon_social: string;
+  nombre_fantasia?: string | null;
+  rut?: string | null;
+  giro?: string | null;
+  telefono?: string | null;
+  correo?: string | null;
+  sitio_web?: string | null;
   esta_activa: boolean;
   es_empresa_maestra?: boolean;
   creado_at: string;
-  empresa_nombre?: string | null;
+  direccion?: string | null;
+  region_id?: number | null;
+  ciudad_id?: number | null;
+  comuna_id?: number | null;
+  region_nombre?: string | null;
+  ciudad_nombre?: string | null;
+  comuna_nombre?: string | null;
 }
 
 export interface EmpresaCrear {
   codigo: string;
-  nombre: string;
+  razon_social: string;
+  nombre_fantasia?: string | null;
   rut?: string | null;
+  giro?: string | null;
+  telefono?: string | null;
+  correo?: string | null;
+  sitio_web?: string | null;
+  direccion?: string | null;
+  region_id?: number | null;
+  ciudad_id?: number | null;
+  comuna_id?: number | null;
 }
 
 export interface EmpresaActualizar {
-  nombre?: string;
+  razon_social?: string;
+  nombre_fantasia?: string | null;
   rut?: string | null;
+  giro?: string | null;
+  telefono?: string | null;
+  correo?: string | null;
+  sitio_web?: string | null;
   esta_activa?: boolean;
+  direccion?: string | null;
+  region_id?: number | null;
+  ciudad_id?: number | null;
+  comuna_id?: number | null;
 }
 
 export interface UnidadMedidaCrear {

@@ -5,7 +5,7 @@ def format_empresa_nombre(empresa) -> str | None:
     if empresa is None:
         return None
     codigo = getattr(empresa, "codigo", None)
-    nombre = getattr(empresa, "nombre", None)
-    if codigo and nombre:
-        return f"{codigo} — {nombre}"
-    return nombre or codigo
+    razon_social = getattr(empresa, "razon_social", None)
+    if codigo and razon_social:
+        return f"{codigo} — {razon_social}"
+    return razon_social or codigo

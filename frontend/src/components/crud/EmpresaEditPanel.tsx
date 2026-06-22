@@ -5,6 +5,8 @@ import { PrimaryButton } from '@/components/ui/buttons';
 import { useUI } from '@/hooks/ui';
 import { ApiError } from '@/api/client';
 import type { Empresa } from '@/types/api';
+import { formatRut, rutError } from '@/utils/rut';
+import { DireccionSelector } from '@/components/DireccionSelector';
 
 export interface EmpresaEditPanelProps {
   empresa: Empresa;
@@ -13,19 +15,44 @@ export interface EmpresaEditPanelProps {
 
 export function EmpresaEditPanel({ empresa, onSaved }: EmpresaEditPanelProps) {
   const { closeSidePanel, showNotification } = useUI();
-  const [nombre, setNombre] = useState(empresa.nombre);
-  const [rut, setRut] = useState(empresa.rut ?? '');
-  const [estaActiva, setEstaActiva] = useState(Boolean(empresa.esta_activa));
+  const [razonSocial,    setRazonSocial]    = useState(empresa.razon_social);
+  const [nombreFantasia, setNombreFantasia] = useState(empresa.nombre_fantasia ?? '');
+  const [rut,            setRut]            = useState(empresa.rut ?? '');
+  const [giro,           setGiro]           = useState(empresa.giro ?? '');
+  const [telefono,       setTelefono]       = useState(empresa.telefono ?? '');
+  const [correo,         setCorreo]         = useState(empresa.correo ?? '');
+  const [sitioWeb,       setSitioWeb]       = useState(empresa.sitio_web ?? '');
+  const [estaActiva,     setEstaActiva]     = useState(Boolean(empresa.esta_activa));
+  const [direccionData,  setDireccionData]  = useState<{
+    direccion?: string | null;
+    region_id?: number | null;
+    ciudad_id?: number | null;
+    comuna_id?: number | null;
+  }>({
+    direccion: empresa.direccion ?? null,
+    region_id: empresa.region_id ?? null,
+    ciudad_id: empresa.ciudad_id ?? null,
+    comuna_id: empresa.comuna_id ?? null,
+  });
+  const [rutValidationError, setRutValidationError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    const rutErr = rutError(rut);
+    if (rutErr) { setRutValidationError(rutErr); return; }
     setSubmitting(true);
     try {
       await actualizarEmpresa(empresa.id, {
-        nombre: nombre.trim(),
-        rut: rut.trim() || null,
-        esta_activa: estaActiva,
+        razon_social:    razonSocial.trim(),
+        nombre_fantasia: nombreFantasia.trim() || null,
+        rut:             rut.trim() || null,
+        giro:            giro.trim() || null,
+        telefono:        telefono.trim() || null,
+        correo:          correo.trim() || null,
+        sitio_web:       sitioWeb.trim() || null,
+        esta_activa:     estaActiva,
+        ...direccionData,
       });
       showNotification({
         type: 'success',
@@ -45,9 +72,28 @@ export function EmpresaEditPanel({ empresa, onSaved }: EmpresaEditPanelProps) {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      <LabelInput id="edit-codigo" label="Código" value={empresa.codigo} onChange={() => undefined} disabled />
-      <LabelInput id="edit-nombre" label="Nombre" value={nombre} onChange={setNombre} required />
-      <LabelInput id="edit-rut" label="RUT (opcional)" value={rut} onChange={setRut} />
+      <LabelInput id="edit-codigo"       label="Código"          value={empresa.codigo}  onChange={() => undefined}  disabled />
+      <LabelInput id="edit-razon-social" label="Razón social"    value={razonSocial}     onChange={setRazonSocial}   required />
+      <LabelInput id="edit-fantasia"     label="Nombre de fantasía" value={nombreFantasia} onChange={setNombreFantasia} />
+      <LabelInput
+        id="edit-rut"
+        label="RUT"
+        value={rut}
+        onChange={(v) => { setRut(v); setRutValidationError(rutError(v)); }}
+        onBlur={() => { if (rut) setRut(formatRut(rut)); }}
+        placeholder="12.345.678-9"
+        hasError={!!rutValidationError}
+        errorMessage={rutValidationError ?? ''}
+      />
+      <LabelInput id="edit-giro"         label="Giro"            value={giro}            onChange={setGiro} />
+      <LabelInput id="edit-telefono"     label="Teléfono"        value={telefono}        onChange={setTelefono}       placeholder="+56222345678" />
+      <LabelInput id="edit-correo"       label="Correo"          value={correo}          onChange={setCorreo}         placeholder="contacto@empresa.cl" />
+      <LabelInput id="edit-web"          label="Sitio web"       value={sitioWeb}        onChange={setSitioWeb}       placeholder="https://empresa.cl" />
+
+      <div className="border-t pt-4">
+        <DireccionSelector value={direccionData} onChange={setDireccionData} disabled={submitting} />
+      </div>
+
       {empresa.es_empresa_maestra ? (
         <p className="text-sm text-muted-foreground">La empresa maestra permanece siempre activa.</p>
       ) : (
@@ -61,13 +107,10 @@ export function EmpresaEditPanel({ empresa, onSaved }: EmpresaEditPanelProps) {
           Empresa activa (operativa en listados y login de sus usuarios)
         </label>
       )}
+
       <div className="flex gap-3 pt-2">
-        <PrimaryButton type="button" variant="outline" onClick={closeSidePanel}>
-          Cancelar
-        </PrimaryButton>
-        <PrimaryButton type="submit" colorVariant="success" isLoading={submitting}>
-          Guardar
-        </PrimaryButton>
+        <PrimaryButton type="button" variant="outline" onClick={closeSidePanel}>Cancelar</PrimaryButton>
+        <PrimaryButton type="submit" colorVariant="success" isLoading={submitting}>Guardar</PrimaryButton>
       </div>
     </form>
   );

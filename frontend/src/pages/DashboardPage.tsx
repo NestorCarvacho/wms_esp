@@ -12,8 +12,8 @@ import { Card } from '@/components/ui/cards/Card';
 import { PrimaryButton } from '@/components/ui/buttons';
 import { Text } from '@/components/ui/text/Text';
 import { IconScout } from '@/components/ui/images/IconScout';
-import { Feedback } from '@/app/Feedback';
 import { useAuthContext } from '@/context/AuthContext';
+import { useUI } from '@/hooks/ui';
 import { ApiError } from '@/api/client';
 import { colorClass } from '@/assets/styles/colors';
 import { cn } from '@/lib/utils';
@@ -123,19 +123,18 @@ function WarehouseSummaryCard({
 
 export function DashboardPage() {
   const { user, isSuperAdmin } = useAuthContext();
+  const { showNotification } = useUI();
   const [apiStatus, setApiStatus] = useState<string | null>(null);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [statsGlobal, setStatsGlobal] = useState<DashboardStats | null>(null);
   const [statsMaestra, setStatsMaestra] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
 
     async function loadDashboard() {
       setLoading(true);
-      setError(null);
 
       try {
         const listParams: PaginatedListParams = { pagina: 1, porPagina: 1 };
@@ -168,7 +167,7 @@ export function DashboardPage() {
         }
       } catch (err) {
         if (!cancelled) {
-          setError(err instanceof ApiError ? err.message : 'No se pudo cargar el resumen del panel');
+          showNotification({ type: 'error', message: err instanceof ApiError ? err.message : 'No se pudo cargar el resumen del panel' });
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -197,8 +196,6 @@ export function DashboardPage() {
       icon="home"
       supportingText={`Bienvenido, ${user?.email ?? 'usuario'}`}
     >
-      {error && <Feedback type="error" message={error} />}
-
       <div className={`grid gap-4 mb-6 ${isSuperAdmin ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
         <Card elevation={2} padding="20px">
           <Text variant="body-medium" className={colorClass.brandLight}>

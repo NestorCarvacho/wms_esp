@@ -244,8 +244,17 @@ async def crear_empresa(
     try:
         resultado = await service.crear_empresa(
             codigo=dto.codigo,
-            nombre=dto.nombre,
-            rut=dto.rut
+            razon_social=dto.razon_social,
+            nombre_fantasia=dto.nombre_fantasia,
+            rut=dto.rut,
+            giro=dto.giro,
+            telefono=dto.telefono,
+            correo=dto.correo,
+            sitio_web=dto.sitio_web,
+            direccion=dto.direccion,
+            region_id=dto.region_id,
+            ciudad_id=dto.ciudad_id,
+            comuna_id=dto.comuna_id,
         )
 
         rbac = await rbac_service.provisionar(
@@ -357,9 +366,18 @@ async def actualizar_empresa(
     try:
         resultado = await service.actualizar_empresa(
             empresa_id=id,
-            nombre=dto.nombre,
+            razon_social=dto.razon_social,
+            nombre_fantasia=dto.nombre_fantasia,
             rut=dto.rut,
-            esta_activa=dto.esta_activa
+            giro=dto.giro,
+            telefono=dto.telefono,
+            correo=dto.correo,
+            sitio_web=dto.sitio_web,
+            esta_activa=dto.esta_activa,
+            direccion=dto.direccion,
+            region_id=dto.region_id,
+            ciudad_id=dto.ciudad_id,
+            comuna_id=dto.comuna_id,
         )
         
         return RespuestaAPIDTO(

@@ -21,22 +21,13 @@ from typing import Optional
 # ============ BODEGA ============
 class BodegaCrearDTO(BaseModel):
     """DTO para crear una nueva bodega."""
-    nombre: str = Field(
-        ...,
-        min_length=1,
-        max_length=100,
-        description="Nombre de la bodega (1-100 caracteres)"
-    )
-    codigo: str = Field(
-        ...,
-        min_length=1,
-        max_length=50,
-        description="Código de la bodega (1-50 caracteres)"
-    )
-    activo: int = Field(
-        1,
-        description="Indica si la bodega está activa (1) o no (0)"
-    )
+    nombre: str = Field(..., min_length=1, max_length=100)
+    codigo: str = Field(..., min_length=1, max_length=50)
+    activo: int = Field(1)
+    direccion: Optional[str] = Field(None, max_length=255, description="Calle y número")
+    region_id: Optional[int] = None
+    ciudad_id: Optional[int] = None
+    comuna_id: Optional[int] = None
 
     @validator("nombre")
     def validar_nombre(cls, v):
@@ -57,22 +48,13 @@ class BodegaCrearDTO(BaseModel):
 
 class BodegaActualizarDTO(BaseModel):
     """DTO para actualizar una bodega existente."""
-    nombre: Optional[str] = Field(
-        None,
-        min_length=1,
-        max_length=100,
-        description="Nombre de la bodega (1-100 caracteres)"
-    )
-    codigo: Optional[str] = Field(
-        None,
-        min_length=1,
-        max_length=50,
-        description="Código de la bodega (1-50 caracteres)"
-    )
-    activo: Optional[int] = Field(
-        None,
-        description="Indica si la bodega está activa (1) o no (0)"
-    )
+    nombre: Optional[str] = Field(None, min_length=1, max_length=100)
+    codigo: Optional[str] = Field(None, min_length=1, max_length=50)
+    activo: Optional[int] = None
+    direccion: Optional[str] = Field(None, max_length=255)
+    region_id: Optional[int] = None
+    ciudad_id: Optional[int] = None
+    comuna_id: Optional[int] = None
 
     @validator("nombre")
     def validar_nombre(cls, v):
@@ -110,18 +92,18 @@ class BodegaRespuestaDTO(BaseModel):
     id: int
     empresa_id: int
     nombre: str
-    
+    codigo: Optional[str] = None
+    activo: Optional[int] = None
+    direccion: Optional[str] = None
+    region_id: Optional[int] = None
+    ciudad_id: Optional[int] = None
+    comuna_id: Optional[int] = None
+    region_nombre: Optional[str] = None
+    ciudad_nombre: Optional[str] = None
+    comuna_nombre: Optional[str] = None
+
     class Config:
         from_attributes = True
-        json_schema_extra = {
-            "example": {
-                "id": 1,
-                "empresa_id": 1,
-                "nombre": "Bodega Central",
-                "codigo": "BOD001",
-                "activo": 1
-            }
-        }
 
 
 class BodegaListaDTO(BaseModel):

@@ -37,7 +37,7 @@ class EmpresaCRUDRepository:
             Tupla (lista_empresas, total_empresas)
         """
         try:
-            buscar_cond = condicion_buscar(Empresa, buscar, "nombre", "codigo")
+            buscar_cond = condicion_buscar(Empresa, buscar, "razon_social", "codigo")
 
             count_stmt = select(func.count(Empresa.id))
             if solo_activas:
@@ -56,13 +56,13 @@ class EmpresaCRUDRepository:
                 stmt_base,
                 columnas={
                     "id": Empresa.id,
-                    "nombre": Empresa.nombre,
+                    "razon_social": Empresa.razon_social,
                     "codigo": Empresa.codigo,
                     "activo": Empresa.esta_activa,
                 },
                 ordenar_por=ordenar_por,
                 orden=orden,
-                default=Empresa.nombre,
+                default=Empresa.razon_social,
             )
 
             offset = (pagina - 1) * por_pagina
@@ -96,38 +96,24 @@ class EmpresaCRUDRepository:
         except SQLAlchemyError as e:
             raise Exception(f"Error al obtener empresa por código: {str(e)}")
     
-    async def crear(
-        self,
-        codigo: str,
-        nombre: str,
-        rut: str = None
-    ) -> Empresa:
-        """
-        Crea una nueva empresa.
-        
-        Args:
-            codigo: Código único de la empresa
-            nombre: Nombre de la empresa
-            rut: RUT de la empresa (opcional)
-            
-        Returns:
-            Objeto Empresa creado
-            
-        Raises:
-            Exception: Si el código ya existe o hay error de base de datos
-        """
+    async def crear(self, codigo: str, razon_social: str, **kwargs) -> Empresa:
         try:
-            # Validar que el código no existe
             empresa_existente = await self.obtener_por_codigo(codigo)
             if empresa_existente:
                 raise ValueError(f"El código de empresa '{codigo}' ya existe")
-            
+
+            campos_permitidos = {
+                "nombre_fantasia", "rut", "giro", "telefono", "correo",
+                "sitio_web", "direccion", "region_id", "ciudad_id", "comuna_id"
+            }
+            extras = {k: v for k, v in kwargs.items() if k in campos_permitidos and v is not None}
+
             nueva_empresa = Empresa(
                 codigo=codigo,
-                nombre=nombre,
-                rut=rut,
+                razon_social=razon_social,
                 esta_activa=True,
-                creado_at=datetime.utcnow()
+                creado_at=datetime.utcnow(),
+                **extras,
             )
             self.session.add(nueva_empresa)
             await self.session.commit()
@@ -160,8 +146,11 @@ class EmpresaCRUDRepository:
             if not empresa:
                 raise ValueError("Empresa no encontrada")
             
-            # Filtrar campos válidos
-            campos_validos = {"nombre", "rut", "esta_activa"}
+            campos_validos = {
+                "razon_social", "nombre_fantasia", "rut", "giro",
+                "telefono", "correo", "sitio_web", "esta_activa",
+                "direccion", "region_id", "ciudad_id", "comuna_id"
+            }
             datos_filtrados = {k: v for k, v in datos.items() if k in campos_validos and v is not None}
             
             if not datos_filtrados:

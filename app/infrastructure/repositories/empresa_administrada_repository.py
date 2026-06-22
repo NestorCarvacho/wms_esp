@@ -44,13 +44,13 @@ class EmpresaAdministradaRepository:
             )
             .where(*conditions)
             .options(selectinload(Empresa.usuarios))
-            .order_by(Empresa.nombre)
+            .order_by(Empresa.razon_social)
         )
         result = await self.session.execute(stmt)
         return list(result.scalars().unique().all())
 
     async def _listar_todas(self, *, solo_activas: bool = True) -> list[Empresa]:
-        stmt = select(Empresa).order_by(Empresa.nombre)
+        stmt = select(Empresa).order_by(Empresa.razon_social)
         if solo_activas:
             stmt = stmt.where(*self._empresa_activa_cond())
         result = await self.session.execute(stmt)
