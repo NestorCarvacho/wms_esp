@@ -28,7 +28,7 @@ class EmpresaMaestraService:
                 {
                     "id": e.id,
                     "codigo": e.codigo,
-                    "nombre": e.razon_social,
+                    "razon_social": e.razon_social,
                     "rut": e.rut,
                     "esta_activa": e.esta_activa,
                     "es_empresa_maestra": bool(e.es_empresa_maestra),
