@@ -13,6 +13,7 @@ import {
 } from '@/api/inventario';
 import { InventarioDashboardCharts } from '@/components/inventario/InventarioDashboardCharts';
 import { InventarioOperacionEscaneo } from '@/components/inventario/InventarioOperacionEscaneo';
+import { RecepcionSerializadaPanel } from '@/components/inventario/RecepcionSerializadaPanel';
 import { InventarioOperativoNav } from '@/components/inventario/InventarioOperativoNav';
 import { listarProductos } from '@/api/productos';
 import { listarZonasBodega } from '@/api/zonasBodega';
@@ -193,6 +194,9 @@ export function InventarioPage({ vista }: InventarioPageProps) {
         if (!cancelled) {
           setBodegas(bRes.bodegas);
           setProductos(pRes.productos);
+          if (bRes.bodegas.length === 1) {
+            setOpBodega((prev) => prev || String(bRes.bodegas[0].id));
+          }
         }
       })
       .catch((err) => {
@@ -210,6 +214,7 @@ export function InventarioPage({ vista }: InventarioPageProps) {
   const [opBodega, setOpBodega] = useState('');
   const [zonaOrigen, setZonaOrigen] = useState('');
   const [zonaDestino, setZonaDestino] = useState('');
+  const [modoRecepcion, setModoRecepcion] = useState<'barcode' | 'serializado'>('barcode');
 
   useEffect(() => {
     if (!OP_VISTAS.includes(vista) || !opBodega) {
@@ -497,20 +502,64 @@ export function InventarioPage({ vista }: InventarioPageProps) {
       )}
 
       {(vista === 'recepcion' || vista === 'traslado' || vista === 'despacho') && (
-        <InventarioOperacionEscaneo
-          vista={vista}
-          titulo={meta.title}
-          bodegas={bodegas}
-          zonas={zonas}
-          productos={productos}
-          empresaIdParam={empresaIdParam ?? undefined}
-          opBodega={opBodega}
-          onOpBodegaChange={setOpBodega}
-          zonaOrigen={zonaOrigen}
-          onZonaOrigenChange={setZonaOrigen}
-          zonaDestino={zonaDestino}
-          onZonaDestinoChange={setZonaDestino}
-        />
+        <>
+          {/* Tab toggle: solo en Recepción */}
+          {vista === 'recepcion' && (
+            <div className="mb-3 flex gap-1 rounded-lg border border-border bg-muted/40 p-1 w-fit">
+              <button
+                type="button"
+                onClick={() => setModoRecepcion('barcode')}
+                className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
+                  modoRecepcion === 'barcode'
+                    ? 'bg-background text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Por código de barras
+              </button>
+              <button
+                type="button"
+                onClick={() => setModoRecepcion('serializado')}
+                className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
+                  modoRecepcion === 'serializado'
+                    ? 'bg-background text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Serializado (por producto)
+              </button>
+            </div>
+          )}
+
+          {/* Modo serializado en Recepción */}
+          {vista === 'recepcion' && modoRecepcion === 'serializado' ? (
+            <RecepcionSerializadaPanel
+              bodegas={bodegas}
+              zonas={zonas}
+              productos={productos}
+              empresaIdParam={empresaIdParam ?? undefined}
+              opBodega={opBodega}
+              onOpBodegaChange={setOpBodega}
+              zonaDestino={zonaDestino}
+              onZonaDestinoChange={setZonaDestino}
+            />
+          ) : (
+            <InventarioOperacionEscaneo
+              vista={vista}
+              titulo={meta.title}
+              bodegas={bodegas}
+              zonas={zonas}
+              productos={productos}
+              empresaIdParam={empresaIdParam ?? undefined}
+              opBodega={opBodega}
+              onOpBodegaChange={setOpBodega}
+              zonaOrigen={zonaOrigen}
+              onZonaOrigenChange={setZonaOrigen}
+              zonaDestino={zonaDestino}
+              onZonaDestinoChange={setZonaDestino}
+            />
+          )}
+        </>
       )}
 
       {vista === 'configuracion' && (

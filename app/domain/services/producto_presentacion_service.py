@@ -14,6 +14,7 @@ def _serializar_presentacion(p) -> dict:
         "id": p.id,
         "producto_id": p.producto_id,
         "nombre": p.nombre,
+        "codigo_barras": p.codigo_barras,
         "cantidad_contenida": float(p.cantidad_contenida),
         "unidad_medida_id": p.unidad_medida_id,
         "unidad_medida_nombre": p.unidad_medida.nombre if p.unidad_medida else None,
@@ -106,6 +107,29 @@ class ProductoPresentacionService:
             "presentaciones": [_serializar_presentacion(p) for p in items],
         }
 
+    async def buscar_por_barcode(
+        self,
+        empresa_id: int,
+        codigo_barras: str,
+    ) -> Dict[str, Any] | None:
+        """
+        Resuelve un código de barras escaneado al producto y presentación correspondiente.
+        Retorna None si no se encuentra.
+        """
+        presentacion = await self.repository.buscar_por_codigo_barras(empresa_id, codigo_barras)
+        if not presentacion:
+            return None
+        producto = presentacion.producto
+        return {
+            "producto_id": producto.id,
+            "producto_nombre": producto.nombre,
+            "sku": producto.sku,
+            "presentacion_id": presentacion.id,
+            "presentacion_nombre": presentacion.nombre,
+            "factor_conversion": float(presentacion.cantidad_contenida),
+            "unidad_base": producto.unidad_medida.nombre if producto.unidad_medida else None,
+        }
+
     async def crear_presentacion(
         self,
         producto_id: int,
@@ -113,6 +137,7 @@ class ProductoPresentacionService:
         nombre: str,
         cantidad_contenida: Decimal,
         unidad_medida_id: int,
+        codigo_barras: str | None = None,
         precio_costo: float | None = None,
         precio_venta: float | None = None,
         permite_venta_unidad: bool = True,
@@ -125,6 +150,8 @@ class ProductoPresentacionService:
         nombre = nombre.strip()
         if await self.repository.obtener_por_nombre(producto_id, nombre, solo_activas=True):
             raise ValueError(f"Ya existe la presentación '{nombre}' para este producto")
+        if codigo_barras and await self.repository.existe_codigo_barras(empresa_id, codigo_barras):
+            raise ValueError(f"El código de barras '{codigo_barras}' ya está en uso en esta empresa")
 
         inactiva = await self.repository.obtener_por_nombre(
             producto_id, nombre, solo_activas=False
@@ -134,6 +161,7 @@ class ProductoPresentacionService:
                 inactiva.id,
                 empresa_id,
                 nombre=nombre,
+                codigo_barras=codigo_barras,
                 cantidad_contenida=cantidad_contenida,
                 unidad_medida_id=unidad_medida_id,
                 precio_costo=precio_costo,
@@ -151,6 +179,7 @@ class ProductoPresentacionService:
             nombre,
             cantidad_contenida,
             unidad_medida_id,
+            codigo_barras,
             precio_costo,
             precio_venta,
             permite_venta_unidad,
@@ -175,6 +204,11 @@ class ProductoPresentacionService:
             )
             if existente and existente.id != presentacion_id:
                 raise ValueError(f"Ya existe la presentación '{datos['nombre']}'")
+        if "codigo_barras" in datos and datos["codigo_barras"]:
+            if await self.repository.existe_codigo_barras(
+                empresa_id, datos["codigo_barras"], excluir_id=presentacion_id
+            ):
+                raise ValueError(f"El código de barras '{datos['codigo_barras']}' ya está en uso en esta empresa")
         if datos.get("unidad_medida_id") is not None:
             await self._validar_unidad(datos["unidad_medida_id"], empresa_id)
         if datos.get("cantidad_contenida") is not None and datos["cantidad_contenida"] <= 0:

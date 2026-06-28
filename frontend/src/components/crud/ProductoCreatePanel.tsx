@@ -24,6 +24,7 @@ export function ProductoCreatePanel({ onSaved }: ProductoCreatePanelProps) {
   const [sku, setSku] = useState('');
   const [unidadMedidaId, setUnidadMedidaId] = useState('');
   const [tipoProductoId, setTipoProductoId] = useState('');
+  const [serializado, setSerializado] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -73,6 +74,7 @@ export function ProductoCreatePanel({ onSaved }: ProductoCreatePanelProps) {
         sku: sku.trim(),
         activo: 1,
         unidad_medida_id: Number(unidadMedidaId),
+        serializado,
         ...(tipoProductoId ? { tipo_producto_id: Number(tipoProductoId) } : {}),
         ...(empresaCreate.empresaIdNumber != null ? { empresa_id: empresaCreate.empresaIdNumber } : {}),
       });
@@ -118,6 +120,27 @@ export function ProductoCreatePanel({ onSaved }: ProductoCreatePanelProps) {
       <p className="text-xs text-neutral-500 -mt-2">
         El inventario se controlará en esta unidad. Los precios van en cada presentación.
       </p>
+
+      <label className="flex items-center gap-3 cursor-pointer select-none">
+        <div className="relative">
+          <input
+            id="create-serializado"
+            type="checkbox"
+            className="sr-only"
+            checked={serializado}
+            onChange={(e) => setSerializado(e.target.checked)}
+          />
+          <div className={`w-10 h-6 rounded-full transition-colors ${serializado ? 'bg-blue-600' : 'bg-neutral-300'}`} />
+          <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${serializado ? 'translate-x-4' : ''}`} />
+        </div>
+        <div>
+          <span className="text-sm font-medium text-foreground">Inventario serializado</span>
+          <p className="text-xs text-neutral-500">
+            Actívalo si cada unidad tiene un número de serie único (laptops, equipos, etc.)
+          </p>
+        </div>
+      </label>
+
       <CrudPanelFooter
         submitting={submitting}
         disabled={!empresaCreate.isValid || !unidades.length}

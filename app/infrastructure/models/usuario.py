@@ -321,6 +321,7 @@ class Producto(Base):
     tipo_producto_id = Column(BigInteger, ForeignKey("tipo_producto.id"), nullable=True)
     precio_costo = Column(Numeric(12, 2), nullable=True)
     activo = Column(Boolean, default=True)
+    serializado = Column(Boolean, default=False)
     empresa = relationship("Empresa")
     unidad_medida = relationship("UnidadMedida")
     tipo_producto = relationship("TipoProducto", back_populates="productos")
@@ -337,6 +338,7 @@ class ProductoPresentacion(Base):
     id = Column(BigInteger, primary_key=True, index=True)
     producto_id = Column(BigInteger, ForeignKey("producto.id"), nullable=False, index=True)
     nombre = Column(String(255), nullable=False)
+    codigo_barras = Column(String(100), nullable=True, index=True)
     cantidad_contenida = Column(Numeric(18, 6), nullable=False)
     unidad_medida_id = Column(BigInteger, ForeignKey("unidad_medida.id"), nullable=False)
     precio_costo = Column(Numeric(12, 2), nullable=True)
@@ -392,6 +394,7 @@ class MovimientoInventario(Base):
     cantidad = Column(Numeric(18, 6), nullable=False)
     presentacion_id = Column(BigInteger, ForeignKey("producto_presentacion.id"), nullable=True)
     venta_por_presentacion = Column(Boolean, default=False)
+    serie_id = Column(BigInteger, ForeignKey("serie_producto.id"), nullable=True)
     zona_origen_id = Column(BigInteger, ForeignKey("zona_bodega.id"), nullable=True)
     zona_destino_id = Column(BigInteger, ForeignKey("zona_bodega.id"), nullable=True)
     documento_tipo = Column(String(50), nullable=True)
@@ -404,6 +407,24 @@ class MovimientoInventario(Base):
     producto = relationship("Producto")
     zona_origen = relationship("ZonaBodega", foreign_keys=[zona_origen_id])
     zona_destino = relationship("ZonaBodega", foreign_keys=[zona_destino_id])
+
+
+class SerieProducto(Base):
+    """Número de serie individual de una unidad (inventario serializado)."""
+    __tablename__ = "serie_producto"
+
+    id = Column(BigInteger, primary_key=True, index=True)
+    empresa_id = Column(BigInteger, ForeignKey("empresa.id"), nullable=False, index=True)
+    producto_id = Column(BigInteger, ForeignKey("producto.id"), nullable=False, index=True)
+    numero_serie = Column(String(100), nullable=False)
+    zona_bodega_id = Column(BigInteger, ForeignKey("zona_bodega.id"), nullable=True, index=True)
+    estado = Column(String(30), nullable=False, default="EN_BODEGA")
+    creado_at = Column(DateTime, default=datetime.utcnow)
+    actualizado_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    empresa = relationship("Empresa")
+    producto = relationship("Producto")
+    zona_bodega = relationship("ZonaBodega")
 
 
 class BodegaConfig(Base):

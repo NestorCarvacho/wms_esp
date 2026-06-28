@@ -242,6 +242,31 @@ class EmpresaRbacBootstrapRepository:
                     UsuarioRol(usuario_id=usuario_id, rol_id=rol_id, activo=True)
                 )
 
+    async def contar_usuarios(self, empresa_id: int) -> int:
+        stmt = select(func.count(Usuario.id)).where(
+            Usuario.empresa_id == empresa_id,
+            Usuario.activo == True,
+        )
+        return (await self.session.execute(stmt)).scalar() or 0
+
+    async def crear_usuario_admin_inicial(
+        self,
+        empresa_id: int,
+        email: str,
+        password_hash: str,
+        cargo_id: int | None = None,
+    ) -> Usuario:
+        usuario = Usuario(
+            empresa_id=empresa_id,
+            email=email,
+            password_hash=password_hash,
+            cargo_id=cargo_id,
+            activo=True,
+        )
+        self.session.add(usuario)
+        await self.session.flush()
+        return usuario
+
     async def commit(self) -> None:
         await self.session.commit()
 

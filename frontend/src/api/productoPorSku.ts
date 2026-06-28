@@ -1,5 +1,24 @@
+import { apiRequest } from '@/api/client';
 import { listarProductos } from '@/api/productos';
-import type { Producto } from '@/types/api';
+import type { BarcodeResolucion, Producto } from '@/types/api';
+
+/** Resuelve un código de barras contra la tabla producto_presentacion. */
+export async function resolverBarcode(
+  codigo: string,
+  empresaId?: number,
+): Promise<BarcodeResolucion | null> {
+  const term = codigo.trim();
+  if (!term) return null;
+  try {
+    const query = empresaId != null ? `?empresa_id=${empresaId}` : '';
+    const res = await apiRequest<BarcodeResolucion>(
+      `/api/v1/productos/barcode/${encodeURIComponent(term)}${query}`,
+    );
+    return res.datos ?? null;
+  } catch {
+    return null;
+  }
+}
 
 /** Resuelve producto por SKU/código de barras (coincidencia exacta, sin distinguir mayúsculas). */
 export async function buscarProductoPorSku(

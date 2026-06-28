@@ -25,6 +25,7 @@ export function ProductoPresentacionesPanel({ producto, onSaved }: ProductoPrese
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [nombre, setNombre] = useState('');
+  const [codigoBarras, setCodigoBarras] = useState('');
   const [cantidad, setCantidad] = useState('');
   const [unidadId, setUnidadId] = useState('');
   const [precioCosto, setPrecioCosto] = useState('');
@@ -77,6 +78,7 @@ export function ProductoPresentacionesPanel({ producto, onSaved }: ProductoPrese
 
   function resetForm() {
     setNombre('');
+    setCodigoBarras('');
     setCantidad('');
     setPrecioCosto('');
     setPrecioVenta('');
@@ -91,6 +93,7 @@ export function ProductoPresentacionesPanel({ producto, onSaved }: ProductoPrese
     try {
       await crearProductoPresentacion(producto.id, {
         nombre: nombre.trim(),
+        codigo_barras: codigoBarras.trim() || null,
         cantidad_contenida: Number(cantidad),
         unidad_medida_id: Number(unidadId),
         precio_costo: precioCosto ? Number(precioCosto) : null,
@@ -147,8 +150,13 @@ export function ProductoPresentacionesPanel({ producto, onSaved }: ProductoPrese
           {presentaciones.map((p) => (
             <li key={p.id} className="border rounded-lg p-3 text-sm">
               <div className="font-medium">{p.nombre}</div>
+              {p.codigo_barras && (
+                <div className="text-neutral-500 font-mono text-xs mt-0.5">
+                  EAN: {p.codigo_barras}
+                </div>
+              )}
               <div className="text-neutral-600 mt-1">
-                Contiene {p.cantidad_contenida} {p.unidad_medida_nombre ?? 'unidades'}
+                Factor: {p.cantidad_contenida} {p.unidad_medida_nombre ?? 'unidades'}
               </div>
               <div className="text-neutral-600">
                 Venta unidad: {p.permite_venta_unidad ? 'Sí' : 'No'} · Venta empaque:{' '}
@@ -181,8 +189,15 @@ export function ProductoPresentacionesPanel({ producto, onSaved }: ProductoPrese
         <form onSubmit={handleCreate} className="flex flex-col gap-3 border-t pt-4">
           <LabelInput id="pres-nombre" label="Nombre" value={nombre} onChange={setNombre} required placeholder="Caja 100 unidades" />
           <LabelInput
+            id="pres-barcode"
+            label="Código de barras (EAN)"
+            value={codigoBarras}
+            onChange={setCodigoBarras}
+            placeholder="7801234567890"
+          />
+          <LabelInput
             id="pres-cantidad"
-            label="Cantidad contenida"
+            label="Factor de conversión (unidades base por empaque)"
             type="number"
             value={cantidad}
             onChange={setCantidad}

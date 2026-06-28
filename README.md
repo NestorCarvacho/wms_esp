@@ -62,17 +62,23 @@ pip install -r requirements.txt
 
 ### 2. Base de datos
 
-```bash
-mysql -u root -p < mysql-init/01_setup.sql
-mysql -u root -p < mysql-init/02_altern_tables.sql
-mysql -u root -p < mysql-init/03_rbac_hierarchy.sql
-```
-
-Alternativa con Docker:
+Instalación completa (recomendada):
 
 ```bash
-docker compose up -d db
+mysql -u root -p wms_esp < mysql-init/schema_completo.sql
 ```
+
+Usuario admin incluido: `admin@emp001.cl` / `WmsAdmin1!`
+
+Alternativa con Docker (aplica `schema_completo.sql` al levantar MySQL):
+
+```bash
+docker compose up -d
+# Primera vez o reset completo de BD:
+# docker compose down -v && docker compose up -d
+```
+
+MySQL expuesto en `localhost:3307`, base de datos `wms_db`.
 
 ### 3. Backend
 

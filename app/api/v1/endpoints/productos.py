@@ -287,7 +287,8 @@ async def crear_producto(
             activo=producto_dto.activo,
             unidad_medida_id=producto_dto.unidad_medida_id,
             tipo_producto_id=producto_dto.tipo_producto_id,
-            precio_costo=producto_dto.precio_costo
+            precio_costo=producto_dto.precio_costo,
+            serializado=producto_dto.serializado or False,
         )
         
         return RespuestaAPIDTO(
@@ -381,6 +382,7 @@ async def actualizar_producto(
             tipo_producto_id=actualizar_dto.tipo_producto_id,
             actualizar_tipo_producto=actualizar_tipo_producto,
             precio_costo=actualizar_dto.precio_costo,
+            serializado=actualizar_dto.serializado,
         )
         
         return RespuestaAPIDTO(

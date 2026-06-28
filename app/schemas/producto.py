@@ -50,6 +50,10 @@ class ProductoCrearDTO(BaseModel):
         ge=0,
         description="Precio de costo del producto (opcional, debe ser positivo)"
     )
+    serializado: Optional[bool] = Field(
+        False,
+        description="True si el inventario se controla por número de serie individual"
+    )
     empresa_id: Optional[int] = Field(None, description="Empresa destino (solo empresa maestra)")
 
     @validator("nombre")
@@ -98,6 +102,10 @@ class ProductoActualizarDTO(BaseModel):
         None,
         ge=0,
         description="Precio de costo del producto (opcional, debe ser positivo)"
+    )
+    serializado: Optional[bool] = Field(
+        None,
+        description="True si el inventario se controla por número de serie individual"
     )
 
     @validator("nombre")

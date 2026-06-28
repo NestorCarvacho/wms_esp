@@ -92,6 +92,35 @@ async def listar_presentaciones(
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
+@router.get(
+    "/productos/barcode/{codigo}",
+    response_model=RespuestaAPIDTO,
+    status_code=status.HTTP_200_OK,
+)
+async def resolver_barcode(
+    codigo: str,
+    ctx: ContextoEmpresa = Depends(obtener_contexto_empresa),
+    service: ProductoPresentacionService = Depends(obtener_presentacion_service),
+):
+    """
+    Resuelve un código de barras escaneado al producto y presentación correspondiente.
+    Retorna producto_id, presentacion_id y factor_conversion (cantidad de unidades base).
+    """
+    try:
+        empresa_id = ctx.empresa_usuario_id
+        resultado = await service.buscar_por_barcode(empresa_id, codigo.strip())
+        if resultado is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Código de barras '{codigo}' no encontrado",
+            )
+        return RespuestaAPIDTO(exito=True, datos=resultado, mensaje="Código resuelto").dict()
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
 @router.post(
     "/productos/{producto_id}/presentaciones",
     response_model=RespuestaAPIDTO,
@@ -109,6 +138,7 @@ async def crear_presentacion(
             producto_id=producto_id,
             empresa_id=empresa_id,
             nombre=dto.nombre,
+            codigo_barras=dto.codigo_barras,
             cantidad_contenida=dto.cantidad_contenida,
             unidad_medida_id=dto.unidad_medida_id,
             precio_costo=dto.precio_costo,

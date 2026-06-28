@@ -362,6 +362,16 @@ export function ProductosPage() {
             render: (row) => displayUnidadMedida(row),
           },
           {
+            key: 'serializado',
+            header: 'Serializado',
+            render: (row) =>
+              row.serializado ? (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                  Serie
+                </span>
+              ) : null,
+          },
+          {
             key: 'activo',
             header: 'Estado',
             render: (row) => <StatusPill active={row.activo} />,

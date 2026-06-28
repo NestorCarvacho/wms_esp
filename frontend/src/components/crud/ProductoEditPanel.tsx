@@ -24,6 +24,7 @@ export function ProductoEditPanel({ producto, unidades, onSaved }: ProductoEditP
   const [tipoProductoId, setTipoProductoId] = useState(
     producto.tipo_producto_id != null ? String(producto.tipo_producto_id) : '',
   );
+  const [serializado, setSerializado] = useState(producto.serializado ?? false);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -61,6 +62,7 @@ export function ProductoEditPanel({ producto, unidades, onSaved }: ProductoEditP
         unidad_medida_id: unidadId,
         tipo_producto_id: tipoProductoId ? Number(tipoProductoId) : null,
         activo: preserveActivoNumber(producto.activo),
+        serializado,
       });
       showNotification({ type: 'success', message: 'Producto actualizado correctamente' });
       onSaved?.();
@@ -94,6 +96,26 @@ export function ProductoEditPanel({ producto, unidades, onSaved }: ProductoEditP
         value={unidadMedidaId}
         onChange={(v) => setUnidadMedidaId(String(v))}
       />
+      <label className="flex items-center gap-3 cursor-pointer select-none">
+        <div className="relative">
+          <input
+            id="edit-serializado"
+            type="checkbox"
+            className="sr-only"
+            checked={serializado}
+            onChange={(e) => setSerializado(e.target.checked)}
+          />
+          <div className={`w-10 h-6 rounded-full transition-colors ${serializado ? 'bg-blue-600' : 'bg-neutral-300'}`} />
+          <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${serializado ? 'translate-x-4' : ''}`} />
+        </div>
+        <div>
+          <span className="text-sm font-medium text-foreground">Inventario serializado</span>
+          <p className="text-xs text-neutral-500">
+            Actívalo si cada unidad tiene un número de serie único (laptops, equipos, etc.)
+          </p>
+        </div>
+      </label>
+
       <div className="flex gap-3 pt-2">
         <PrimaryButton type="button" variant="outline" onClick={closeSidePanel}>
           Cancelar

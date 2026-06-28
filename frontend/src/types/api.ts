@@ -104,6 +104,7 @@ export interface Producto {
   nombre: string;
   sku: string;
   activo: number;
+  serializado?: boolean;
   empresa_id?: number;
   empresa_nombre?: string | null;
   unidad_medida_id?: number;
@@ -113,6 +114,54 @@ export interface Producto {
   precio_costo?: number | null;
 }
 
+export interface SerieProducto {
+  id: number;
+  empresa_id: number;
+  producto_id: number;
+  producto_nombre?: string | null;
+  producto_sku?: string | null;
+  numero_serie: string;
+  zona_bodega_id?: number | null;
+  zona_nombre?: string | null;
+  estado: 'EN_BODEGA' | 'DESPACHADO' | 'BAJA';
+  creado_at?: string | null;
+  actualizado_at?: string | null;
+}
+
+export interface SerieRecepcionarRequest {
+  producto_id: number;
+  numero_serie: string;
+  bodega_id: number;
+  zona_destino_id?: number | null;
+  documento_tipo?: string | null;
+  documento_folio?: string | null;
+  observaciones?: string | null;
+}
+
+export interface SerieTrasladarRequest {
+  numero_serie: string;
+  zona_origen_id: number;
+  zona_destino_id: number;
+  documento_tipo?: string | null;
+  documento_folio?: string | null;
+  observaciones?: string | null;
+}
+
+export interface SerieDespacharRequest {
+  numero_serie: string;
+  zona_origen_id: number;
+  documento_tipo?: string | null;
+  documento_folio?: string | null;
+  observaciones?: string | null;
+}
+
+export interface PaginatedSeriesProducto {
+  total: number;
+  pagina: number;
+  por_pagina: number;
+  series: SerieProducto[];
+}
+
 export interface ProductoCrear {
   nombre: string;
   sku: string;
@@ -120,6 +169,7 @@ export interface ProductoCrear {
   unidad_medida_id: number;
   tipo_producto_id?: number | null;
   precio_costo?: number | null;
+  serializado?: boolean;
   empresa_id?: number;
 }
 
@@ -130,6 +180,7 @@ export interface ProductoActualizar {
   unidad_medida_id?: number;
   tipo_producto_id?: number | null;
   precio_costo?: number | null;
+  serializado?: boolean;
 }
 
 export interface TipoProducto {
@@ -161,6 +212,7 @@ export interface ProductoPresentacion {
   id: number;
   producto_id: number;
   nombre: string;
+  codigo_barras?: string | null;
   cantidad_contenida: number;
   unidad_medida_id: number;
   unidad_medida_nombre?: string | null;
@@ -173,6 +225,7 @@ export interface ProductoPresentacion {
 
 export interface ProductoPresentacionCrear {
   nombre: string;
+  codigo_barras?: string | null;
   cantidad_contenida: number;
   unidad_medida_id: number;
   precio_costo?: number | null;
@@ -183,6 +236,7 @@ export interface ProductoPresentacionCrear {
 
 export interface ProductoPresentacionActualizar {
   nombre?: string;
+  codigo_barras?: string | null;
   cantidad_contenida?: number;
   unidad_medida_id?: number;
   precio_costo?: number | null;
@@ -190,6 +244,16 @@ export interface ProductoPresentacionActualizar {
   permite_venta_unidad?: number;
   permite_venta_presentacion?: number;
   activo?: number;
+}
+
+export interface BarcodeResolucion {
+  producto_id: number;
+  producto_nombre: string;
+  sku: string;
+  presentacion_id: number;
+  presentacion_nombre: string;
+  factor_conversion: number;
+  unidad_base: string | null;
 }
 
 export interface PaginatedProductoPresentaciones {

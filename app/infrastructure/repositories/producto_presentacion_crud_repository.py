@@ -74,6 +74,50 @@ class ProductoPresentacionCRUDRepository:
         result = await self.session.execute(stmt)
         return result.scalars().first()
 
+    async def buscar_por_codigo_barras(
+        self,
+        empresa_id: int,
+        codigo_barras: str,
+    ) -> ProductoPresentacion | None:
+        """Busca una presentación por código de barras dentro de una empresa."""
+        stmt = (
+            select(ProductoPresentacion)
+            .join(Producto, ProductoPresentacion.producto_id == Producto.id)
+            .options(
+                selectinload(ProductoPresentacion.unidad_medida),
+                selectinload(ProductoPresentacion.producto).selectinload(Producto.unidad_medida),
+            )
+            .where(
+                ProductoPresentacion.codigo_barras == codigo_barras,
+                Producto.empresa_id == empresa_id,
+                ProductoPresentacion.activo == True,
+                Producto.activo == True,
+            )
+        )
+        result = await self.session.execute(stmt)
+        return result.scalars().first()
+
+    async def existe_codigo_barras(
+        self,
+        empresa_id: int,
+        codigo_barras: str,
+        excluir_id: int | None = None,
+    ) -> bool:
+        """Verifica si el código de barras ya está en uso en la empresa."""
+        stmt = (
+            select(func.count(ProductoPresentacion.id))
+            .join(Producto, ProductoPresentacion.producto_id == Producto.id)
+            .where(
+                ProductoPresentacion.codigo_barras == codigo_barras,
+                Producto.empresa_id == empresa_id,
+                ProductoPresentacion.activo == True,
+            )
+        )
+        if excluir_id is not None:
+            stmt = stmt.where(ProductoPresentacion.id != excluir_id)
+        total = (await self.session.execute(stmt)).scalar() or 0
+        return total > 0
+
     async def obtener_por_nombre(
         self,
         producto_id: int,
@@ -96,6 +140,7 @@ class ProductoPresentacionCRUDRepository:
         nombre: str,
         cantidad_contenida: Decimal,
         unidad_medida_id: int,
+        codigo_barras: str | None = None,
         precio_costo: float | None = None,
         precio_venta: float | None = None,
         permite_venta_unidad: bool = True,
@@ -105,6 +150,7 @@ class ProductoPresentacionCRUDRepository:
             nueva = ProductoPresentacion(
                 producto_id=producto_id,
                 nombre=nombre,
+                codigo_barras=codigo_barras,
                 cantidad_contenida=cantidad_contenida,
                 unidad_medida_id=unidad_medida_id,
                 precio_costo=precio_costo,

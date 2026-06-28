@@ -70,6 +70,7 @@ class ProductoService:
                     "tipo_producto_id": b.tipo_producto_id,
                     "tipo_producto_nombre": b.tipo_producto.nombre if b.tipo_producto else None,
                     "precio_costo": float(b.precio_costo) if b.precio_costo is not None else None,
+                    "serializado": bool(b.serializado),
                 }
                 for b in productos
             ]
@@ -106,7 +107,8 @@ class ProductoService:
         activo: bool = True,
         unidad_medida_id: int = None,
         tipo_producto_id: int | None = None,
-        precio_costo: float = None
+        precio_costo: float = None,
+        serializado: bool = False,
     ) -> Dict[str, Any]:
         """
         Crea una nueva producto.
@@ -142,7 +144,8 @@ class ProductoService:
         
         # Crear producto
         nuevo_producto = await self.repository.crear(
-            empresa_id, nombre, sku, activo, unidad_medida_id, tipo_producto_id, precio_costo
+            empresa_id, nombre, sku, activo, unidad_medida_id, tipo_producto_id, precio_costo,
+            serializado=serializado,
         )
         
         return {
@@ -153,7 +156,8 @@ class ProductoService:
             "activo": nuevo_producto.activo,
             "unidad_medida_id": nuevo_producto.unidad_medida_id,
             "tipo_producto_id": nuevo_producto.tipo_producto_id,
-            "precio_costo": nuevo_producto.precio_costo
+            "precio_costo": nuevo_producto.precio_costo,
+            "serializado": bool(nuevo_producto.serializado),
         }
     
     async def actualizar_producto(
@@ -167,6 +171,7 @@ class ProductoService:
         actualizar_tipo_producto: bool = False,
         precio_costo: float = None,
         activo: bool | None = None,
+        serializado: bool | None = None,
     ) -> Dict[str, Any]:
         """
         Actualiza una producto existente.
@@ -220,6 +225,7 @@ class ProductoService:
             tipo_producto_id,
             precio_costo,
             actualizar_tipo_producto=actualizar_tipo_producto,
+            serializado=serializado,
         )
 
         if not producto_actualizada:
@@ -233,7 +239,8 @@ class ProductoService:
             "activo": producto_actualizada.activo,
             "unidad_medida_id": producto_actualizada.unidad_medida_id,
             "tipo_producto_id": producto_actualizada.tipo_producto_id,
-            "precio_costo": producto_actualizada.precio_costo
+            "precio_costo": producto_actualizada.precio_costo,
+            "serializado": bool(producto_actualizada.serializado),
         }
     
     async def eliminar_producto(self, producto_id: int, empresa_id: int) -> Dict[str, Any]:
