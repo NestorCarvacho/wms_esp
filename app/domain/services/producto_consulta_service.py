@@ -53,10 +53,19 @@ class ProductoConsultaService:
                 if producto:
                     via = "sku"
                     break
-            if producto is None:
-                producto = await self._buscar_sku_insensitive(term, empresas_ids)
-                if producto:
-                    via = "sku"
+        if producto is None:
+            producto = await self._buscar_sku_insensitive(term, empresas_ids)
+            if producto:
+                via = "sku"
+
+        # Último recurso: buscar por número de serie registrada
+        if producto is None:
+            for empresa_id in empresas_ids:
+                serie_match = await self._buscar_por_numero_serie(term, empresa_id)
+                if serie_match:
+                    producto = serie_match
+                    via = "numero_serie"
+                    break
 
         if not producto:
             raise ValueError(f"No se encontró producto con SKU o código de barras «{term}»")
@@ -148,6 +157,24 @@ class ProductoConsultaService:
         )
         result = await self.producto_repo.session.execute(stmt)
         return result.scalars().first()
+
+    async def _buscar_por_numero_serie(
+        self, numero_serie: str, empresa_id: int
+    ) -> "Producto | None":
+        from app.infrastructure.models.usuario import SerieProducto as SP
+
+        stmt = (
+            select(SP)
+            .options(selectinload(SP.producto))
+            .where(
+                SP.empresa_id == empresa_id,
+                SP.numero_serie == numero_serie,
+            )
+            .limit(1)
+        )
+        result = await self.producto_repo.session.execute(stmt)
+        serie = result.scalars().first()
+        return serie.producto if serie and serie.producto and serie.producto.activo else None
 
     async def _resumen_series(
         self, producto_id: int, empresa_id: int
