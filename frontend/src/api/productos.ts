@@ -4,6 +4,7 @@ import type {
   PaginatedProductos,
   Producto,
   ProductoActualizar,
+  ProductoConsultaDetalle,
   ProductoCrear,
   ProductoImportacionResultado,
 } from '@/types/api';
@@ -58,6 +59,13 @@ export async function descargarPlantillaProductos(): Promise<void> {
   anchor.download = 'plantilla_productos.xlsx';
   anchor.click();
   URL.revokeObjectURL(url);
+}
+
+export async function consultarProducto(codigo: string): Promise<ProductoConsultaDetalle> {
+  const response = await apiRequest<ProductoConsultaDetalle>(
+    `/api/v1/productos/consulta/${encodeURIComponent(codigo.trim())}`,
+  );
+  return response.datos!;
 }
 
 export async function importarProductos(archivo: File): Promise<ProductoImportacionResultado> {

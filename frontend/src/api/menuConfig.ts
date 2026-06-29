@@ -29,6 +29,7 @@ export interface MenuItem {
 
 const ROUTE_PERMISSIONS: Record<string, string> = {
   [appPath('/productos')]: 'productos.leer',
+  [appPath('/productos/consulta')]: 'productos.leer',
   [appPath('/tipos-producto')]: 'tipos_producto.leer',
   [appPath('/unidades-medida')]: 'unidades_medida.leer',
   [appPath('/bodegas')]: 'bodegas.leer',
@@ -87,6 +88,7 @@ export function buildWmsMenu(
           icon: 'folderOpen',
           children: [
             { id: 'productos', title: 'Productos', url: appPath('/productos'), routeMetadata: { iconName: 'table', breadcrumbTitle: 'Productos' } },
+            { id: 'consulta-producto', title: 'Consulta producto', url: appPath('/productos/consulta'), routeMetadata: { iconName: 'search', breadcrumbTitle: 'Consulta producto' } },
             { id: 'tipos-producto', title: 'Tipos de producto', url: appPath('/tipos-producto'), routeMetadata: { iconName: 'layers', breadcrumbTitle: 'Tipos de producto' } },
             { id: 'unidades', title: 'Unidades de medida', url: appPath('/unidades-medida'), routeMetadata: { iconName: 'layers', breadcrumbTitle: 'Unidades de medida' } },
           ],

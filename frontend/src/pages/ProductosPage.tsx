@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ChevronDown, Loader2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { ChevronDown, Loader2, Search } from 'lucide-react';
 import {
   descargarPlantillaProductos,
   eliminarProducto,
@@ -31,6 +32,7 @@ import { usePaginatedCrudTable } from '@/crud/usePaginatedCrudTable';
 import type { Producto, ProductoImportacionResultado, TipoProducto, UnidadMedida } from '@/types/api';
 import { displayEmpresa, displayTipoProducto, displayUnidadMedida } from '@/utils/displayLabels';
 import type { TableAction } from '@/components/ui/tables';
+import { appPath } from '@/routes/paths';
 
 const PRODUCTO_FILTER_INITIAL = { unidad: '', tipo: '' } as const;
 
@@ -186,7 +188,15 @@ export function ProductosPage() {
       const result = await importarProductos(file);
       setImportResult(result);
       if (result.creados > 0) {
-        notifySuccess(`${result.creados} producto(s) importados`);
+        notifySuccess(
+          `${result.creados} producto(s) importados` +
+            (result.presentaciones_creadas
+              ? ` · ${result.presentaciones_creadas} presentación(es) con código de barras`
+              : ''),
+        );
+        await table.reload();
+      } else if (result.presentaciones_creadas && result.presentaciones_creadas > 0) {
+        notifySuccess(`${result.presentaciones_creadas} presentación(es) importadas`);
         await table.reload();
       } else if (result.con_errores > 0) {
         notifyApiError(new Error('Ninguna fila válida para importar'), 'Importación sin productos creados');
@@ -258,6 +268,13 @@ export function ProductosPage() {
       supportingText={`${table.total} registrados`}
     >
       <div className="flex flex-wrap justify-end gap-2 mb-4">
+        <Link
+          to={appPath('/productos/consulta')}
+          className="inline-flex items-center rounded-full border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-muted"
+        >
+          <Search className="mr-1.5 h-4 w-4" />
+          Consultar producto
+        </Link>
         <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
             <Button
@@ -314,21 +331,25 @@ export function ProductosPage() {
         </PrimaryButton>
       </div>
 
-      {importResult && importResult.con_errores > 0 && (
+      {(importResult && (importResult.con_errores > 0 || (importResult.errores_presentaciones?.length ?? 0) > 0)) && (
         <Card elevation={1} padding="12px 16px" className="mb-4" backgroundColor="#FFF8E1">
           <Text variant="body-medium" color="#F57C00">
-            {importResult.creados} creados · {importResult.con_errores} fila(s) con errores
+            {importResult.creados} producto(s) · {importResult.presentaciones_creadas ?? 0} presentación(es) ·{' '}
+            {importResult.con_errores} fila(s) con errores
           </Text>
           <ul className="mt-2 text-sm list-disc pl-5 space-y-1 text-neutral-700">
-            {importResult.errores.slice(0, 15).map((err) => (
-              <li key={err.fila}>
-                Fila {err.fila}
+            {importResult.errores.slice(0, 10).map((err) => (
+              <li key={`p-${err.fila}`}>
+                Productos fila {err.fila}
                 {err.sku ? ` (${err.sku})` : ''}: {err.errores.join('; ')}
               </li>
             ))}
-            {importResult.errores.length > 15 && (
-              <li>… y {importResult.errores.length - 15} error(es) más</li>
-            )}
+            {(importResult.errores_presentaciones ?? []).slice(0, 10).map((err) => (
+              <li key={`pr-${err.fila}`}>
+                Presentaciones fila {err.fila}
+                {err.sku ? ` (${err.sku})` : ''}: {err.errores.join('; ')}
+              </li>
+            ))}
           </ul>
         </Card>
       )}

@@ -22,6 +22,7 @@ import { NotFoundPage } from '@/pages/NotFoundPage';
 import { DashboardPage } from '@/pages/DashboardPage';
 
 import { ProductosPage } from '@/pages/ProductosPage';
+import { ConsultaProductoPage } from '@/pages/ConsultaProductoPage';
 
 import { BodegasPage } from '@/pages/BodegasPage';
 import { TiposZonaPage } from '@/pages/TiposZonaPage';
@@ -85,6 +86,7 @@ export default function App() {
             <Route index element={<DashboardPage />} />
 
             <Route path="productos" element={guarded(appPath('/productos'), <ProductosPage />)} />
+            <Route path="productos/consulta" element={guarded(appPath('/productos/consulta'), <ConsultaProductoPage />)} />
             <Route path="tipos-producto" element={guarded(appPath('/tipos-producto'), <TiposProductoPage />)} />
 
             <Route path="bodegas" element={guarded(appPath('/bodegas'), <BodegasPage />)} />

@@ -11,6 +11,9 @@ from app.infrastructure.database import get_db_session
 from app.infrastructure.repositories.producto_crud_repository import ProductoCRUDRepository
 from app.domain.services.producto_service import ProductoService
 from app.domain.services.producto_importacion_service import ProductoImportacionService
+from app.domain.services.producto_consulta_service import ProductoConsultaService
+from app.infrastructure.repositories.inventario_crud_repository import InventarioCRUDRepository
+from app.infrastructure.repositories.producto_presentacion_crud_repository import ProductoPresentacionCRUDRepository
 from app.api.v1.dependencies import obtener_usuario_autenticado, requiere_permiso, es_super_admin
 from app.api.v1.empresa_contexto import ContextoEmpresa, kwargs_listado, obtener_contexto_empresa, resolver_empresa_creacion, contexto_requiere_permiso
 from app.api.v1.listado_query import orden_listado
@@ -35,6 +38,14 @@ async def obtener_producto_service(session: AsyncSession = Depends(get_db_sessio
 
 async def obtener_importacion_service(session: AsyncSession = Depends(get_db_session)) -> ProductoImportacionService:
     return ProductoImportacionService(session)
+
+
+async def obtener_consulta_service(session: AsyncSession = Depends(get_db_session)) -> ProductoConsultaService:
+    return ProductoConsultaService(
+        ProductoCRUDRepository(session),
+        ProductoPresentacionCRUDRepository(session),
+        InventarioCRUDRepository(session),
+    )
 
 
 # ============ GET: LISTAR BODEGAS (CON PAGINACIÓN) ============
@@ -157,9 +168,11 @@ async def importar_productos(
             )
         empresa_id = usuario_autenticado.get("empresa_id")
         resultado = await service.importar_desde_excel(contenido, empresa_id)
-        mensaje = f"Importación completada: {resultado['creados']} creados"
+        mensaje = f"Importación completada: {resultado['creados']} producto(s) creados"
+        if resultado.get("presentaciones_creadas"):
+            mensaje += f", {resultado['presentaciones_creadas']} presentación(es) con código de barras"
         if resultado["con_errores"]:
-            mensaje += f", {resultado['con_errores']} filas con errores"
+            mensaje += f", {resultado['con_errores']} fila(s) con errores"
         return RespuestaAPIDTO(
             exito=True,
             datos=resultado,
@@ -169,6 +182,43 @@ async def importar_productos(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except HTTPException:
         raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e),
+        )
+
+
+# ============ GET: CONSULTA POR SKU O CÓDIGO DE BARRAS ============
+@router.get(
+    "/consulta/{codigo}",
+    response_model=RespuestaAPIDTO,
+    summary="Consultar producto por SKU o código de barras",
+    status_code=status.HTTP_200_OK,
+)
+async def consultar_producto_por_codigo(
+    codigo: str,
+    ctx: ContextoEmpresa = Depends(contexto_requiere_permiso("productos.leer")),
+    service: ProductoConsultaService = Depends(obtener_consulta_service),
+):
+    """
+    Busca un producto por SKU o código de barras (presentación) y retorna
+    ficha detallada: presentaciones, stock por zona y resumen de series si aplica.
+    """
+    try:
+        empresas_ids = (
+            [ctx.empresa_id_filtro]
+            if ctx.empresa_id_filtro is not None
+            else ctx.empresas_administradas_ids
+        )
+        datos = await service.consultar_por_codigo(codigo, empresas_ids)
+        return RespuestaAPIDTO(
+            exito=True,
+            datos=datos,
+            mensaje="Producto encontrado",
+        ).dict()
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

@@ -287,8 +287,30 @@ export interface ProductoImportacionError {
 export interface ProductoImportacionResultado {
   total_filas: number;
   creados: number;
+  presentaciones_creadas?: number;
   con_errores: number;
   errores: ProductoImportacionError[];
+  errores_presentaciones?: ProductoImportacionError[];
+}
+
+export interface ProductoConsultaDetalle {
+  via: 'sku' | 'codigo_barras';
+  codigo_consultado: string;
+  presentacion_coincidente: ProductoPresentacion | null;
+  producto: Producto & {
+    empresa_nombre?: string | null;
+    unidad_medida_nombre?: string | null;
+    tipo_producto_nombre?: string | null;
+  };
+  presentaciones: ProductoPresentacion[];
+  stock: {
+    total_unidades_base: number;
+    por_zona: StockZonaItem[];
+  };
+  series: {
+    total_en_bodega: number;
+    por_zona: { zona_bodega_id: number | null; zona_nombre: string; cantidad: number }[];
+  };
 }
 
 export interface PaginatedBodegas {
