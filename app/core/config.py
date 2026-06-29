@@ -22,7 +22,7 @@ DATABASE_URL = _normalize_database_url(
 # CORS — lista separada por comas (URL pública del frontend en producción)
 _cors_raw = os.getenv(
     "CORS_ORIGINS",
-    "http://localhost:5173,http://127.0.0.1:5173",
+    "http://localhost:5173,http://127.0.0.1:5173,http://localhost:8081,http://localhost:8082,http://localhost:8083",
 )
 CORS_ORIGINS = [origin.strip() for origin in _cors_raw.split(",") if origin.strip()]
 
