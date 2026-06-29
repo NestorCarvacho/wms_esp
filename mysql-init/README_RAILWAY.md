@@ -46,8 +46,11 @@ railway run python scripts/apply_railway_migrations.py --diagnose
 | 7 | `09_grant_superadmin_usuario_1.sql` | Superadmin por email (bloques 1–10) |
 | 8 | `12_inventario_operativo.sql` | Stock por zona, movimientos, config bodega, permisos `inventario.*` |
 | 9 | `13_fix_permiso_inventario_codigos.sql` | Desactiva alias `recepcion.*` / `reportes.*` y asegura `inventario.*` |
+| 10 | `14_auth_security.sql` | Seguridad login (intentos fallidos, bloqueos, reset password) |
+| 11 | `17_presentacion_codigo_barras.sql` | Código de barras por presentación (escaneo caja/display) |
+| 12 | `18_serie_producto.sql` | Inventario serializado (`producto.serializado`, `serie_producto`) |
 
-**No usar** en Railway con datos: `01_setup.sql`, `03_rbac_hierarchy.sql`.
+**No usar** en Railway con datos: `01_setup.sql`, `03_rbac_hierarchy.sql`, `schema_completo.sql` (recrea todo desde cero).
 
 Solo un archivo:
 

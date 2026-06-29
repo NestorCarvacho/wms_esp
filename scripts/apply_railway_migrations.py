@@ -40,6 +40,8 @@ MIGRATION_FILES = [
     "12_inventario_operativo.sql",
     "13_fix_permiso_inventario_codigos.sql",
     "14_auth_security.sql",
+    "17_presentacion_codigo_barras.sql",
+    "18_serie_producto.sql",
 ]
 
 # Errores MySQL benignos al re-ejecutar scripts idempotentes.
@@ -275,6 +277,10 @@ def run_diagnostics(cursor) -> None:
         ("Permisos inventario.* activos", "SELECT COUNT(*) FROM permiso WHERE activo=1 AND codigo LIKE 'inventario.%'"),
         ("Columna usuario.intentos_fallidos", "SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='usuario' AND COLUMN_NAME='intentos_fallidos'"),
         ("Tabla password_reset_token", "SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='password_reset_token'"),
+        ("Columna producto_presentacion.codigo_barras", "SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='producto_presentacion' AND COLUMN_NAME='codigo_barras'"),
+        ("Columna producto.serializado", "SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='producto' AND COLUMN_NAME='serializado'"),
+        ("Tabla serie_producto", "SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='serie_producto'"),
+        ("Columna movimiento_inventario.serie_id", "SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='movimiento_inventario' AND COLUMN_NAME='serie_id'"),
         ("Permisos empresa 1", "SELECT COUNT(*) FROM permiso WHERE empresa_id=1 AND activo=1"),
         ("Roles empresa 1", "SELECT COUNT(*) FROM rol WHERE empresa_id=1 AND activo=1"),
         ("Usuarios con usuario_rol", "SELECT COUNT(DISTINCT usuario_id) FROM usuario_rol WHERE activo=1"),
@@ -317,10 +323,10 @@ def run_diagnostics(cursor) -> None:
     try:
         cursor.execute(
             """
-            SELECT e.id, e.nombre, COUNT(p.id) AS permisos
+            SELECT e.id, COALESCE(e.razon_social, e.nombre_fantasia, e.codigo) AS nombre, COUNT(p.id) AS permisos
             FROM empresa e
             LEFT JOIN permiso p ON p.empresa_id = e.id AND p.activo = 1
-            GROUP BY e.id, e.nombre
+            GROUP BY e.id, e.razon_social, e.nombre_fantasia, e.codigo
             ORDER BY e.id
             """
         )
