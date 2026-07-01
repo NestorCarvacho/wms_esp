@@ -4,7 +4,10 @@ Endpoints CRUD de Unidades de Medida (Capa de Presentación).
 Multi-tenant con soporte para super admin.
 """
 from fastapi import APIRouter, Depends, HTTPException, status, Query
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.domain.services.unidadMedidad_service import UnidadMedidaService
+from app.infrastructure.database import get_db_session
 from app.modules.catalog.presentation.http.dependencies import obtener_unidad_medida_service
 from app.api.v1.dependencies import obtener_usuario_autenticado, requiere_permiso, es_super_admin
 from app.api.v1.empresa_contexto import ContextoEmpresa, kwargs_listado, obtener_contexto_empresa, resolver_empresa_creacion, contexto_requiere_permiso

@@ -1,5 +1,8 @@
 """Endpoints CRUD de permisos atómicos."""
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.infrastructure.database import get_db_session
 
 from app.api.v1.dependencies import requiere_permiso
 from app.api.v1.empresa_contexto import ContextoEmpresa, kwargs_listado, resolver_empresa_creacion, contexto_requiere_permiso

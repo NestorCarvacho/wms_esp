@@ -1,6 +1,9 @@
 """Endpoints CRUD de Tipos de Producto."""
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.domain.services.tipo_producto_service import TipoProductoService
+from app.infrastructure.database import get_db_session
 from app.modules.catalog.presentation.http.dependencies import obtener_tipo_producto_service
 from app.api.v1.dependencies import obtener_usuario_autenticado, requiere_permiso, es_super_admin
 from app.api.v1.empresa_contexto import (
