@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.infrastructure.database import get_db_session
 from app.infrastructure.repositories.usuario_repository import UsuarioRepository
+from app.modules.iam.presentation.http.dependencies import obtener_auth_service
 from app.domain.services.auth_service import AuthService
 from app.schemas.usuario import (
     LoginRequestDTO,
@@ -149,13 +150,10 @@ async def obtener_empresa_id_del_token(authorization: str = None) -> int:
 @router.post("/login", response_model=RespuestaAPIDTO)
 async def login(
     credenciales: LoginRequestDTO,
-    session: AsyncSession = Depends(get_db_session)
+    auth_service: AuthService = Depends(obtener_auth_service),
 ):
 
     try:
-
-        usuario_repo = UsuarioRepository(session)
-        auth_service = AuthService(usuario_repo, session)
 
         resultado = await auth_service.login(
             email=credenciales.email,
@@ -189,7 +187,7 @@ async def login(
 async def olvido_contrasena(
     dto: ForgotPasswordDTO,
     request: Request,
-    session: AsyncSession = Depends(get_db_session),
+    auth_service: AuthService = Depends(obtener_auth_service),
 ):
     """Solicita enlace de recuperación (siempre responde igual por seguridad)."""
     enforce_rate_limit(
@@ -199,7 +197,6 @@ async def olvido_contrasena(
         window_minutes=PASSWORD_RESET_IP_WINDOW_MINUTES,
     )
     try:
-        auth_service = AuthService(UsuarioRepository(session), session)
         await auth_service.solicitar_recuperacion(dto.email)
         return RespuestaAPIDTO(
             exito=True,
@@ -217,10 +214,9 @@ async def olvido_contrasena(
 @router.post("/restablecer-contrasena", response_model=RespuestaAPIDTO)
 async def restablecer_contrasena(
     dto: ResetPasswordDTO,
-    session: AsyncSession = Depends(get_db_session),
+    auth_service: AuthService = Depends(obtener_auth_service),
 ):
     try:
-        auth_service = AuthService(UsuarioRepository(session), session)
         await auth_service.restablecer_contrasena(dto.token, dto.contrasena)
         return RespuestaAPIDTO(
             exito=True,
@@ -240,10 +236,9 @@ async def cambiar_contrasena(
     dto: ChangePasswordDTO,
     usuario_id: int = Depends(obtener_id),
     empresa_id: int = Depends(obtener_empresa_id),
-    session: AsyncSession = Depends(get_db_session),
+    auth_service: AuthService = Depends(obtener_auth_service),
 ):
     try:
-        auth_service = AuthService(UsuarioRepository(session), session)
         await auth_service.cambiar_contrasena(
             usuario_id,
             empresa_id,

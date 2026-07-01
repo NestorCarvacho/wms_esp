@@ -33,3 +33,23 @@ forbidden_modules =
     app.api
     app.modules
     sqlalchemy
+
+[importlinter:contract:iam-domain-isolation]
+name = IAM domain no importa infraestructura
+type = forbidden
+source_modules =
+    app.modules.iam.domain
+forbidden_modules =
+    app.infrastructure
+    app.api
+    sqlalchemy
+
+[importlinter:contract:iam-application-isolation]
+name = IAM application no importa API ni SQLAlchemy directo
+type = forbidden
+source_modules =
+    app.modules.iam.application
+forbidden_modules =
+    app.api
+    app.infrastructure
+    sqlalchemy

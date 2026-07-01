@@ -6,8 +6,6 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.infrastructure.database import get_db_session
-from app.infrastructure.repositories.usuario_repository import UsuarioRepository
-from app.domain.services.auth_service import AuthService
 from app.core.security import decode_access_token
 from app.schemas.usuario import TokenPayload
 
@@ -92,8 +90,5 @@ def requiere_permiso(*permisos_requeridos: str):
     return _validar
 
 
-async def obtener_auth_service(
-    session: AsyncSession = Depends(get_db_session)
-) -> AuthService:
-    usuario_repo = UsuarioRepository(session)
-    return AuthService(usuario_repo, session)
+# Re-export para compatibilidad con imports existentes
+from app.modules.iam.presentation.http.dependencies import obtener_auth_service  # noqa: E402
