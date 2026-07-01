@@ -63,3 +63,33 @@ forbidden_modules =
     app.infrastructure
     app.api
     sqlalchemy
+
+[importlinter:contract:tenant-application-isolation]
+name = Tenant application no importa API ni SQLAlchemy directo
+type = forbidden
+source_modules =
+    app.modules.tenant.application
+forbidden_modules =
+    app.api
+    app.infrastructure
+    sqlalchemy
+
+[importlinter:contract:catalog-domain-isolation]
+name = Catalog domain no importa infraestructura
+type = forbidden
+source_modules =
+    app.modules.catalog.domain
+forbidden_modules =
+    app.infrastructure
+    app.api
+    sqlalchemy
+
+[importlinter:contract:catalog-application-isolation]
+name = Catalog application no importa API ni SQLAlchemy directo
+type = forbidden
+source_modules =
+    app.modules.catalog.application
+forbidden_modules =
+    app.api
+    app.infrastructure
+    sqlalchemy

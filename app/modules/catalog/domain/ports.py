@@ -1,0 +1,43 @@
+"""Puertos del bounded context catalog."""
+from __future__ import annotations
+
+from typing import Any, Protocol
+
+
+class IProductoRepository(Protocol):
+    async def listar(self, **kwargs: Any) -> tuple[list[Any], int]: ...
+
+    async def obtener_por_id(self, producto_id: int, empresa_id: int | None = None) -> Any | None: ...
+
+    async def obtener_por_sku(self, sku: str, empresa_id: int) -> Any | None: ...
+
+    async def obtener_por_nombre(self, nombre: str, empresa_id: int) -> Any | None: ...
+
+    async def crear(
+        self,
+        empresa_id: int,
+        nombre: str,
+        sku: str,
+        activo: bool = True,
+        unidad_medida_id: int | None = None,
+        tipo_producto_id: int | None = None,
+        precio_costo: float | None = None,
+        serializado: bool = False,
+    ) -> Any: ...
+
+    async def actualizar(
+        self,
+        producto_id: int,
+        empresa_id: int,
+        nombre: str | None = None,
+        sku: str | None = None,
+        activo: bool | None = None,
+        unidad_medida_id: int | None = None,
+        tipo_producto_id: int | None = None,
+        precio_costo: float | None = None,
+        *,
+        actualizar_tipo_producto: bool = False,
+        serializado: bool | None = None,
+    ) -> Any | None: ...
+
+    async def eliminar(self, producto_id: int, empresa_id: int) -> bool: ...

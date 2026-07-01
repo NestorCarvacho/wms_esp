@@ -1,37 +1,17 @@
-"""
-Servicio CRUD de Empresas (Capa de Negocio).
-"""
-from typing import Dict, Any, Optional
-from app.infrastructure.repositories.empresa_crud_repository import EmpresaCRUDRepository
+"""Servicio CRUD de Empresas — fachada módulo tenant."""
+from __future__ import annotations
 
+from typing import Any, Optional
 
-def _empresa_dict(e) -> Dict[str, Any]:
-    return {
-        "id": e.id,
-        "codigo": e.codigo,
-        "razon_social": e.razon_social,
-        "nombre_fantasia": e.nombre_fantasia,
-        "rut": e.rut,
-        "giro": e.giro,
-        "telefono": e.telefono,
-        "correo": e.correo,
-        "sitio_web": e.sitio_web,
-        "esta_activa": e.esta_activa,
-        "es_empresa_maestra": bool(getattr(e, "es_empresa_maestra", False)),
-        "creado_at": e.creado_at,
-        "direccion": e.direccion,
-        "region_id": e.region_id,
-        "ciudad_id": e.ciudad_id,
-        "comuna_id": e.comuna_id,
-        "locale": getattr(e, "locale", "es-CL") or "es-CL",
-        "timezone": getattr(e, "timezone", "America/Santiago") or "America/Santiago",
-        "moneda_codigo": getattr(e, "moneda_codigo", "CLP") or "CLP",
-    }
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.bootstrap.tenant_container import build_tenant_handlers
+from app.modules.tenant.application.commands import ActualizarEmpresaCommand, CrearEmpresaCommand
 
 
 class EmpresaService:
-    def __init__(self, repository: EmpresaCRUDRepository):
-        self.repository = repository
+    def __init__(self, session: AsyncSession):
+        self._handlers = build_tenant_handlers(session)
 
     async def listar_empresas(
         self,
@@ -41,9 +21,9 @@ class EmpresaService:
         buscar: Optional[str] = None,
         ordenar_por: Optional[str] = None,
         orden: Optional[str] = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         try:
-            empresas, total = await self.repository.listar(
+            return await self._handlers.listar_empresas.handle(
                 pagina=pagina,
                 por_pagina=por_pagina,
                 solo_activas=solo_activas,
@@ -51,52 +31,41 @@ class EmpresaService:
                 ordenar_por=ordenar_por,
                 orden=orden,
             )
-            return {
-                "total": total,
-                "pagina": pagina,
-                "por_pagina": por_pagina,
-                "empresas": [_empresa_dict(e) for e in empresas],
-            }
         except Exception as e:
-            raise Exception(f"Error al listar empresas: {str(e)}")
+            raise Exception(f"Error al listar empresas: {str(e)}") from e
 
-    async def obtener_empresa(self, empresa_id: int) -> Dict[str, Any]:
+    async def obtener_empresa(self, empresa_id: int) -> dict[str, Any]:
         try:
-            empresa = await self.repository.obtener_por_id(empresa_id)
-            if not empresa:
-                raise ValueError("Empresa no encontrada")
-            return _empresa_dict(empresa)
-        except ValueError as ve:
-            raise ve
+            return await self._handlers.obtener_empresa.handle(empresa_id)
+        except ValueError:
+            raise
         except Exception as e:
-            raise Exception(f"Error al obtener empresa: {str(e)}")
+            raise Exception(f"Error al obtener empresa: {str(e)}") from e
 
-    async def crear_empresa(self, codigo: str, razon_social: str, **kwargs) -> Dict[str, Any]:
+    async def crear_empresa(self, codigo: str, razon_social: str, **kwargs: Any) -> dict[str, Any]:
         try:
-            empresa_existente = await self.repository.obtener_por_codigo(codigo)
-            if empresa_existente:
-                raise ValueError(f"El código de empresa '{codigo}' ya existe")
-            empresa = await self.repository.crear(codigo=codigo, razon_social=razon_social, **kwargs)
-            return _empresa_dict(empresa)
-        except ValueError as ve:
-            raise ve
+            return await self._handlers.crear_empresa.handle(
+                CrearEmpresaCommand(codigo=codigo, razon_social=razon_social, campos=kwargs)
+            )
+        except ValueError:
+            raise
         except Exception as e:
-            raise Exception(f"Error al crear empresa: {str(e)}")
+            raise Exception(f"Error al crear empresa: {str(e)}") from e
 
-    async def actualizar_empresa(self, empresa_id: int, **kwargs) -> Dict[str, Any]:
+    async def actualizar_empresa(self, empresa_id: int, **kwargs: Any) -> dict[str, Any]:
         try:
-            empresa = await self.repository.actualizar(empresa_id, **kwargs)
-            return _empresa_dict(empresa)
-        except ValueError as ve:
-            raise ve
+            return await self._handlers.actualizar_empresa.handle(
+                ActualizarEmpresaCommand(empresa_id=empresa_id, campos=kwargs)
+            )
+        except ValueError:
+            raise
         except Exception as e:
-            raise Exception(f"Error al actualizar empresa: {str(e)}")
+            raise Exception(f"Error al actualizar empresa: {str(e)}") from e
 
-    async def eliminar_empresa(self, empresa_id: int) -> Dict[str, str]:
+    async def eliminar_empresa(self, empresa_id: int) -> dict[str, str]:
         try:
-            await self.repository.eliminar(empresa_id)
-            return {"mensaje": f"Empresa con ID {empresa_id} inhabilitada correctamente"}
-        except ValueError as ve:
-            raise ve
+            return await self._handlers.inhabilitar_empresa.handle(empresa_id)
+        except ValueError:
+            raise
         except Exception as e:
-            raise Exception(f"Error al eliminar empresa: {str(e)}")
+            raise Exception(f"Error al eliminar empresa: {str(e)}") from e

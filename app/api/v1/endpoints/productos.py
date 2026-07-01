@@ -8,11 +8,12 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from io import BytesIO
 from app.infrastructure.database import get_db_session
-from app.infrastructure.repositories.producto_crud_repository import ProductoCRUDRepository
 from app.domain.services.producto_service import ProductoService
 from app.domain.services.producto_importacion_service import ProductoImportacionService
 from app.domain.services.producto_consulta_service import ProductoConsultaService
+from app.modules.catalog.presentation.http.dependencies import obtener_producto_service
 from app.infrastructure.repositories.inventario_crud_repository import InventarioCRUDRepository
+from app.infrastructure.repositories.producto_crud_repository import ProductoCRUDRepository
 from app.infrastructure.repositories.producto_presentacion_crud_repository import ProductoPresentacionCRUDRepository
 from app.api.v1.dependencies import obtener_usuario_autenticado, requiere_permiso, es_super_admin
 from app.api.v1.empresa_contexto import ContextoEmpresa, kwargs_listado, obtener_contexto_empresa, resolver_empresa_creacion, contexto_requiere_permiso
@@ -27,13 +28,6 @@ from app.schemas.producto import (
 
 
 router = APIRouter(prefix="/api/v1/productos", tags=["Productos"])
-
-
-# ============ DEPENDENCIAS ============
-async def obtener_producto_service(session: AsyncSession = Depends(get_db_session)) -> ProductoService:
-    """Factory para instanciar el servicio de productos."""
-    repository = ProductoCRUDRepository(session)
-    return ProductoService(repository)
 
 
 async def obtener_importacion_service(session: AsyncSession = Depends(get_db_session)) -> ProductoImportacionService:

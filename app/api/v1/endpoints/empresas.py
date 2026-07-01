@@ -4,13 +4,14 @@ Endpoints CRUD de Empresas (Capa de Presentación).
 Solo accesible por super admin.
 """
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.infrastructure.database import get_db_session
-from app.infrastructure.repositories.empresa_crud_repository import EmpresaCRUDRepository
 from app.domain.services.empresa_service import EmpresaService
 from app.domain.services.empresa_rbac_bootstrap_service import EmpresaRbacBootstrapService
+from app.domain.services.empresa_maestra_service import EmpresaMaestraService
 from app.modules.iam.presentation.http.dependencies import obtener_empresa_rbac_bootstrap_service
-from app.modules.tenant.presentation.http.dependencies import obtener_empresa_maestra_service
+from app.modules.tenant.presentation.http.dependencies import (
+    obtener_empresa_maestra_service,
+    obtener_empresa_service,
+)
 from app.api.v1.dependencies import obtener_usuario_autenticado, requiere_permiso, es_super_admin
 from app.api.v1.listado_query import orden_listado
 from app.schemas.empresa import (
@@ -23,13 +24,6 @@ from app.schemas.empresa import (
 
 
 router = APIRouter(prefix="/api/v1/empresas", tags=["Empresas"])
-
-
-# ============ DEPENDENCIAS ============
-async def obtener_empresa_service(session: AsyncSession = Depends(get_db_session)) -> EmpresaService:
-    """Factory para instanciar el servicio de empresas."""
-    repository = EmpresaCRUDRepository(session)
-    return EmpresaService(repository)
 
 
 def validar_super_admin(es_admin: bool = Depends(es_super_admin)):

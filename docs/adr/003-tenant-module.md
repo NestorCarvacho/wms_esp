@@ -16,16 +16,16 @@ Crear `app/modules/tenant/` con:
 - **Infraestructura** `SqlAlchemyTenantRepository` + `TenantAccessAdapter` (consumido por IAM)
 - **Composition root** `build_tenant_handlers()` en `app/bootstrap/tenant_container.py`
 - **Fachada** `EmpresaMaestraService` delega al módulo tenant
+- **CRUD empresa** (`EmpresaService`): handlers en `application/handlers/empresa_handlers.py`, puerto `IEmpresaRepository`, fachada en `app/domain/services/empresa_service.py`
 
 IAM importa `TenantAccessAdapter` desde tenant (dependencia unidireccional: iam → tenant).
 
 ## Consecuencias
 
 - Validación multi-tenant centralizada y testeable
+- CRUD empresa desacoplado de repositorio legacy en capa de presentación
 - Camino para extraer `tenant-service` en microservicios
-- Empresa CRUD (`EmpresaService`) permanece legacy hasta migración Fase 2
 
 ## Próximos pasos
 
-- Handlers CRUD empresa en módulo tenant
 - Módulo `catalog` (productos, tipos) como siguiente bounded context
