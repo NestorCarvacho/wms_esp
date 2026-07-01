@@ -1,0 +1,289 @@
+# CLAUDE.md — Guía de arquitectura y desarrollo
+
+Documento de referencia rápida para colaboradores y asistentes de código. Para instalación detallada ver [README.md](README.md); para documentación completa ver [docs/INDEX.md](docs/INDEX.md).
+
+---
+
+## Stack
+
+| Capa | Tecnología |
+|------|------------|
+| Backend | Python 3.9+, FastAPI, SQLAlchemy async, aiomysql |
+| Frontend | React 19, Vite 6, TypeScript, Tailwind |
+| BD | MySQL 8.0 |
+| Auth | JWT (python-jose), BCrypt (passlib) |
+| Deploy | Railway (API + SPA + MySQL plugin) |
+
+---
+
+## Comandos de desarrollo
+
+### Stack completo con Docker (recomendado para validar E2E)
+
+```bash
+docker compose up -d --build
+# Reset BD: docker compose down -v && docker compose up -d --build
+```
+
+| Servicio | URL |
+|----------|-----|
+| API | http://localhost:8000 |
+| Swagger | http://localhost:8000/docs |
+| Frontend (prod build) | http://localhost:4173 |
+| MySQL | localhost:3307 → BD `wms_db` |
+
+### Backend (local sin Docker)
+
+```bash
+cp .env.example .env          # DATABASE_URL, SECRET_KEY, CORS_ORIGINS
+pip install -r requirements.txt
+python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+### Base de datos (local sin Docker)
+
+```bash
+# Instalación completa (recomendada)
+mysql -u root -p wms_esp < mysql-init/schema_completo.sql
+
+# Migración incremental en Railway / BD existente
+railway service link MySQL
+railway run python scripts/apply_railway_migrations.py
+```
+
+Usuario sembrado por defecto: `admin@emp001.cl` / `WmsAdmin1!`
+
+### Frontend (local)
+
+```bash
+cd frontend
+npm install
+cp .env.example .env          # VITE_API_URL vacío → proxy Vite a :8000
+npm run dev                     # http://localhost:5173
+npm run build                   # tsc + vite build (type-check incluido)
+```
+
+### Verificación rápida
+
+```bash
+curl http://localhost:8000/health
+# Login → JWT con empresa_id, permisos, es_empresa_maestra
+# Endpoint protegido sin token → 401
+# Frontend build → npm run build en frontend/
+```
+
+---
+
+## Regla de oro: multi-tenant
+
+**Todo acceso a datos DEBE filtrar por `empresa_id`.**
+
+| Regla | Detalle |
+|-------|---------|
+| Origen del ID | Extraído del JWT (`TokenPayload.empresa_id`), **nunca** confiar en el body para usuarios normales |
+| Aislamiento | Un tenant no ve datos de otro |
+| Empresa maestra | `es_empresa_maestra=true` en JWT; puede filtrar con `?empresa_id=` en listados/creación |
+| Creación | Usar `resolver_empresa_creacion()` — maestra debe enviar `empresa_id` explícito |
+
+### Helpers obligatorios
+
+```python
+# app/api/v1/empresa_contexto.py
+ContextoEmpresa          # ctx.empresa_operacion(), ctx.empresas_scope_ids()
+kwargs_listado(ctx)      # pasa es_super_admin, empresa_id_filtro, empresas_scope_ids
+contexto_requiere_permiso("productos.leer")  # auth + tenant + permiso
+
+# app/infrastructure/repositories/listado_helpers.py
+filtro_empresa(model, empresa_id, es_super_admin, empresa_id_filtro, empresas_scope_ids)
+condicion_buscar(model, buscar, *fields)
+aplicar_orden(stmt, columnas={...}, ordenar_por=..., orden=...)
+```
+
+Patrón en endpoint:
+
+```python
+@router.get("")
+async def listar(
+    ctx: ContextoEmpresa = Depends(contexto_requiere_permiso("productos.leer")),
+    service: ProductoService = Depends(obtener_producto_service),
+):
+    return await service.listar(
+        empresa_id=ctx.empresa_usuario_id,
+        **kwargs_listado(ctx),
+    )
+```
+
+---
+
+## Arquitectura N-tier (flujo estricto)
+
+```
+Request → endpoint (app/api/v1/endpoints/)
+       → service   (app/domain/services/)
+       → repository (app/infrastructure/repositories/)
+       → ORM       (app/infrastructure/models/)
+```
+
+| Capa | Responsabilidad | No debe |
+|------|-----------------|---------|
+| **Endpoint** | HTTP, DTOs, Depends, status codes | Lógica de negocio, SQL directo |
+| **Service** | Reglas de negocio, orquestación | Conocer FastAPI Request |
+| **Repository** | Queries SQLAlchemy, CRUD | Validar permisos HTTP |
+| **Schema** | Pydantic DTOs entrada/salida | Acceder a BD |
+| **Core** | config, security, middleware, request_context | Lógica de dominio |
+
+Referencia extendida: [docs/capas/](docs/capas/)
+
+### Modelos ORM
+
+Concentrados en `app/infrastructure/models/usuario.py` (Empresa, Usuario, Producto, StockZona, MovimientoInventario, etc.). Modelos auxiliares en archivos dedicados (ej. `empresa_administrada.py`).
+
+---
+
+## Convenciones del proyecto
+
+| Tema | Convención |
+|------|------------|
+| Idioma código | Español: tablas, columnas, funciones, variables de dominio |
+| Permisos RBAC | Formato `recurso.accion` — ej. `inventario.recepcionar`, `productos.leer` |
+| Cadena RBAC | `Usuario → usuario_rol → Rol → rol_permiso → Permiso` (+ herencia desde Cargo) |
+| Estados | Tablas catálogo (`estado_orden`, etc.), **no** ENUMs MySQL |
+| Precios | `DECIMAL(12,2)` o superior |
+| Respuestas API | `{ "exito": bool, "datos": ..., "mensaje": str, "errores": [] }` |
+| JWT claims | `usuario_id`, `empresa_id`, `roles[]`, `permisos[]`, `es_empresa_maestra` |
+| Localización | Middleware `LocaleMiddleware` → `contextvars` (`Accept-Language`, `X-Time-Zone`) |
+| Plantilla endpoint | [PLANTILLA_ENDPOINT.py](PLANTILLA_ENDPOINT.py) |
+
+### Auditoría de inventario
+
+Operaciones de stock en `inventario_operacion_service.py` → tabla `movimiento_inventario` (tipos: `RECEPCION`, `TRASLADO`, `DESPACHO`). Timestamps UTC en BD; presentación local vía `formato_service.py` + headers de timezone.
+
+---
+
+## Estructura del monorepo
+
+```
+wms_esp/
+├── app/
+│   ├── main.py                 # FastAPI app, CORS, LocaleMiddleware, routers
+│   ├── api/v1/endpoints/       # Routers REST
+│   ├── api/v1/dependencies.py  # JWT, requiere_permiso
+│   ├── api/v1/empresa_contexto.py
+│   ├── core/                   # config, security, locale_middleware, request_context
+│   ├── domain/services/        # Lógica de negocio
+│   ├── infrastructure/
+│   │   ├── models/             # ORM SQLAlchemy
+│   │   ├── repositories/       # Acceso a datos
+│   │   └── ws/                 # WebSocket event bus (inventario)
+│   └── schemas/                # DTOs Pydantic
+├── frontend/
+│   ├── src/                    # Páginas, hooks, API client, contexts (activo)
+│   └── component/              # UI legacy aún importada vía @/components
+├── mysql-init/                 # schema_completo.sql + migraciones incrementales
+├── scripts/apply_railway_migrations.py
+└── docs/                       # INDEX, MANUAL_USUARIO, CORE_WMS, deploy
+```
+
+### Frontend — patrones clave
+
+| Concepto | Ubicación |
+|----------|-----------|
+| Rutas post-login | `/app/*` — ver `src/routes/paths.ts` |
+| Auth + permisos | `src/context/AuthContext.tsx`, `src/hooks/usePermissions.ts` |
+| Locale/i18n | `src/context/LocaleContext.tsx`, `src/i18n/` |
+| CRUD tablas | `src/crud/usePaginatedCrudTable.ts` |
+| Filtro empresa maestra | `src/crud/useCrudEmpresaFilterCard.ts` |
+| Menú + permisos ruta | `src/api/menuConfig.ts` → `ROUTE_PERMISSIONS` |
+| API client | `src/api/client.ts` — JWT en `localStorage`, headers locale |
+
+Alias Vite: `@` → `src/`, `@/components` → `component/`
+
+---
+
+## Auth y seguridad
+
+```
+POST /api/v1/auth/login → JWT
+Authorization: Bearer <token> en endpoints protegidos
+```
+
+- Bloqueo por intentos fallidos (`LOGIN_MAX_ATTEMPTS`, `LOGIN_LOCKOUT_MINUTES`)
+- Reset contraseña vía `password_reset_token` + Resend (o `EMAIL_DEV_LOG_ONLY=True` en local)
+- Login devuelve `preferencias_locale` (empresa + overrides de perfil)
+- WebSocket inventario: `WS /api/v1/ws/inventario?token=...&locale=...&tz=...`
+
+Dependencias comunes:
+
+```python
+Depends(obtener_usuario_autenticado)   # dict con claims JWT
+Depends(requiere_permiso("codigo"))    # 403 si falta permiso
+Depends(contexto_requiere_permiso(...)) # tenant + permiso combinados
+```
+
+---
+
+## Migraciones SQL
+
+| Escenario | Archivo / comando |
+|-----------|-------------------|
+| BD nueva (local/Docker) | `mysql-init/schema_completo.sql` |
+| BD existente (Railway) | `scripts/apply_railway_migrations.py` |
+| Diagnóstico | `railway run python scripts/apply_railway_migrations.py --diagnose` |
+| Una migración | `--file 19_locale_currency.sql` |
+
+Orden y detalle: [mysql-init/README_RAILWAY.md](mysql-init/README_RAILWAY.md)
+
+**No ejecutar** en producción con datos: `01_setup.sql`, `03_rbac_hierarchy.sql` (recrean esquema).
+
+---
+
+## Despliegue Railway
+
+| Servicio | Root | URL producción |
+|----------|------|----------------|
+| `wms_esp` (API) | `/` | https://wmsesp-production.up.railway.app |
+| `wms-frontend` | `frontend/` | https://wms-frontend-production-296e.up.railway.app |
+
+```bash
+railway login && railway link -p WMS_ESP
+railway service link wms_esp && railway redeploy -y
+railway service link wms-frontend && railway redeploy -y
+railway service link MySQL && railway run python scripts/apply_railway_migrations.py
+```
+
+Guías: [docs/DEPLOY_RAILWAY.md](docs/DEPLOY_RAILWAY.md), [docs/RAILWAY_WMS_ESP.md](docs/RAILWAY_WMS_ESP.md)
+
+---
+
+## Módulos principales (estado actual)
+
+| Módulo | Backend | Notas |
+|--------|---------|-------|
+| Auth / usuarios / RBAC | `auth.py`, `usuarios.py`, `roles.py`, `permisos.py` | Multi-tenant + empresa maestra |
+| Catálogo | `productos.py`, `bodegas.py`, `tipo_zona.py`, … | CRUD estándar |
+| Inventario operativo | `inventario.py` | Stock, movimientos, export, WS | Ver [docs/CORE_WMS.md](docs/CORE_WMS.md) |
+| Regionalización | `locale_middleware`, `auth_service._resolver_preferencias_locale` | Migración `19_locale_currency.sql` |
+| Órdenes compra/venta | — | Próximamente (tag OpenAPI existe) |
+
+---
+
+## Checklist al agregar una feature
+
+1. ¿Filtra por `empresa_id` vía JWT / `ContextoEmpresa`?
+2. ¿Endpoint delgado → service → repository?
+3. ¿DTO en `app/schemas/`?
+4. ¿Permiso `recurso.accion` registrado y sembrado en SQL si es nuevo?
+5. ¿Ruta frontend en `App.tsx` + `menuConfig.ts` + `ROUTE_PERMISSIONS`?
+6. ¿Migración SQL si hay cambio de esquema?
+
+---
+
+## Documentación relacionada
+
+| Doc | Audiencia |
+|-----|-----------|
+| [docs/INDEX.md](docs/INDEX.md) | Índice maestro |
+| [docs/MANUAL_USUARIO.md](docs/MANUAL_USUARIO.md) | Usuarios finales |
+| [docs/CORE_WMS.md](docs/CORE_WMS.md) | Inventario (técnico) |
+| [copilot-instructions.md](copilot-instructions.md) | Reglas legacy para Copilot |
+| [API_EXAMPLES.md](API_EXAMPLES.md) | Ejemplos curl/API |

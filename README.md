@@ -193,6 +193,7 @@ railway up ./frontend --path-as-root --detach
 
 | Recurso | Contenido |
 |---------|-----------|
+| [**CLAUDE.md**](CLAUDE.md) | Guía concisa de arquitectura, comandos y convenciones (onboarding devs) |
 | [**docs/INDEX.md**](docs/INDEX.md) | **Índice maestro** de toda la documentación |
 | [**docs/MANUAL_USUARIO.md**](docs/MANUAL_USUARIO.md) | **Manual de uso** para operadores y administradores |
 | [docs/CORE_WMS.md](docs/CORE_WMS.md) | Inventario operativo (referencia técnica) |

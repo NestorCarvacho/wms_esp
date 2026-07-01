@@ -18,6 +18,7 @@ Mapa central de toda la documentación del proyecto **wms_esp**. Use este archiv
 | Documento | Descripción |
 |-----------|-------------|
 | [README.md](../README.md) | Instalación local, variables de entorno, estructura del monorepo |
+| [CLAUDE.md](../CLAUDE.md) | **Guía rápida** de arquitectura, comandos y convenciones para desarrolladores |
 | [ESTRUCTURA_PROYECTO.md](./ESTRUCTURA_PROYECTO.md) | Árbol de carpetas y archivos principales |
 | [API_EXAMPLES.md](../API_EXAMPLES.md) | Ejemplos de llamadas a la API REST |
 | [PLANTILLA_ENDPOINT.py](../PLANTILLA_ENDPOINT.py) | Plantilla para nuevos endpoints FastAPI |
