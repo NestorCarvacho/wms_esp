@@ -132,14 +132,10 @@ class PermisoCargoService:
         return {"mensaje": "Permiso cargo eliminado exitosamente"}
 
     async def listar_roles_cargo(self, cargo_id: int, empresa_id: int, es_super_admin: bool = False) -> Dict[str, Any]:
-        filtro = None if es_super_admin else empresa_id
-        cargo = await self.repository.obtener_cargo(cargo_id, filtro)
-        if not cargo:
-            raise ValueError("Cargo no encontrado")
-        if not es_super_admin and cargo.empresa_id != empresa_id:
-            raise ValueError("No tiene permiso para consultar roles de otro cargo")
-        rol_ids = await self.repository.listar_roles_por_cargo(cargo_id, cargo.empresa_id)
-        return {"cargo_id": cargo_id, "rol_ids": rol_ids}
+        from app.bootstrap.container import build_iam_handlers
+
+        handlers = build_iam_handlers(self.repository.session)
+        return await handlers.listar_roles_cargo.handle(cargo_id, empresa_id, es_super_admin)
 
     async def sincronizar_roles_cargo(
         self,
@@ -148,11 +144,15 @@ class PermisoCargoService:
         rol_ids: list[int],
         es_super_admin: bool = False,
     ) -> Dict[str, Any]:
-        filtro = None if es_super_admin else empresa_id
-        cargo = await self.repository.obtener_cargo(cargo_id, filtro)
-        if not cargo:
-            raise ValueError("Cargo no encontrado")
-        if not es_super_admin and cargo.empresa_id != empresa_id:
-            raise ValueError("No tiene permiso para modificar roles de otro cargo")
-        ids = await self.repository.sincronizar_roles_cargo(cargo_id, cargo.empresa_id, rol_ids)
-        return {"cargo_id": cargo_id, "rol_ids": ids}
+        from app.bootstrap.container import build_iam_handlers
+        from app.modules.iam.application.commands_rbac import SincronizarRolesCargoCommand
+
+        handlers = build_iam_handlers(self.repository.session)
+        return await handlers.sincronizar_roles_cargo.handle(
+            SincronizarRolesCargoCommand(
+                cargo_id=cargo_id,
+                empresa_id=empresa_id,
+                rol_ids=rol_ids,
+                es_super_admin=es_super_admin,
+            )
+        )

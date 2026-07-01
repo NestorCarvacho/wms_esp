@@ -1,19 +1,13 @@
 """Endpoints de asignación rol ↔ permiso."""
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.dependencies import requiere_permiso
 from app.domain.services.rol_permiso_service import RolPermisoService
-from app.infrastructure.database import get_db_session
-from app.infrastructure.repositories.rol_permiso_crud_repository import RolPermisoCRUDRepository
+from app.modules.iam.presentation.http.dependencies import obtener_rol_permiso_service
 from app.schemas.permiso import RolPermisoSincronizarDTO
 from app.schemas.usuario import RespuestaAPIDTO
 
 router = APIRouter(prefix="/api/v1/roles", tags=["Roles"])
-
-
-async def obtener_rol_permiso_service(session: AsyncSession = Depends(get_db_session)) -> RolPermisoService:
-    return RolPermisoService(RolPermisoCRUDRepository(session), session)
 
 
 @router.get("/{rol_id}/permisos", response_model=RespuestaAPIDTO)

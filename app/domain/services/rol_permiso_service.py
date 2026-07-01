@@ -1,52 +1,33 @@
-"""Servicio de asignación rol ↔ permiso."""
+"""Servicio de asignación rol ↔ permiso — fachada IAM."""
 from typing import Any, Dict
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.domain.services.empresa_maestra_service import EmpresaMaestraService
-from app.infrastructure.repositories.empresa_administrada_repository import EmpresaAdministradaRepository
+from app.bootstrap.container import build_iam_handlers
 from app.infrastructure.repositories.rol_permiso_crud_repository import RolPermisoCRUDRepository
+from app.modules.iam.application.commands_rbac import SincronizarPermisosRolCommand
 
 
 class RolPermisoService:
-    def __init__(self, repository: RolPermisoCRUDRepository, session: AsyncSession):
-        self.repository = repository
-        self.session = session
-
-    async def _empresa_efectiva_rol(self, rol_id: int, usuario: dict) -> int:
-        """Resuelve la empresa del rol y valida acceso multi-tenant."""
-        rol = await self.repository.obtener_rol(rol_id)
-        if not rol:
-            raise ValueError("Rol no encontrado")
-
-        empresa_caller = usuario.get("empresa_id")
-        es_maestra = bool(usuario.get("es_empresa_maestra"))
-
-        if not es_maestra:
-            if rol.empresa_id != empresa_caller:
-                raise ValueError("No autorizado para gestionar permisos de este rol")
-            return rol.empresa_id
-
-        maestra = EmpresaMaestraService(EmpresaAdministradaRepository(self.session))
-        try:
-            await maestra.validar_acceso(empresa_caller, rol.empresa_id)
-        except ValueError as e:
-            raise ValueError(str(e)) from e
-        return rol.empresa_id
+    def __init__(
+        self,
+        repository: RolPermisoCRUDRepository | None = None,
+        session: AsyncSession | None = None,
+    ):
+        if session is None and repository is not None:
+            session = repository.session
+        elif session is None:
+            raise ValueError("Se requiere session o repository")
+        self._handlers = build_iam_handlers(session)
 
     async def listar_por_rol(self, rol_id: int, usuario: dict) -> Dict[str, Any]:
-        empresa_id = await self._empresa_efectiva_rol(rol_id, usuario)
-        rows = await self.repository.listar_por_rol(rol_id, empresa_id)
-        return {
-            "rol_id": rol_id,
-            "permiso_ids": [permiso.id for _, permiso in rows],
-            "permisos": [
-                {"permiso_id": permiso.id, "codigo": permiso.codigo, "descripcion": permiso.descripcion}
-                for _, permiso in rows
-            ],
-        }
+        return await self._handlers.listar_permisos_rol.handle(rol_id, usuario)
 
-    async def sincronizar(self, rol_id: int, usuario: dict, permiso_ids: list[int]) -> Dict[str, Any]:
-        empresa_id = await self._empresa_efectiva_rol(rol_id, usuario)
-        ids = await self.repository.sincronizar(rol_id, empresa_id, permiso_ids)
-        return {"rol_id": rol_id, "permiso_ids": ids}
+    async def sincronizar(
+        self, rol_id: int, usuario: dict, permiso_ids: list[int]
+    ) -> Dict[str, Any]:
+        return await self._handlers.sincronizar_permisos_rol.handle(
+            SincronizarPermisosRolCommand(
+                rol_id=rol_id, usuario=usuario, permiso_ids=permiso_ids
+            )
+        )

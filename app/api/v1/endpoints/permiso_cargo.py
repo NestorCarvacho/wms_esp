@@ -2,11 +2,9 @@
 Endpoints CRUD de Permisos Cargo.
 """
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.infrastructure.database import get_db_session
-from app.infrastructure.repositories.permiso_cargo_crud_repository import PermisoCargoCRUDRepository
 from app.domain.services.permiso_cargo_service import PermisoCargoService
+from app.modules.iam.presentation.http.dependencies import obtener_permiso_cargo_service
 from app.api.v1.dependencies import obtener_usuario_autenticado, requiere_permiso, es_super_admin
 from app.schemas.permiso_cargo import (
     PermisoCargoCrearDTO,
@@ -16,11 +14,6 @@ from app.schemas.permiso_cargo import (
 from app.schemas.cargo_rol import CargoRolSincronizarDTO
 
 router = APIRouter(prefix="/api/v1/permisos-cargo", tags=["Permisos Cargo"])
-
-
-async def obtener_permiso_cargo_service(session: AsyncSession = Depends(get_db_session)) -> PermisoCargoService:
-    repository = PermisoCargoCRUDRepository(session)
-    return PermisoCargoService(repository)
 
 
 @router.get("", response_model=RespuestaAPIDTO, summary="Listar permisos cargo")

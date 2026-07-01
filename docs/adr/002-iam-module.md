@@ -37,8 +37,15 @@ Crear `app/modules/iam/` con vertical slice **autenticación + resolución de pe
 - `/auth/registrar` sigue roto (sin handler) — pendiente Fase 1b con `UsuarioService`
 - `app/api/v1/dependencies.py` sin cambios de contrato JWT
 
-## Próximos pasos (Fase 1b)
+## Próximos pasos (Fase 1c)
 
-- Handlers de asignación: `SincronizarRolesUsuario`, `SincronizarPermisosRol`
-- CRUD mecánico: Rol, Permiso, Cargo, Usuario
+- CRUD mecánico: Rol, Permiso, Cargo (handlers + fachadas)
 - `ProvisionarRbacEmpresaHandler` con puerto `ITenantRepository`
+- Perfil usuario (`perfil_usuario` endpoint)
+
+## Fase 1b (completada)
+
+- Handlers CRUD usuario + herencia roles desde cargo
+- `SincronizarRolesUsuario`, `SincronizarPermisosRol`, `SincronizarRolesCargo`
+- Puertos `IUserCrudRepository`, `IUsuarioRolRepository`, `IRolPermisoRepository`, `IPermisoCargoRepository`, `ITenantAccessValidator`
+- `/auth/registrar` reparado vía `CrearUsuarioHandler`

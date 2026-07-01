@@ -3,9 +3,6 @@ Endpoints de Autenticación (Capa de Presentación).
 Login, registro, refresh token.
 """
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.infrastructure.database import get_db_session
-from app.infrastructure.repositories.usuario_repository import UsuarioRepository
 from app.modules.iam.presentation.http.dependencies import obtener_auth_service
 from app.domain.services.auth_service import AuthService
 from app.schemas.usuario import (
@@ -308,7 +305,7 @@ async def cambiar_contrasena(
 async def registrar(
     datos_usuario: UsuarioCrearDTO,
     empresa_id: int = Depends(obtener_empresa_id),
-    session: AsyncSession = Depends(get_db_session)
+    auth_service: AuthService = Depends(obtener_auth_service),
 ) -> dict:
     """
     Endpoint para registrar un nuevo usuario en la empresa.
@@ -319,12 +316,6 @@ async def registrar(
     - Datos requeridos presentes
     """
     try:
-        # TODO: Obtener empresa_id del JWT
-        # empresa_id = obtener_empresa_id()
-        
-        usuario_repo = UsuarioRepository(session)
-        auth_service = AuthService(usuario_repo, session)
-        
         resultado = await auth_service.registrar_usuario(
             email=datos_usuario.email,
             contrasena=datos_usuario.contrasena,

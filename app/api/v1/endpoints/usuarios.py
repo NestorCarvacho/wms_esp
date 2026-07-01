@@ -4,15 +4,16 @@ Endpoints CRUD de Usuarios (Capa de Presentación).
 Multi-tenant con soporte para super admin.
 """
 from fastapi import APIRouter, Depends, HTTPException, status, Query
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.infrastructure.database import get_db_session
-from app.infrastructure.repositories.usuario_crud_repository import UsuarioCRUDRepository
+from app.modules.iam.presentation.http.dependencies import (
+    obtener_auth_service,
+    obtener_usuario_rol_service,
+    obtener_usuario_service,
+)
 from app.domain.services.usuario_service import UsuarioService
 from app.api.v1.dependencies import obtener_usuario_autenticado, requiere_permiso, es_super_admin
 from app.api.v1.empresa_contexto import ContextoEmpresa, kwargs_listado, obtener_contexto_empresa, contexto_requiere_permiso
 from app.api.v1.listado_query import orden_listado
 from app.domain.services.usuario_rol_service import UsuarioRolService
-from app.infrastructure.repositories.usuario_rol_crud_repository import UsuarioRolCRUDRepository
 from app.schemas.permiso import UsuarioRolSincronizarDTO
 from app.schemas.usuario import (
     UsuarioCrearDTO,
@@ -24,19 +25,6 @@ from app.schemas.usuario import (
 
 
 router = APIRouter(prefix="/api/v1/usuarios", tags=["Usuarios"])
-
-
-# ============ DEPENDENCIAS ============
-async def obtener_usuario_service(session: AsyncSession = Depends(get_db_session)) -> UsuarioService:
-    """Factory para instanciar el servicio de usuarios."""
-    return UsuarioService(
-        UsuarioCRUDRepository(session),
-        UsuarioRolCRUDRepository(session),
-    )
-
-
-async def obtener_usuario_rol_service(session: AsyncSession = Depends(get_db_session)) -> UsuarioRolService:
-    return UsuarioRolService(UsuarioRolCRUDRepository(session))
 
 
 # ============ GET: LISTAR USUARIOS (CON PAGINACIÓN) ============

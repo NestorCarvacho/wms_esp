@@ -16,7 +16,22 @@ from app.modules.iam.application.handlers.resolver_permisos_handler import (
 from app.modules.iam.application.handlers.solicitar_recuperacion_handler import (
     SolicitarRecuperacionContrasenaHandler,
 )
-from app.modules.iam.application.handlers.validar_token_handler import ValidarTokenQueryHandler
+from app.modules.iam.application.handlers.rbac_handlers import (
+    ListarPermisosRolQueryHandler,
+    ListarRolesCargoQueryHandler,
+    ListarRolesUsuarioQueryHandler,
+    SincronizarPermisosRolHandler,
+    SincronizarRolesCargoHandler,
+    SincronizarRolesUsuarioHandler,
+)
+from app.modules.iam.application.handlers.usuario_handlers import (
+    ActualizarUsuarioHandler,
+    CrearUsuarioHandler,
+    DesactivarUsuarioHandler,
+    ListarUsuariosQueryHandler,
+    ObtenerUsuarioQueryHandler,
+    ReactivarUsuarioHandler,
+)
 from app.modules.iam.infrastructure.security_adapters import (
     BcryptPasswordHasher,
     JwtTokenIssuer,
@@ -26,6 +41,7 @@ from app.modules.iam.infrastructure.sqlalchemy_repositories import (
     SqlAlchemyAutorizacionRepository,
     SqlAlchemyUsuarioAuthRepository,
 )
+from app.modules.iam.application.handlers.validar_token_handler import ValidarTokenQueryHandler
 from app.modules.iam.infrastructure.unit_of_work import SqlAlchemyAuthUnitOfWork
 from app.modules.inventory.application.handlers.config_handlers import (
     ActualizarConfigBodegaHandler,
@@ -53,25 +69,54 @@ class IamHandlers:
     cambiar_contrasena: CambiarContrasenaHandler
     validar_token: ValidarTokenQueryHandler
     resolver_permisos: ResolverPermisosUsuarioQueryHandler
+    listar_usuarios: ListarUsuariosQueryHandler
+    obtener_usuario: ObtenerUsuarioQueryHandler
+    crear_usuario: CrearUsuarioHandler
+    actualizar_usuario: ActualizarUsuarioHandler
+    desactivar_usuario: DesactivarUsuarioHandler
+    reactivar_usuario: ReactivarUsuarioHandler
+    listar_roles_usuario: ListarRolesUsuarioQueryHandler
+    sincronizar_roles_usuario: SincronizarRolesUsuarioHandler
+    listar_permisos_rol: ListarPermisosRolQueryHandler
+    sincronizar_permisos_rol: SincronizarPermisosRolHandler
+    listar_roles_cargo: ListarRolesCargoQueryHandler
+    sincronizar_roles_cargo: SincronizarRolesCargoHandler
 
 
 def build_iam_handlers(session: AsyncSession) -> IamHandlers:
     uow = SqlAlchemyAuthUnitOfWork(session)
-    usuarios = SqlAlchemyUsuarioAuthRepository(session)
+    usuarios_auth = SqlAlchemyUsuarioAuthRepository(session)
+    usuarios_crud = SqlAlchemyUsuarioCrudRepository(session)
+    usuario_rol = SqlAlchemyUsuarioRolRepository(session)
+    rol_permiso = SqlAlchemyRolPermisoRepository(session)
+    permiso_cargo = SqlAlchemyPermisoCargoRepository(session)
+    tenant = SqlAlchemyTenantAccessValidator(session)
     autorizacion = SqlAlchemyAutorizacionRepository(session)
     token_issuer = JwtTokenIssuer()
     password_hasher = BcryptPasswordHasher()
     email_notifier = ResendEmailNotifier()
 
     return IamHandlers(
-        login=LoginHandler(usuarios, autorizacion, token_issuer, password_hasher),
+        login=LoginHandler(usuarios_auth, autorizacion, token_issuer, password_hasher),
         solicitar_recuperacion=SolicitarRecuperacionContrasenaHandler(uow, email_notifier),
         restablecer_contrasena=RestablecerContrasenaHandler(
-            usuarios, uow.reset, password_hasher
+            usuarios_auth, uow.reset, password_hasher
         ),
-        cambiar_contrasena=CambiarContrasenaHandler(usuarios, password_hasher),
-        validar_token=ValidarTokenQueryHandler(usuarios),
+        cambiar_contrasena=CambiarContrasenaHandler(usuarios_auth, password_hasher),
+        validar_token=ValidarTokenQueryHandler(usuarios_auth),
         resolver_permisos=ResolverPermisosUsuarioQueryHandler(autorizacion),
+        listar_usuarios=ListarUsuariosQueryHandler(usuarios_crud),
+        obtener_usuario=ObtenerUsuarioQueryHandler(usuarios_crud),
+        crear_usuario=CrearUsuarioHandler(usuarios_crud, usuario_rol),
+        actualizar_usuario=ActualizarUsuarioHandler(usuarios_crud, usuario_rol),
+        desactivar_usuario=DesactivarUsuarioHandler(usuarios_crud),
+        reactivar_usuario=ReactivarUsuarioHandler(usuarios_crud),
+        listar_roles_usuario=ListarRolesUsuarioQueryHandler(usuario_rol),
+        sincronizar_roles_usuario=SincronizarRolesUsuarioHandler(usuario_rol),
+        listar_permisos_rol=ListarPermisosRolQueryHandler(rol_permiso, tenant),
+        sincronizar_permisos_rol=SincronizarPermisosRolHandler(rol_permiso, tenant),
+        listar_roles_cargo=ListarRolesCargoQueryHandler(permiso_cargo),
+        sincronizar_roles_cargo=SincronizarRolesCargoHandler(permiso_cargo),
     )
 
 
