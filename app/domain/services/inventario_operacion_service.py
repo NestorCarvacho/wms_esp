@@ -3,6 +3,8 @@ from decimal import Decimal
 from typing import Any
 from app.infrastructure.repositories.inventario_crud_repository import InventarioCRUDRepository
 from app.domain.services.inventario_presentacion_service import InventarioPresentacionService
+from app.domain.services.formato_service import serializar_timestamp
+from app.infrastructure.ws.inventario_event_bus import inventario_event_bus
 
 
 def _serializar_movimiento(m) -> dict:
@@ -33,7 +35,23 @@ def _serializar_movimiento(m) -> dict:
         "usuario_id": m.usuario_id,
         "usuario_email": m.usuario.email if m.usuario else None,
         "creado_at": m.creado_at.isoformat() if m.creado_at else None,
+        "creado_at_local": serializar_timestamp(m.creado_at),
     }
+
+
+async def _emitir_evento_stock(empresa_id: int, tipo: str, data: dict) -> None:
+    await inventario_event_bus.broadcast_stock_event(
+        empresa_id=empresa_id,
+        event_type=tipo,
+        payload={
+            "movimiento_id": data.get("id"),
+            "producto_nombre": data.get("producto_nombre"),
+            "producto_sku": data.get("producto_sku"),
+            "cantidad": data.get("cantidad"),
+            "tipo": tipo,
+            "creado_at_local": data.get("creado_at_local"),
+        },
+    )
 
 
 class InventarioOperacionService:
@@ -124,6 +142,7 @@ class InventarioOperacionService:
             await self.repository.commit()
             data = _serializar_movimiento(mov)
             data["stock_destino"] = float(stock_final)
+            await _emitir_evento_stock(empresa_id, "RECEPCION", data)
             return data
         except Exception:
             await self.repository.rollback()
@@ -184,6 +203,7 @@ class InventarioOperacionService:
             data = _serializar_movimiento(mov)
             data["stock_origen"] = float(stock_origen)
             data["stock_destino"] = float(stock_destino)
+            await _emitir_evento_stock(empresa_id, "TRASLADO", data)
             return data
         except Exception:
             await self.repository.rollback()
@@ -234,6 +254,7 @@ class InventarioOperacionService:
             await self.repository.commit()
             data = _serializar_movimiento(mov)
             data["stock_origen"] = float(stock_origen)
+            await _emitir_evento_stock(empresa_id, "DESPACHO", data)
             return data
         except Exception:
             await self.repository.rollback()

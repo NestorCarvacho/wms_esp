@@ -71,6 +71,9 @@ class Empresa(Base):
     region_id        = Column(Integer, ForeignKey("region.id"), nullable=True)
     ciudad_id        = Column(Integer, ForeignKey("ciudad.id"), nullable=True)
     comuna_id        = Column(Integer, ForeignKey("comuna.id"), nullable=True)
+    locale           = Column(String(10), nullable=False, default="es-CL")
+    timezone         = Column(String(64), nullable=False, default="America/Santiago")
+    moneda_codigo    = Column(String(3), nullable=False, default="CLP")
 
     usuarios = relationship("Usuario", back_populates="empresa")
     region   = relationship("Region")
@@ -156,7 +159,9 @@ class PerfilUsuario(Base):
     region_id = Column(Integer, ForeignKey("region.id"), nullable=True)
     ciudad_id = Column(Integer, ForeignKey("ciudad.id"), nullable=True)
     comuna_id = Column(Integer, ForeignKey("comuna.id"), nullable=True)
-    pais      = Column(String(100), nullable=True)
+    pais              = Column(String(100), nullable=True)
+    locale_override   = Column(String(10), nullable=True)
+    timezone_override = Column(String(64), nullable=True)
     foto_url  = Column(String(500), nullable=True)
     biografia = Column(Text, nullable=True)
 
@@ -437,3 +442,32 @@ class BodegaConfig(Base):
 
     bodega = relationship("Bodega")
     zona_recepcion = relationship("ZonaBodega")
+
+
+class Moneda(Base):
+    """Catálogo ISO de monedas soportadas."""
+    __tablename__ = "moneda"
+
+    codigo = Column(String(3), primary_key=True)
+    nombre = Column(String(100), nullable=False)
+    simbolo = Column(String(10), nullable=True)
+    decimales = Column(Integer, nullable=False, default=2)
+    activo = Column(Boolean, default=True)
+
+
+class TipoCambioHistorico(Base):
+    """Snapshot de tipo de cambio para cuadre contable de órdenes cross-border."""
+    __tablename__ = "tipo_cambio_historico"
+
+    id = Column(BigInteger, primary_key=True, index=True)
+    empresa_id = Column(BigInteger, ForeignKey("empresa.id"), nullable=False, index=True)
+    moneda_origen = Column(String(3), nullable=False)
+    moneda_destino = Column(String(3), nullable=False)
+    tasa = Column(Numeric(18, 8), nullable=False)
+    vigente_desde = Column(DateTime, nullable=False)
+    vigente_hasta = Column(DateTime, nullable=True)
+    documento_tipo = Column(String(50), nullable=True)
+    documento_id = Column(BigInteger, nullable=True)
+    creado_at = Column(DateTime, default=datetime.utcnow)
+
+    empresa = relationship("Empresa")

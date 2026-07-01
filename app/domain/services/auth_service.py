@@ -26,6 +26,27 @@ MSG_BLOQUEO_PERMANENTE = (
 )
 
 
+def _resolver_preferencias_locale(usuario) -> dict[str, str]:
+    empresa = usuario.empresa
+    perfil = usuario.perfil
+    locale = (
+        perfil.locale_override
+        if perfil and perfil.locale_override
+        else getattr(empresa, "locale", None) or "es-CL"
+    )
+    timezone = (
+        perfil.timezone_override
+        if perfil and perfil.timezone_override
+        else getattr(empresa, "timezone", None) or "America/Santiago"
+    )
+    currency = getattr(empresa, "moneda_codigo", None) or "CLP"
+    return {
+        "locale": locale,
+        "timezone": timezone,
+        "currency": currency,
+    }
+
+
 class AuthService:
     def __init__(self, repository: UsuarioRepository, session: AsyncSession):
         self.repository = repository
@@ -59,6 +80,7 @@ class AuthService:
         usuario_data["es_empresa_maestra"] = es_empresa_maestra
         usuario_data["roles"] = roles
         usuario_data["permisos"] = permisos
+        usuario_data["preferencias_locale"] = _resolver_preferencias_locale(usuario)
         return {
             "acceso_token": access_token,
             "token_type": "bearer",

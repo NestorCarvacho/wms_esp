@@ -20,6 +20,8 @@ import type {
   InventarioHistogramaDia,
   InventarioStockDistribucion,
 } from '@/types/api';
+import { useLocale } from '@/context/LocaleContext';
+import { useTranslation } from '@/i18n';
 
 const MOV_COLORS = {
   recepcion: palette.success,
@@ -64,6 +66,9 @@ export function InventarioDashboardCharts({
   selectClass,
   diasHistograma = 30,
 }: InventarioDashboardChartsProps) {
+  const { formatNumber } = useLocale();
+  const { t } = useTranslation('inventario');
+
   const histogramaData = histograma.map((d) => ({
     ...d,
     etiqueta: formatFechaCorta(d.fecha),
@@ -221,7 +226,7 @@ export function InventarioDashboardCharts({
                       lineas: number;
                     };
                     return [
-                      `${Number(value).toLocaleString('es-CL')} u. (${row.porcentaje}% · ${row.lineas} líneas)`,
+                      `${formatNumber(Number(value))} u. (${row.porcentaje}% · ${row.lineas} líneas)`,
                       item.name,
                     ];
                   }}
@@ -233,7 +238,7 @@ export function InventarioDashboardCharts({
         </div>
         {stockDistribucion.total_cantidad > 0 && (
           <Text variant="small-regular" className={`mt-2 text-center ${colorClass.muted}`}>
-            Total: {stockDistribucion.total_cantidad.toLocaleString('es-CL')} unidades
+            {t('dashboard.totalUnits', { formatted: formatNumber(stockDistribucion.total_cantidad) })}
           </Text>
         )}
       </Card>

@@ -32,6 +32,14 @@ export function setToken(token: string | null): void {
 
 let onUnauthorized: (() => void) | null = null;
 
+type LocaleHeaders = Record<string, string>;
+let localeHeadersProvider: () => LocaleHeaders = () => ({});
+
+/** Registra proveedor de headers de localización (Accept-Language, X-Time-Zone). */
+export function setLocaleHeadersProvider(provider: () => LocaleHeaders): void {
+  localeHeadersProvider = provider;
+}
+
 /** Registra callback para limpiar sesión cuando el API responde 401. */
 export function setUnauthorizedHandler(handler: (() => void) | null): void {
   onUnauthorized = handler;
@@ -62,6 +70,11 @@ export async function apiRequest<T>(
     if (token) {
       headers.set('Authorization', `Bearer ${token}`);
     }
+  }
+
+  const localeHeaders = localeHeadersProvider();
+  for (const [key, value] of Object.entries(localeHeaders)) {
+    if (value) headers.set(key, value);
   }
 
   const response = await fetch(`${BASE_URL}${path}`, {

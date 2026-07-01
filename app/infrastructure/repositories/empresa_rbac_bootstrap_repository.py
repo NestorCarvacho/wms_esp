@@ -38,21 +38,29 @@ class EmpresaRbacBootstrapRepository:
         return [row[0] for row in result.all()]
 
     async def copiar_permisos(self, empresa_plantilla_id: int, empresa_destino_id: int) -> int:
-        plantilla = await self.session.execute(
+        plantilla_result = await self.session.execute(
             select(Permiso).where(
                 Permiso.empresa_id == empresa_plantilla_id,
                 Permiso.activo == True,
             )
         )
-        creados = 0
-        for permiso in plantilla.scalars().all():
-            existente = await self.session.execute(
-                select(Permiso).where(
-                    Permiso.empresa_id == empresa_destino_id,
-                    Permiso.codigo == permiso.codigo,
-                )
+        permisos_plantilla = list(plantilla_result.scalars().all())
+        if not permisos_plantilla:
+            return 0
+
+        codigos_plantilla = [p.codigo for p in permisos_plantilla]
+
+        existentes_result = await self.session.execute(
+            select(Permiso).where(
+                Permiso.empresa_id == empresa_destino_id,
+                Permiso.codigo.in_(codigos_plantilla),
             )
-            row = existente.scalars().first()
+        )
+        dict_existentes = {p.codigo: p for p in existentes_result.scalars().all()}
+
+        creados = 0
+        for permiso in permisos_plantilla:
+            row = dict_existentes.get(permiso.codigo)
             if row:
                 if not row.activo or row.descripcion != permiso.descripcion:
                     row.activo = True

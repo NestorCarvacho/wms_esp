@@ -104,7 +104,8 @@ class EmpresaCRUDRepository:
 
             campos_permitidos = {
                 "nombre_fantasia", "rut", "giro", "telefono", "correo",
-                "sitio_web", "direccion", "region_id", "ciudad_id", "comuna_id"
+                "sitio_web", "direccion", "region_id", "ciudad_id", "comuna_id",
+                "locale", "timezone", "moneda_codigo",
             }
             extras = {k: v for k, v in kwargs.items() if k in campos_permitidos and v is not None}
 
@@ -149,7 +150,8 @@ class EmpresaCRUDRepository:
             campos_validos = {
                 "razon_social", "nombre_fantasia", "rut", "giro",
                 "telefono", "correo", "sitio_web", "esta_activa",
-                "direccion", "region_id", "ciudad_id", "comuna_id"
+                "direccion", "region_id", "ciudad_id", "comuna_id",
+                "locale", "timezone", "moneda_codigo",
             }
             datos_filtrados = {k: v for k, v in datos.items() if k in campos_validos and v is not None}
             

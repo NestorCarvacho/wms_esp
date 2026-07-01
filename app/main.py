@@ -7,7 +7,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.openapi.utils import get_openapi
 from app.core.config import APP_NAME, APP_TAGLINE, APP_VERSION, CORS_ORIGINS, DEBUG
-from app.api.v1.endpoints import auth, bodegas, productos, unidadesMedidas, usuarios, empresas, cargos, roles, perfil_usuario, permiso_cargo, permisos, rol_permiso, tipo_zona, zona_bodega, tipo_producto, producto_presentacion, inventario, geografia, serie_producto
+from app.core.locale_middleware import LocaleMiddleware
+from app.api.v1.endpoints import auth, bodegas, productos, unidadesMedidas, usuarios, empresas, cargos, roles, perfil_usuario, permiso_cargo, permisos, rol_permiso, tipo_zona, zona_bodega, tipo_producto, producto_presentacion, inventario, geografia, serie_producto, ws_inventario
 
 # Crear instancia de FastAPI
 app = FastAPI(
@@ -68,10 +69,17 @@ app = FastAPI(
             "name": "Zonas de Bodega",
             "description": "Zonas dentro de cada bodega",
         },
+        {
+            "name": "WebSocket",
+            "description": "Eventos en tiempo real de inventario (stock, alertas)",
+        },
     ]
 )
 
 # ============ MIDDLEWARES ============
+# Localización (Accept-Language, X-Time-Zone) → contextvars
+app.add_middleware(LocaleMiddleware)
+
 # CORS
 app.add_middleware(
     CORSMiddleware,
@@ -128,6 +136,7 @@ app.include_router(producto_presentacion.router)
 app.include_router(inventario.router)
 app.include_router(serie_producto.router)
 app.include_router(geografia.router)
+app.include_router(ws_inventario.router)
 
 # TODO: Agregar routers de:
 # - Órdenes

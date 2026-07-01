@@ -20,6 +20,13 @@ export interface Usuario {
   es_empresa_maestra?: boolean;
   roles?: string[];
   permisos?: string[];
+  preferencias_locale?: PreferenciasLocale;
+}
+
+export interface PreferenciasLocale {
+  locale: string;
+  timezone: string;
+  currency: string;
 }
 
 export interface Region {
@@ -411,6 +418,9 @@ export interface Empresa {
   region_nombre?: string | null;
   ciudad_nombre?: string | null;
   comuna_nombre?: string | null;
+  locale?: string;
+  timezone?: string;
+  moneda_codigo?: string;
 }
 
 export interface EmpresaCrear {
@@ -441,6 +451,9 @@ export interface EmpresaActualizar {
   region_id?: number | null;
   ciudad_id?: number | null;
   comuna_id?: number | null;
+  locale?: string;
+  timezone?: string;
+  moneda_codigo?: string;
 }
 
 export interface UnidadMedidaCrear {

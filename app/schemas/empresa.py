@@ -8,7 +8,8 @@ from typing import Optional, List
 
 EMPRESA_CAMPOS = ["razon_social", "nombre_fantasia", "rut", "giro",
                   "telefono", "correo", "sitio_web", "direccion",
-                  "region_id", "ciudad_id", "comuna_id", "esta_activa"]
+                  "region_id", "ciudad_id", "comuna_id", "esta_activa",
+                  "locale", "timezone", "moneda_codigo"]
 
 
 class EmpresaCrearDTO(BaseModel):
@@ -24,6 +25,9 @@ class EmpresaCrearDTO(BaseModel):
     region_id:       Optional[int]  = None
     ciudad_id:       Optional[int]  = None
     comuna_id:       Optional[int]  = None
+    locale:          Optional[str]  = Field("es-CL", max_length=10)
+    timezone:        Optional[str]  = Field("America/Santiago", max_length=64)
+    moneda_codigo:   Optional[str]  = Field("CLP", min_length=3, max_length=3)
 
     class Config:
         json_schema_extra = {
@@ -57,6 +61,9 @@ class EmpresaActualizarDTO(BaseModel):
     region_id:       Optional[int]  = None
     ciudad_id:       Optional[int]  = None
     comuna_id:       Optional[int]  = None
+    locale:          Optional[str]  = Field(None, max_length=10)
+    timezone:        Optional[str]  = Field(None, max_length=64)
+    moneda_codigo:   Optional[str]  = Field(None, min_length=3, max_length=3)
 
 
 class EmpresaRespuestaDTO(BaseModel):
@@ -79,6 +86,9 @@ class EmpresaRespuestaDTO(BaseModel):
     region_nombre:   Optional[str]  = None
     ciudad_nombre:   Optional[str]  = None
     comuna_nombre:   Optional[str]  = None
+    locale:          str            = "es-CL"
+    timezone:        str            = "America/Santiago"
+    moneda_codigo:   str            = "CLP"
 
     class Config:
         from_attributes = True

@@ -1,0 +1,13 @@
+{
+  "dashboard": {
+    "title": "Inventory dashboard",
+    "stockDistribution": "Stock distribution",
+    "totalUnits": "Total: {{formatted}} units",
+    "criticalStock": "Critical stock alert"
+  },
+  "movements": {
+    "recepcion": "Receipt",
+    "traslado": "Transfer",
+    "despacho": "Dispatch"
+  }
+}

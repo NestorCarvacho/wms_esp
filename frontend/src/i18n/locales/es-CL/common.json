@@ -1,0 +1,14 @@
+{
+  "actions": {
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "confirm": "Confirmar",
+    "export": "Exportar",
+    "save": "Guardar"
+  },
+  "locale": {
+    "language": "Idioma",
+    "timezone": "Zona horaria",
+    "currency": "Moneda"
+  }
+}

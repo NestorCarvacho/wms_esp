@@ -17,6 +17,7 @@ interface AuthContextValue {
   token: string | null;
   permisos: string[];
   roles: string[];
+  sessionKey: number;
   isAuthenticated: boolean;
   isSuperAdmin: boolean;
   tienePermiso: (codigo: string) => boolean;
@@ -66,6 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setAuthToken] = useState<string | null>(initial.token);
   const [permisos, setPermisos] = useState<string[]>(initial.permisos);
   const [roles, setRoles] = useState<string[]>(initial.roles);
+  const [sessionKey, setSessionKey] = useState(0);
 
   const logout = useCallback(() => {
     apiLogout();
@@ -112,6 +114,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(enrichedUser);
     setPermisos(userPermisos);
     setRoles(userRoles);
+    setSessionKey((k) => k + 1);
   }, []);
 
   const tienePermiso = useCallback((codigo: string) => permisos.includes(codigo), [permisos]);
@@ -122,13 +125,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       token,
       permisos,
       roles,
+      sessionKey,
       isAuthenticated: Boolean(token && user),
       isSuperAdmin: Boolean(user?.es_empresa_maestra ?? user?.empresa_id === 1),
       tienePermiso,
       login,
       logout,
     }),
-    [user, token, permisos, roles, tienePermiso, login, logout],
+    [user, token, permisos, roles, sessionKey, tienePermiso, login, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

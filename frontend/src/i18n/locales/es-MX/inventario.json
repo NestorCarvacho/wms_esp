@@ -1,0 +1,13 @@
+{
+  "dashboard": {
+    "title": "Panel de inventario",
+    "stockDistribution": "Distribución de stock",
+    "totalUnits": "Total: {{formatted}} unidades",
+    "criticalStock": "Stock crítico"
+  },
+  "movements": {
+    "recepcion": "Recepción",
+    "traslado": "Traslado",
+    "despacho": "Despacho"
+  }
+}

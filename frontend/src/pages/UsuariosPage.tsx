@@ -13,12 +13,14 @@ import { useCrudEmpresaFilterCard } from '@/crud/useCrudEmpresaFilterCard';
 import { useCrudTableFilters } from '@/crud/useCrudTableFilters';
 import { usePaginatedCrudTable } from '@/crud/usePaginatedCrudTable';
 import type { Cargo, UsuarioLista } from '@/types/api';
+import { useLocale } from '@/context/LocaleContext';
 import { displayCargo, displayEmpresa } from '@/utils/displayLabels';
 
 const USUARIO_FILTER_INITIAL = { cargo: '' } as const;
 
 export function UsuariosPage() {
   const { notifyApiError, confirmDelete, openSidePanel } = useCrudUi();
+  const { formatDate } = useLocale();
   const listFilter = useCrudEmpresaFilterCard();
   const tableFilters = useCrudTableFilters({ ...USUARIO_FILTER_INITIAL });
 
@@ -168,7 +170,7 @@ export function UsuariosPage() {
             key: 'ultimo_login',
             header: 'Último login',
             render: (row) =>
-              row.ultimo_login ? new Date(row.ultimo_login).toLocaleString('es-CL') : '—',
+              row.ultimo_login ? formatDate(row.ultimo_login) : '—',
           },
         ]}
         totalRows={table.total}

@@ -23,6 +23,9 @@ def _empresa_dict(e) -> Dict[str, Any]:
         "region_id": e.region_id,
         "ciudad_id": e.ciudad_id,
         "comuna_id": e.comuna_id,
+        "locale": getattr(e, "locale", "es-CL") or "es-CL",
+        "timezone": getattr(e, "timezone", "America/Santiago") or "America/Santiago",
+        "moneda_codigo": getattr(e, "moneda_codigo", "CLP") or "CLP",
     }
 
 

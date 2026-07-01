@@ -2,6 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-route
 import type { ReactNode } from 'react';
 
 import { AuthProvider } from '@/context/AuthContext';
+import { LocaleProvider } from '@/context/LocaleContext';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { UIProvider } from '@/context/UIContext';
 import { registerCrudPanels } from './components/crud/registerCrudPanels';
@@ -63,6 +64,7 @@ export default function App() {
   return (
     <ThemeProvider>
     <AuthProvider>
+    <LocaleProvider>
       <UIProvider>
         <TooltipProvider delayDuration={200} skipDelayDuration={0}>
         <BrowserRouter>
@@ -134,6 +136,7 @@ export default function App() {
         </BrowserRouter>
         </TooltipProvider>
       </UIProvider>
+    </LocaleProvider>
     </AuthProvider>
     </ThemeProvider>
   );
