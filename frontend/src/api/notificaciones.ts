@@ -1,4 +1,4 @@
-import { apiRequest } from '@/api/client';
+import { apiRequest, getNotificationsBaseUrl } from '@/api/client';
 import { buildListQuery, type PaginatedListParams } from '@/api/listQuery';
 
 export interface Notificacion {
@@ -26,19 +26,27 @@ export async function listarNotificaciones(params: PaginatedListParams & { leida
   const leidaParam = leida === undefined ? '' : `&leida=${leida ? 'true' : 'false'}`;
   const response = await apiRequest<PaginatedNotificaciones>(
     `/api/v1/notificaciones?${query}${leidaParam}`,
+    {},
+    true,
+    getNotificationsBaseUrl(),
   );
   return response.datos!;
 }
 
 export async function contarNotificacionesNoLeidas() {
-  const response = await apiRequest<{ total: number }>('/api/v1/notificaciones/no-leidas/count');
+  const response = await apiRequest<{ total: number }>(
+    '/api/v1/notificaciones/no-leidas/count',
+    {},
+    true,
+    getNotificationsBaseUrl(),
+  );
   return response.datos!.total;
 }
 
 export async function marcarNotificacionLeida(id: number) {
-  await apiRequest(`/api/v1/notificaciones/${id}/leer`, { method: 'PATCH' });
+  await apiRequest(`/api/v1/notificaciones/${id}/leer`, { method: 'PATCH' }, true, getNotificationsBaseUrl());
 }
 
 export async function marcarTodasNotificacionesLeidas() {
-  await apiRequest('/api/v1/notificaciones/leer-todas', { method: 'PATCH' });
+  await apiRequest('/api/v1/notificaciones/leer-todas', { method: 'PATCH' }, true, getNotificationsBaseUrl());
 }

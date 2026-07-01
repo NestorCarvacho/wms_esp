@@ -13,6 +13,7 @@ pymysql
 openpyxl
 reportlab
 resend
+redis>=5.0.0
 pytest
 pytest-asyncio
 import-linter
