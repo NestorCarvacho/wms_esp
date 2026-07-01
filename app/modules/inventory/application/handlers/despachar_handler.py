@@ -5,10 +5,12 @@ from app.modules.inventory.application.commands import DespacharCommand
 from app.modules.inventory.application.operation_helpers import (
     cantidad_unidades_base,
     emitir_evento_stock,
+    evaluar_stock_critico_tras_despacho,
     movimiento_dict,
 )
 from app.modules.inventory.domain.ports import IEventPublisher, IUnitOfWork
 from app.modules.inventory.domain.services.presentacion_converter import PresentacionConverter
+from app.modules.notifications.application.dispatcher import NotificationDispatcher
 
 
 class DespacharHandler:
@@ -16,10 +18,12 @@ class DespacharHandler:
         self,
         uow: IUnitOfWork,
         event_publisher: IEventPublisher,
+        notifications: NotificationDispatcher,
         conversion: PresentacionConverter | None = None,
     ):
         self.uow = uow
         self.events = event_publisher
+        self.notifications = notifications
         self.conversion = conversion or PresentacionConverter()
 
     async def handle(self, cmd: DespacharCommand) -> dict:
@@ -63,6 +67,19 @@ class DespacharHandler:
             data = movimiento_dict(mov)
             data["stock_origen"] = float(stock_origen)
             await emitir_evento_stock(self.events, cmd.empresa_id, "DESPACHO", data)
+            await evaluar_stock_critico_tras_despacho(
+                self.notifications,
+                empresa_id=cmd.empresa_id,
+                usuario_id=cmd.usuario_id,
+                producto=producto,
+                stock_zona=stock_origen,
+                payload_base={
+                    "producto_nombre": data.get("producto_nombre"),
+                    "producto_sku": data.get("producto_sku"),
+                    "zona_bodega_id": cmd.zona_origen_id,
+                    "movimiento_id": data.get("id"),
+                },
+            )
             return data
         except Exception:
             await self.uow.rollback()

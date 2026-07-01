@@ -54,6 +54,7 @@ class ProductoService:
         tipo_producto_id: int | None = None,
         precio_costo: float | None = None,
         serializado: bool = False,
+        stock_minimo: float | None = None,
     ) -> dict[str, Any]:
         return await self._handlers.crear_producto.handle(
             CrearProductoCommand(
@@ -65,6 +66,7 @@ class ProductoService:
                 tipo_producto_id=tipo_producto_id,
                 precio_costo=precio_costo,
                 serializado=serializado,
+                stock_minimo=stock_minimo,
             )
         )
 
@@ -80,6 +82,8 @@ class ProductoService:
         precio_costo: float | None = None,
         activo: bool | None = None,
         serializado: bool | None = None,
+        stock_minimo: float | None = None,
+        actualizar_stock_minimo: bool = False,
     ) -> dict[str, Any]:
         return await self._handlers.actualizar_producto.handle(
             ActualizarProductoCommand(
@@ -93,6 +97,8 @@ class ProductoService:
                 actualizar_tipo_producto=actualizar_tipo_producto,
                 precio_costo=precio_costo,
                 serializado=serializado,
+                stock_minimo=stock_minimo,
+                actualizar_stock_minimo=actualizar_stock_minimo,
             )
         )
 

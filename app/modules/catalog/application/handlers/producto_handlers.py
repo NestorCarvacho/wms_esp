@@ -63,6 +63,7 @@ class CrearProductoHandler:
             cmd.tipo_producto_id,
             cmd.precio_costo,
             serializado=cmd.serializado,
+            stock_minimo=cmd.stock_minimo,
         )
         return serializar_producto_detalle(nuevo)
 
@@ -103,6 +104,8 @@ class ActualizarProductoHandler:
             cmd.precio_costo,
             actualizar_tipo_producto=cmd.actualizar_tipo_producto,
             serializado=cmd.serializado,
+            stock_minimo=cmd.stock_minimo,
+            actualizar_stock_minimo=cmd.actualizar_stock_minimo,
         )
         if not actualizado:
             raise ValueError("Error al actualizar el producto")

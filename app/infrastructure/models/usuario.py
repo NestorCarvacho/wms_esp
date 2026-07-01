@@ -1,7 +1,7 @@
 """
 Modelos ORM: Entidades de base de datos mapeadas con SQLAlchemy.
 """
-from sqlalchemy import Column, Integer, Numeric, String, DateTime, Date, Boolean, Text, DECIMAL, ForeignKey, BigInteger
+from sqlalchemy import Column, Integer, Numeric, String, DateTime, Date, Boolean, Text, DECIMAL, ForeignKey, BigInteger, JSON
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from datetime import datetime
@@ -325,6 +325,7 @@ class Producto(Base):
     unidad_medida_id = Column(BigInteger, ForeignKey("unidad_medida.id"), nullable=False)
     tipo_producto_id = Column(BigInteger, ForeignKey("tipo_producto.id"), nullable=True)
     precio_costo = Column(Numeric(12, 2), nullable=True)
+    stock_minimo = Column(Numeric(18, 6), nullable=True)
     activo = Column(Boolean, default=True)
     serializado = Column(Boolean, default=False)
     empresa = relationship("Empresa")
@@ -385,6 +386,25 @@ class StockZona(Base):
 
     zona_bodega = relationship("ZonaBodega")
     producto = relationship("Producto")
+
+
+class Notificacion(Base):
+    """Bandeja de notificaciones in-app por usuario."""
+    __tablename__ = "notificacion"
+
+    id = Column(BigInteger, primary_key=True, index=True)
+    empresa_id = Column(BigInteger, ForeignKey("empresa.id"), nullable=False, index=True)
+    usuario_id = Column(BigInteger, ForeignKey("usuario.id"), nullable=False, index=True)
+    tipo = Column(String(50), nullable=False)
+    titulo = Column(String(255), nullable=False)
+    mensaje = Column(String(2000), nullable=True)
+    payload_json = Column(JSON, nullable=True)
+    leida = Column(Boolean, default=False, nullable=False)
+    creado_at = Column(DateTime, default=datetime.utcnow)
+    leida_at = Column(DateTime, nullable=True)
+
+    empresa = relationship("Empresa")
+    usuario = relationship("Usuario")
 
 
 class MovimientoInventario(Base):

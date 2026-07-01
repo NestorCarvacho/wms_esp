@@ -4,6 +4,7 @@ import { SearchBar, ThemeToggle, UserDropdown } from './';
 import { Link } from 'react-router-dom';
 import { appPath } from '@/routes/paths';
 import { LogoWms } from '@/components/ui/images';
+import { NotificationBell } from '@/features/notifications/components/NotificationBell';
 import { APP_NAME } from '@/config/appBrand';
 import { cn } from '@/lib/utils';
 import {
@@ -60,6 +61,7 @@ const ToolsBar: React.FC<ToolsBarProps> = ({
       <SearchBar searchTerm={searchTerm} onSearchChange={handleSearchChange} />
 
       <div className="flex items-center gap-1 shrink-0">
+        <NotificationBell />
         <ThemeToggle />
         <DropdownMenu open={isUserMenuOpen} onOpenChange={setIsUserMenuOpen}>
         <DropdownMenuTrigger asChild>

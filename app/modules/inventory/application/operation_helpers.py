@@ -79,5 +79,35 @@ async def emitir_evento_stock(
     )
 
 
+async def evaluar_stock_critico_tras_despacho(
+    notifications,
+    *,
+    empresa_id: int,
+    usuario_id: int,
+    producto: Any,
+    stock_zona: Decimal,
+    payload_base: dict,
+) -> None:
+    """Emite STOCK_CRITICO si el stock en zona queda en o bajo el umbral del producto."""
+    umbral = getattr(producto, "stock_minimo", None)
+    if umbral is None:
+        return
+    try:
+        umbral_f = float(umbral)
+    except (TypeError, ValueError):
+        return
+    if umbral_f < 0:
+        return
+    if float(stock_zona) > umbral_f:
+        return
+    payload = {
+        **payload_base,
+        "cantidad": float(stock_zona),
+        "stock_minimo": umbral_f,
+        "producto_id": getattr(producto, "id", None),
+    }
+    await notifications.notify_stock_critical(empresa_id, usuario_id, payload)
+
+
 def movimiento_dict(mov: Any) -> dict:
     return serializar_movimiento(mov)

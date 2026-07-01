@@ -14,6 +14,7 @@ class CrearProductoCommand:
     tipo_producto_id: int | None = None
     precio_costo: float | None = None
     serializado: bool = False
+    stock_minimo: float | None = None
 
 
 @dataclass(frozen=True)
@@ -28,6 +29,8 @@ class ActualizarProductoCommand:
     actualizar_tipo_producto: bool = False
     precio_costo: float | None = None
     serializado: bool | None = None
+    stock_minimo: float | None = None
+    actualizar_stock_minimo: bool = False
 
 
 @dataclass(frozen=True)

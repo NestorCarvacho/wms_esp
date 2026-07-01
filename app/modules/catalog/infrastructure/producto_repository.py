@@ -34,6 +34,7 @@ class SqlAlchemyProductoRepository:
         tipo_producto_id: int | None = None,
         precio_costo: float | None = None,
         serializado: bool = False,
+        stock_minimo: float | None = None,
     ) -> Any:
         return await self._repo.crear(
             empresa_id,
@@ -44,6 +45,7 @@ class SqlAlchemyProductoRepository:
             tipo_producto_id,
             precio_costo,
             serializado=serializado,
+            stock_minimo=stock_minimo,
         )
 
     async def actualizar(
@@ -59,6 +61,8 @@ class SqlAlchemyProductoRepository:
         *,
         actualizar_tipo_producto: bool = False,
         serializado: bool | None = None,
+        stock_minimo: float | None = None,
+        actualizar_stock_minimo: bool = False,
     ) -> Any | None:
         return await self._repo.actualizar(
             producto_id,
@@ -71,6 +75,8 @@ class SqlAlchemyProductoRepository:
             precio_costo,
             actualizar_tipo_producto=actualizar_tipo_producto,
             serializado=serializado,
+            stock_minimo=stock_minimo,
+            actualizar_stock_minimo=actualizar_stock_minimo,
         )
 
     async def eliminar(self, producto_id: int, empresa_id: int) -> bool:

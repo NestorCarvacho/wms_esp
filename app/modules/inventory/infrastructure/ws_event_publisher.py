@@ -1,13 +1,13 @@
 """Publicador de eventos vía módulo notifications."""
 from __future__ import annotations
 
-from app.bootstrap.notification_container import build_notification_handlers
 from app.modules.inventory.domain.events import StockMovimientoRegistrado
+from app.modules.notifications.application.dispatcher import NotificationDispatcher
 
 
 class WebSocketEventPublisher:
-    def __init__(self) -> None:
-        self._dispatcher = build_notification_handlers().dispatcher
+    def __init__(self, dispatcher: NotificationDispatcher) -> None:
+        self._dispatcher = dispatcher
 
     async def publish(self, event: StockMovimientoRegistrado) -> None:
         await self._dispatcher.publish_stock_event(

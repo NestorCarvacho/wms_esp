@@ -54,6 +54,11 @@ class ProductoCrearDTO(BaseModel):
         False,
         description="True si el inventario se controla por número de serie individual"
     )
+    stock_minimo: Optional[float] = Field(
+        None,
+        ge=0,
+        description="Umbral de stock crítico en unidad base (opcional)",
+    )
     empresa_id: Optional[int] = Field(None, description="Empresa destino (solo empresa maestra)")
 
     @validator("nombre")
@@ -106,6 +111,11 @@ class ProductoActualizarDTO(BaseModel):
     serializado: Optional[bool] = Field(
         None,
         description="True si el inventario se controla por número de serie individual"
+    )
+    stock_minimo: Optional[float] = Field(
+        None,
+        ge=0,
+        description="Umbral de stock crítico en unidad base (opcional)",
     )
 
     @validator("nombre")

@@ -171,6 +171,7 @@ class ProductoCRUDRepository:
         tipo_producto_id: int | None = None,
         precio_costo: float = None,
         serializado: bool = False,
+        stock_minimo: float | None = None,
     ) -> Producto:
         """
         Crea un nuevo producto.
@@ -185,6 +186,7 @@ class ProductoCRUDRepository:
                 tipo_producto_id=tipo_producto_id,
                 precio_costo=precio_costo,
                 serializado=serializado,
+                stock_minimo=stock_minimo,
             )
             self.session.add(nuevo_producto)
             await self.session.commit()
@@ -217,7 +219,9 @@ class ProductoCRUDRepository:
                          tipo_producto_id: int | None = None,
                          precio_costo: float = None,
                          actualizar_tipo_producto: bool = False,
-                         serializado: bool | None = None) -> Producto | None:
+                         serializado: bool | None = None,
+                         stock_minimo: float | None = None,
+                         actualizar_stock_minimo: bool = False) -> Producto | None:
         """
         Actualiza un producto existente.
         
@@ -255,6 +259,10 @@ class ProductoCRUDRepository:
                 datos_actualizar["precio_costo"] = precio_costo
             if serializado is not None:
                 datos_actualizar["serializado"] = serializado
+            if actualizar_stock_minimo:
+                datos_actualizar["stock_minimo"] = stock_minimo
+            elif stock_minimo is not None:
+                datos_actualizar["stock_minimo"] = stock_minimo
             if not datos_actualizar:
                 return producto
             

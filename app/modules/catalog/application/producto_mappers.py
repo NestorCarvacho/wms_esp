@@ -20,6 +20,7 @@ def serializar_producto_lista(p: Any) -> dict:
         "tipo_producto_nombre": p.tipo_producto.nombre if p.tipo_producto else None,
         "precio_costo": float(p.precio_costo) if p.precio_costo is not None else None,
         "serializado": bool(p.serializado),
+        "stock_minimo": float(p.stock_minimo) if getattr(p, "stock_minimo", None) is not None else None,
     }
 
 
@@ -34,4 +35,5 @@ def serializar_producto_detalle(p: Any) -> dict:
         "tipo_producto_id": p.tipo_producto_id,
         "precio_costo": p.precio_costo,
         "serializado": bool(p.serializado),
+        "stock_minimo": float(p.stock_minimo) if getattr(p, "stock_minimo", None) is not None else None,
     }

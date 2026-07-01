@@ -8,7 +8,7 @@ from fastapi.responses import JSONResponse
 from fastapi.openapi.utils import get_openapi
 from app.core.config import APP_NAME, APP_TAGLINE, APP_VERSION, CORS_ORIGINS, DEBUG
 from app.core.locale_middleware import LocaleMiddleware
-from app.api.v1.endpoints import auth, bodegas, productos, unidadesMedidas, usuarios, empresas, cargos, roles, perfil_usuario, permiso_cargo, permisos, rol_permiso, tipo_zona, zona_bodega, tipo_producto, producto_presentacion, inventario, geografia, serie_producto, ws_inventario
+from app.api.v1.endpoints import auth, bodegas, productos, unidadesMedidas, usuarios, empresas, cargos, roles, perfil_usuario, permiso_cargo, permisos, rol_permiso, tipo_zona, zona_bodega, tipo_producto, producto_presentacion, inventario, geografia, serie_producto, ws_inventario, notificaciones
 
 # Crear instancia de FastAPI
 app = FastAPI(
@@ -137,6 +137,7 @@ app.include_router(inventario.router)
 app.include_router(serie_producto.router)
 app.include_router(geografia.router)
 app.include_router(ws_inventario.router)
+app.include_router(notificaciones.router)
 
 # TODO: Agregar routers de:
 # - Órdenes

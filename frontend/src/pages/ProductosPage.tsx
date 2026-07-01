@@ -1,14 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronDown, Loader2, Search } from 'lucide-react';
+import { useProductoCatalogOptions } from '@/features/producto/hooks/useProductoCatalogOptions';
+import { productoKeys } from '@/features/producto/model/queryKeys';
+import { usePaginatedQueryTable } from '@/crud/usePaginatedQueryTable';
+import { listarProductos, listarUnidadesMedida } from '@/entities/producto/api';
 import {
   descargarPlantillaProductos,
   eliminarProducto,
   importarProductos,
-  listarProductos,
 } from '@/api/productos';
-import { listarTiposProducto } from '@/api/tiposProducto';
-import { listarUnidadesMedida } from '@/api/unidadesMedida';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { Card } from '@/components/ui/cards/Card';
 import { PrimaryButton } from '@/components/ui/buttons';
@@ -28,8 +29,7 @@ import { useCrudUi } from '@/crud/useCrudUi';
 import { useCrudEmpresaFilterCard } from '@/crud/useCrudEmpresaFilterCard';
 import { useCrudTableFilters } from '@/crud/useCrudTableFilters';
 import { dependentSelectOptions } from '@/crud/crudFilterHelpers';
-import { usePaginatedCrudTable } from '@/crud/usePaginatedCrudTable';
-import type { Producto, ProductoImportacionResultado, TipoProducto, UnidadMedida } from '@/types/api';
+import type { Producto, ProductoImportacionResultado } from '@/types/api';
 import { displayEmpresa, displayTipoProducto, displayUnidadMedida } from '@/utils/displayLabels';
 import type { TableAction } from '@/components/ui/tables';
 import { appPath } from '@/routes/paths';
@@ -40,39 +40,13 @@ export function ProductosPage() {
   const { notifySuccess, notifyApiError, confirmDelete, openSidePanel } = useCrudUi();
   const listFilter = useCrudEmpresaFilterCard();
   const tableFilters = useCrudTableFilters({ ...PRODUCTO_FILTER_INITIAL });
-
-  const [unidadesFiltro, setUnidadesFiltro] = useState<UnidadMedida[]>([]);
-  const [tiposFiltro, setTiposFiltro] = useState<TipoProducto[]>([]);
   const puedeFiltrarUnidad = listFilter.puedeFiltrarDependientes;
-
-  useEffect(() => {
-    if (!puedeFiltrarUnidad) {
-      setUnidadesFiltro([]);
-      setTiposFiltro([]);
-      return;
-    }
-    let cancelled = false;
-    const listParams = {
-      pagina: 1,
-      porPagina: 500,
-      ...(listFilter.empresaIdParam != null ? { empresaId: listFilter.empresaIdParam } : {}),
-    };
-    Promise.all([listarUnidadesMedida(listParams), listarTiposProducto(listParams)])
-      .then(([uniRes, tiposRes]) => {
-        if (cancelled) return;
-        setUnidadesFiltro(uniRes.productos ?? []);
-        setTiposFiltro(tiposRes.tipos_producto);
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setUnidadesFiltro([]);
-          setTiposFiltro([]);
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [puedeFiltrarUnidad, listFilter.empresaIdParam]);
+  const catalogOptions = useProductoCatalogOptions({
+    empresaId: listFilter.empresaIdParam ?? undefined,
+    enabled: puedeFiltrarUnidad,
+  });
+  const unidadesFiltro = catalogOptions.unidades;
+  const tiposFiltro = catalogOptions.tipos;
 
   useEffect(() => {
     tableFilters.setFilter('unidad', '');
@@ -153,7 +127,8 @@ export function ProductosPage() {
     [],
   );
 
-  const table = usePaginatedCrudTable<Producto>({
+  const table = usePaginatedQueryTable<Producto>({
+    queryKeyBuilder: (params) => productoKeys.list(params),
     empresaFilterId: listFilter.empresaIdParam,
     filterValues: tableFilters.debouncedValues,
     mapFiltersToParams: mapProductoFiltersToParams,

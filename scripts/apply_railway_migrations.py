@@ -43,6 +43,8 @@ MIGRATION_FILES = [
     "17_presentacion_codigo_barras.sql",
     "18_serie_producto.sql",
     "19_locale_currency.sql",
+    "20_notificacion.sql",
+    "21_producto_stock_minimo.sql",
 ]
 
 # Errores MySQL benignos al re-ejecutar scripts idempotentes.

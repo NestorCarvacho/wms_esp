@@ -333,6 +333,7 @@ async def crear_producto(
             tipo_producto_id=producto_dto.tipo_producto_id,
             precio_costo=producto_dto.precio_costo,
             serializado=producto_dto.serializado or False,
+            stock_minimo=producto_dto.stock_minimo,
         )
         
         return RespuestaAPIDTO(
@@ -415,6 +416,7 @@ async def actualizar_producto(
             actualizar_dto, "__fields_set__", set()
         )
         actualizar_tipo_producto = "tipo_producto_id" in campos_enviados
+        actualizar_stock_minimo = "stock_minimo" in campos_enviados
 
         producto_actualizada = await service.actualizar_producto(
             producto_id=id,
@@ -427,6 +429,8 @@ async def actualizar_producto(
             actualizar_tipo_producto=actualizar_tipo_producto,
             precio_costo=actualizar_dto.precio_costo,
             serializado=actualizar_dto.serializado,
+            stock_minimo=actualizar_dto.stock_minimo,
+            actualizar_stock_minimo=actualizar_stock_minimo,
         )
         
         return RespuestaAPIDTO(
