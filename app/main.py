@@ -6,7 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.openapi.utils import get_openapi
-from app.core.config import APP_NAME, APP_TAGLINE, APP_VERSION, CORS_ORIGINS, DEBUG, NOTIFICATIONS_MODE
+from app.core.config import APP_NAME, APP_TAGLINE, APP_VERSION, CORS_ORIGINS, DEBUG
 from app.core.locale_middleware import LocaleMiddleware
 from app.api.v1.endpoints import auth, bodegas, productos, unidadesMedidas, usuarios, empresas, cargos, roles, perfil_usuario, permiso_cargo, permisos, rol_permiso, tipo_zona, zona_bodega, tipo_producto, producto_presentacion, inventario, geografia, serie_producto, ws_inventario, notificaciones
 
@@ -136,9 +136,8 @@ app.include_router(producto_presentacion.router)
 app.include_router(inventario.router)
 app.include_router(serie_producto.router)
 app.include_router(geografia.router)
-if NOTIFICATIONS_MODE == "local":
-    app.include_router(ws_inventario.router)
-    app.include_router(notificaciones.router)
+app.include_router(ws_inventario.router)
+app.include_router(notificaciones.router)
 
 # TODO: Agregar routers de:
 # - Órdenes
@@ -160,7 +159,6 @@ async def health_check():
         "status": "ok",
         "app": APP_NAME,
         "version": APP_VERSION,
-        "notifications_mode": NOTIFICATIONS_MODE,
     }
     return JSONResponse(status_code=200, content=content)
 

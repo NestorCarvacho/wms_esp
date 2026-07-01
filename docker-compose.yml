@@ -20,18 +20,6 @@ services:
       retries: 12
       start_period: 30s
 
-  redis:
-    image: redis:7-alpine
-    container_name: wms_redis
-    restart: always
-    ports:
-      - "6379:6379"
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
-
   backend:
     build: .
     container_name: wms_api_backend
@@ -42,32 +30,8 @@ services:
       DATABASE_URL: "mysql+aiomysql://root:root_password_segura@db:3306/wms_db"
       SECRET_KEY: tu_clave_secreta_para_jwt
       CORS_ORIGINS: "http://localhost:4173,http://127.0.0.1:4173,http://localhost:5173,http://127.0.0.1:5173"
-      NOTIFICATIONS_MODE: "remote"
-      REDIS_URL: "redis://redis:6379/0"
     depends_on:
       db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-
-  notification-service:
-    build:
-      context: .
-      dockerfile: services/notification-service/Dockerfile
-    container_name: wms_notification_service
-    restart: always
-    ports:
-      - "8010:8010"
-    environment:
-      DATABASE_URL: "mysql+aiomysql://root:root_password_segura@db:3306/wms_db"
-      SECRET_KEY: tu_clave_secreta_para_jwt
-      CORS_ORIGINS: "http://localhost:4173,http://127.0.0.1:4173,http://localhost:5173,http://127.0.0.1:5173"
-      REDIS_URL: "redis://redis:6379/0"
-      NOTIFICATIONS_MODE: "local"
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
         condition: service_healthy
 
   frontend:
@@ -75,15 +39,12 @@ services:
       context: ./frontend
       args:
         VITE_API_URL: http://localhost:8000
-        VITE_NOTIFICATIONS_API_URL: http://localhost:8010
-        VITE_NOTIFICATIONS_WS_URL: http://localhost:8010
     container_name: wms_frontend
     restart: always
     ports:
       - "4173:4173"
     depends_on:
       - backend
-      - notification-service
 
 volumes:
   db_data:

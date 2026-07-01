@@ -6,15 +6,6 @@ export function getBaseUrl(): string {
   return BASE_URL;
 }
 
-/** Base URL del notification-service; cae al API principal si no está configurado. */
-export function getNotificationsBaseUrl(): string {
-  const notificationsUrl = import.meta.env.VITE_NOTIFICATIONS_API_URL;
-  if (notificationsUrl !== undefined && notificationsUrl !== '') {
-    return notificationsUrl;
-  }
-  return BASE_URL;
-}
-
 export class ApiError extends Error {
   status: number;
 
@@ -70,9 +61,7 @@ export async function apiRequest<T>(
   path: string,
   options: RequestInit = {},
   authenticated = true,
-  baseUrl?: string,
 ): Promise<ApiResponse<T>> {
-  const root = baseUrl ?? BASE_URL;
   const headers = new Headers(options.headers);
   headers.set('Content-Type', 'application/json');
 
@@ -88,7 +77,7 @@ export async function apiRequest<T>(
     if (value) headers.set(key, value);
   }
 
-  const response = await fetch(`${root}${path}`, {
+  const response = await fetch(`${BASE_URL}${path}`, {
     ...options,
     headers,
   });

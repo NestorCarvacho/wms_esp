@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 
-import { getBaseUrl, getNotificationsBaseUrl, getToken } from '@/api/client';
+import { getBaseUrl, getToken } from '@/api/client';
 import { useLocale } from '@/context/LocaleContext';
 import { useUI } from '@/hooks/ui';
 
@@ -24,8 +24,7 @@ export function useInventarioWebSocket(enabled = true) {
     const token = getToken();
     if (!token) return;
 
-    const httpBase = import.meta.env.VITE_NOTIFICATIONS_WS_URL || getNotificationsBaseUrl() || getBaseUrl();
-    const base = httpBase.replace(/^http/, 'ws');
+    const base = getBaseUrl().replace(/^http/, 'ws');
     const params = new URLSearchParams({
       token,
       locale,

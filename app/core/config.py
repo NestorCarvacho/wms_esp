@@ -58,8 +58,3 @@ PASSWORD_RESET_EXPIRE_MINUTES = int(os.getenv("PASSWORD_RESET_EXPIRE_MINUTES", "
 PASSWORD_RESET_COOLDOWN_MINUTES = int(os.getenv("PASSWORD_RESET_COOLDOWN_MINUTES", "5"))
 PASSWORD_RESET_IP_LIMIT = int(os.getenv("PASSWORD_RESET_IP_LIMIT", "5"))
 PASSWORD_RESET_IP_WINDOW_MINUTES = int(os.getenv("PASSWORD_RESET_IP_WINDOW_MINUTES", "15"))
-
-# Notificaciones — local (monolito) | remote (Redis → notification-service)
-NOTIFICATIONS_MODE = os.getenv("NOTIFICATIONS_MODE", "local").lower()
-REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
-STOCK_EVENTS_CHANNEL = os.getenv("STOCK_EVENTS_CHANNEL", "wms:stock-events")
