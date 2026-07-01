@@ -28,3 +28,35 @@ class ActualizarProductoCommand:
     actualizar_tipo_producto: bool = False
     precio_costo: float | None = None
     serializado: bool | None = None
+
+
+@dataclass(frozen=True)
+class CrearTipoProductoCommand:
+    empresa_id: int
+    nombre: str
+    activo: bool = True
+
+
+@dataclass(frozen=True)
+class ActualizarTipoProductoCommand:
+    tipo_producto_id: int
+    empresa_id: int
+    nombre: str | None = None
+    activo: bool | None = None
+
+
+@dataclass(frozen=True)
+class CrearUnidadMedidaCommand:
+    empresa_id: int
+    nombre: str
+    codigo: str
+    activo: bool = True
+
+
+@dataclass(frozen=True)
+class ActualizarUnidadMedidaCommand:
+    unidad_medida_id: int
+    empresa_id: int
+    nombre: str | None = None
+    codigo: str | None = None
+    activo: bool | None = None

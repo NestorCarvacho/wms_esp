@@ -93,3 +93,23 @@ forbidden_modules =
     app.api
     app.infrastructure
     sqlalchemy
+
+[importlinter:contract:notifications-domain-isolation]
+name = Notifications domain no importa infraestructura
+type = forbidden
+source_modules =
+    app.modules.notifications.domain
+forbidden_modules =
+    app.infrastructure
+    app.api
+    sqlalchemy
+
+[importlinter:contract:notifications-application-isolation]
+name = Notifications application no importa API ni SQLAlchemy directo
+type = forbidden
+source_modules =
+    app.modules.notifications.application
+forbidden_modules =
+    app.api
+    app.infrastructure
+    sqlalchemy

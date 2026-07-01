@@ -1,9 +1,7 @@
 """Endpoints CRUD de Tipos de Producto."""
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.infrastructure.database import get_db_session
-from app.infrastructure.repositories.tipo_producto_crud_repository import TipoProductoCRUDRepository
 from app.domain.services.tipo_producto_service import TipoProductoService
+from app.modules.catalog.presentation.http.dependencies import obtener_tipo_producto_service
 from app.api.v1.dependencies import obtener_usuario_autenticado, requiere_permiso, es_super_admin
 from app.api.v1.empresa_contexto import (
     ContextoEmpresa,
@@ -15,12 +13,6 @@ from app.api.v1.listado_query import orden_listado
 from app.schemas.tipo_producto import TipoProductoCrearDTO, TipoProductoActualizarDTO, RespuestaAPIDTO
 
 router = APIRouter(prefix="/api/v1/tipos-producto", tags=["Tipos de Producto"])
-
-
-async def obtener_tipo_producto_service(
-    session: AsyncSession = Depends(get_db_session),
-) -> TipoProductoService:
-    return TipoProductoService(TipoProductoCRUDRepository(session))
 
 
 @router.get("", response_model=RespuestaAPIDTO, status_code=status.HTTP_200_OK)

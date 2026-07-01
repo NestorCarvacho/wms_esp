@@ -1,12 +1,17 @@
-"""Servicio CRUD de Tipos de Producto."""
-from typing import Dict, Any
-from app.infrastructure.repositories.tipo_producto_crud_repository import TipoProductoCRUDRepository
-from app.domain.services.display_helpers import format_empresa_nombre
+"""Servicio CRUD de Tipos de Producto — fachada módulo catalog."""
+from __future__ import annotations
+
+from typing import Any
+
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.bootstrap.catalog_container import build_catalog_handlers
+from app.modules.catalog.application.commands import ActualizarTipoProductoCommand, CrearTipoProductoCommand
 
 
 class TipoProductoService:
-    def __init__(self, repository: TipoProductoCRUDRepository):
-        self.repository = repository
+    def __init__(self, session: AsyncSession):
+        self._handlers = build_catalog_handlers(session)
 
     async def listar_tipos_producto(
         self,
@@ -19,8 +24,8 @@ class TipoProductoService:
         buscar: str | None = None,
         ordenar_por: str | None = None,
         orden: str | None = None,
-    ) -> Dict[str, Any]:
-        tipos, total = await self.repository.listar(
+    ) -> dict[str, Any]:
+        return await self._handlers.listar_tipos_producto.handle(
             empresa_id=empresa_id,
             pagina=pagina,
             por_pagina=por_pagina,
@@ -31,51 +36,18 @@ class TipoProductoService:
             ordenar_por=ordenar_por,
             orden=orden,
         )
-        return {
-            "total": total,
-            "pagina": pagina,
-            "por_pagina": por_pagina,
-            "tipos_producto": [
-                {
-                    "id": t.id,
-                    "nombre": t.nombre,
-                    "empresa_id": t.empresa_id,
-                    "empresa_nombre": format_empresa_nombre(t.empresa),
-                    "activo": t.activo,
-                }
-                for t in tipos
-            ],
-        }
 
     async def obtener_tipo_producto(
         self, tipo_producto_id: int, empresa_id: int | None = None
-    ) -> Dict[str, Any]:
-        tipo = await self.repository.obtener_por_id(tipo_producto_id, empresa_id)
-        if not tipo:
-            raise ValueError("Tipo de producto no encontrado")
-        return {
-            "id": tipo.id,
-            "nombre": tipo.nombre,
-            "empresa_id": tipo.empresa_id,
-            "activo": tipo.activo,
-        }
+    ) -> dict[str, Any]:
+        return await self._handlers.obtener_tipo_producto.handle(tipo_producto_id, empresa_id)
 
     async def crear_tipo_producto(
         self, empresa_id: int, nombre: str, activo: bool = True
-    ) -> Dict[str, Any]:
-        if not nombre or not nombre.strip():
-            raise ValueError("El nombre no puede estar vacío")
-        nombre = nombre.strip()
-        existente = await self.repository.obtener_por_nombre(nombre, empresa_id)
-        if existente:
-            raise ValueError(f"Ya existe un tipo de producto con el nombre '{nombre}'")
-        nuevo = await self.repository.crear(empresa_id, nombre, activo)
-        return {
-            "id": nuevo.id,
-            "nombre": nuevo.nombre,
-            "empresa_id": nuevo.empresa_id,
-            "activo": nuevo.activo,
-        }
+    ) -> dict[str, Any]:
+        return await self._handlers.crear_tipo_producto.handle(
+            CrearTipoProductoCommand(empresa_id=empresa_id, nombre=nombre, activo=activo)
+        )
 
     async def actualizar_tipo_producto(
         self,
@@ -83,32 +55,17 @@ class TipoProductoService:
         empresa_id: int,
         nombre: str | None = None,
         activo: bool | None = None,
-    ) -> Dict[str, Any]:
-        if nombre is not None and nombre.strip():
-            nombre = nombre.strip()
-            existente = await self.repository.obtener_por_nombre(nombre, empresa_id)
-            if existente and existente.id != tipo_producto_id:
-                raise ValueError(f"Ya existe un tipo de producto con el nombre '{nombre}'")
-        actualizado = await self.repository.actualizar(tipo_producto_id, empresa_id, nombre, activo)
-        if not actualizado:
-            raise ValueError("Tipo de producto no encontrado")
-        return {
-            "id": actualizado.id,
-            "nombre": actualizado.nombre,
-            "empresa_id": actualizado.empresa_id,
-            "activo": actualizado.activo,
-        }
+    ) -> dict[str, Any]:
+        return await self._handlers.actualizar_tipo_producto.handle(
+            ActualizarTipoProductoCommand(
+                tipo_producto_id=tipo_producto_id,
+                empresa_id=empresa_id,
+                nombre=nombre,
+                activo=activo,
+            )
+        )
 
     async def eliminar_tipo_producto(
         self, tipo_producto_id: int, empresa_id: int
-    ) -> Dict[str, Any]:
-        tipo = await self.repository.obtener_por_id(tipo_producto_id, empresa_id)
-        if not tipo:
-            raise ValueError("Tipo de producto no encontrado")
-        ok = await self.repository.eliminar(tipo_producto_id, empresa_id)
-        if not ok:
-            raise ValueError("Error al eliminar tipo de producto")
-        return {
-            "mensaje": f"Tipo de producto '{tipo.nombre}' eliminado",
-            "tipo_producto_id": tipo_producto_id,
-        }
+    ) -> dict[str, Any]:
+        return await self._handlers.eliminar_tipo_producto.handle(tipo_producto_id, empresa_id)

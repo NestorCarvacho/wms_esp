@@ -40,7 +40,6 @@ import {
   type InventarioVista,
 } from '@/pages/inventario/inventarioViews';
 import { usePermissions } from '@/hooks/usePermissions';
-import { useInventarioWebSocket } from '@/hooks/useInventarioWebSocket';
 import { useInventarioDashboard } from '@/features/inventario/hooks/useInventarioDashboard';
 import { appPath } from '@/routes/paths';
 
@@ -61,7 +60,6 @@ interface InventarioPageProps {
 
 export function InventarioPage({ vista }: InventarioPageProps) {
   const meta = INVENTARIO_VISTA_META[vista];
-  useInventarioWebSocket(true);
   const { notifyApiError, notifySuccess } = useCrudUi();
   const { tienePermiso } = usePermissions();
   const listFilter = useCrudEmpresaFilterCard();

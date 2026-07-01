@@ -1,12 +1,12 @@
-import { useEffect, useState, type FormEvent } from 'react';
-import { actualizarProducto } from '@/api/productos';
-import { listarTiposProducto } from '@/api/tiposProducto';
+import { useState, type FormEvent } from 'react';
 import { LabelInput } from '@/components/ui/inputs';
 import { ComboBox } from '@/components/ui/inputs/ComboBox';
 import { PrimaryButton } from '@/components/ui/buttons';
 import { useUI } from '@/hooks/ui';
 import { ApiError } from '@/api/client';
-import type { Producto, TipoProducto, UnidadMedida } from '@/types/api';
+import type { Producto, UnidadMedida } from '@/types/api';
+import { useProductoCatalogOptions } from '@/features/producto/hooks/useProductoCatalogOptions';
+import { useProductoMutations } from '@/features/producto/hooks/useProductoMutations';
 import { preserveActivoNumber } from './preserveActivo';
 
 export interface ProductoEditPanelProps {
@@ -17,7 +17,11 @@ export interface ProductoEditPanelProps {
 
 export function ProductoEditPanel({ producto, unidades, onSaved }: ProductoEditPanelProps) {
   const { closeSidePanel, showNotification } = useUI();
-  const [tipos, setTipos] = useState<TipoProducto[]>([]);
+  const { tipos } = useProductoCatalogOptions({
+    empresaId: producto.empresa_id ?? undefined,
+  });
+  const { actualizar } = useProductoMutations();
+
   const [nombre, setNombre] = useState(producto.nombre);
   const [sku, setSku] = useState(producto.sku);
   const [unidadMedidaId, setUnidadMedidaId] = useState(String(producto.unidad_medida_id ?? ''));
@@ -25,17 +29,6 @@ export function ProductoEditPanel({ producto, unidades, onSaved }: ProductoEditP
     producto.tipo_producto_id != null ? String(producto.tipo_producto_id) : '',
   );
   const [serializado, setSerializado] = useState(producto.serializado ?? false);
-  const [submitting, setSubmitting] = useState(false);
-
-  useEffect(() => {
-    listarTiposProducto({
-      pagina: 1,
-      porPagina: 500,
-      ...(producto.empresa_id != null ? { empresaId: producto.empresa_id } : {}),
-    })
-      .then((res) => setTipos(res.tipos_producto))
-      .catch(() => setTipos([]));
-  }, [producto.empresa_id]);
 
   const unidadOptions = unidades.map((u) => ({
     label: `${u.nombre}${u.codigo ? ` (${u.codigo})` : ''}`,
@@ -54,15 +47,17 @@ export function ProductoEditPanel({ producto, unidades, onSaved }: ProductoEditP
       showNotification({ type: 'error', message: 'Seleccione una unidad de medida válida' });
       return;
     }
-    setSubmitting(true);
     try {
-      await actualizarProducto(producto.id, {
-        nombre: nombre.trim(),
-        sku: sku.trim(),
-        unidad_medida_id: unidadId,
-        tipo_producto_id: tipoProductoId ? Number(tipoProductoId) : null,
-        activo: preserveActivoNumber(producto.activo),
-        serializado,
+      await actualizar.mutateAsync({
+        id: producto.id,
+        data: {
+          nombre: nombre.trim(),
+          sku: sku.trim(),
+          unidad_medida_id: unidadId,
+          tipo_producto_id: tipoProductoId ? Number(tipoProductoId) : null,
+          activo: preserveActivoNumber(producto.activo),
+          serializado,
+        },
       });
       showNotification({ type: 'success', message: 'Producto actualizado correctamente' });
       onSaved?.();
@@ -72,8 +67,6 @@ export function ProductoEditPanel({ producto, unidades, onSaved }: ProductoEditP
         type: 'error',
         message: err instanceof ApiError ? err.message : 'Error al actualizar producto',
       });
-    } finally {
-      setSubmitting(false);
     }
   }
 
@@ -120,7 +113,7 @@ export function ProductoEditPanel({ producto, unidades, onSaved }: ProductoEditP
         <PrimaryButton type="button" variant="outline" onClick={closeSidePanel}>
           Cancelar
         </PrimaryButton>
-        <PrimaryButton type="submit" colorVariant="success" isLoading={submitting} disabled={!unidades.length}>
+        <PrimaryButton type="submit" colorVariant="success" isLoading={actualizar.isPending} disabled={!unidades.length}>
           Guardar
         </PrimaryButton>
       </div>

@@ -1,14 +1,12 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { crearProducto } from '@/api/productos';
-import { listarTiposProducto } from '@/api/tiposProducto';
-import { listarUnidadesMedida } from '@/api/unidadesMedida';
 import { EmpresaCreateSelector } from '@/components/crud/EmpresaCreateSelector';
 import { LabelInput } from '@/components/ui/inputs';
 import { ComboBox } from '@/components/ui/inputs/ComboBox';
 import { useUI } from '@/hooks/ui';
 import { ApiError } from '@/api/client';
 import { useEmpresaMaestraCreateForm } from '@/crud/useEmpresaMaestraCreateForm';
-import type { TipoProducto, UnidadMedida } from '@/types/api';
+import { useProductoCatalogOptions } from '@/features/producto/hooks/useProductoCatalogOptions';
+import { useProductoMutations } from '@/features/producto/hooks/useProductoMutations';
 import { CrudPanelFooter } from './CrudPanelFooter';
 
 export interface ProductoCreatePanelProps {
@@ -18,42 +16,26 @@ export interface ProductoCreatePanelProps {
 export function ProductoCreatePanel({ onSaved }: ProductoCreatePanelProps) {
   const { closeSidePanel, showNotification } = useUI();
   const empresaCreate = useEmpresaMaestraCreateForm();
-  const [unidades, setUnidades] = useState<UnidadMedida[]>([]);
-  const [tipos, setTipos] = useState<TipoProducto[]>([]);
+  const { unidades, tipos } = useProductoCatalogOptions({
+    empresaId: empresaCreate.empresaIdNumber ?? undefined,
+  });
+  const { crear } = useProductoMutations();
+
   const [nombre, setNombre] = useState('');
   const [sku, setSku] = useState('');
   const [unidadMedidaId, setUnidadMedidaId] = useState('');
   const [tipoProductoId, setTipoProductoId] = useState('');
   const [serializado, setSerializado] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    let cancelled = false;
-    const params = {
-      pagina: 1,
-      porPagina: 500,
-      ...(empresaCreate.empresaIdNumber != null ? { empresaId: empresaCreate.empresaIdNumber } : {}),
-    };
-    Promise.all([listarUnidadesMedida(params), listarTiposProducto(params)])
-      .then(([uniRes, tiposRes]) => {
-        if (cancelled) return;
-        const items = uniRes.productos ?? [];
-        setUnidades(items);
-        setTipos(tiposRes.tipos_producto);
-        setUnidadMedidaId((prev) =>
-          prev && items.some((u) => String(u.id) === prev) ? prev : items.length ? String(items[0].id) : '',
-        );
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setUnidades([]);
-          setTipos([]);
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [empresaCreate.empresaIdNumber]);
+    setUnidadMedidaId((prev) =>
+      prev && unidades.some((u) => String(u.id) === prev)
+        ? prev
+        : unidades.length
+          ? String(unidades[0].id)
+          : '',
+    );
+  }, [unidades]);
 
   const unidadOptions = unidades.map((u) => ({
     label: `${u.nombre}${u.codigo ? ` (${u.codigo})` : ''}`,
@@ -67,9 +49,8 @@ export function ProductoCreatePanel({ onSaved }: ProductoCreatePanelProps) {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    setSubmitting(true);
     try {
-      await crearProducto({
+      await crear.mutateAsync({
         nombre: nombre.trim(),
         sku: sku.trim(),
         activo: 1,
@@ -86,8 +67,6 @@ export function ProductoCreatePanel({ onSaved }: ProductoCreatePanelProps) {
         type: 'error',
         message: err instanceof ApiError ? err.message : 'Error al crear producto',
       });
-    } finally {
-      setSubmitting(false);
     }
   }
 
@@ -142,7 +121,7 @@ export function ProductoCreatePanel({ onSaved }: ProductoCreatePanelProps) {
       </label>
 
       <CrudPanelFooter
-        submitting={submitting}
+        submitting={crear.isPending}
         disabled={!empresaCreate.isValid || !unidades.length}
         submitLabel="Guardar producto"
       />

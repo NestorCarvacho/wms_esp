@@ -1,7 +1,6 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Search } from 'lucide-react';
-import { consultarProducto } from '@/api/productos';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { Card } from '@/components/ui/cards/Card';
 import { PrimaryButton } from '@/components/ui/buttons';
@@ -9,44 +8,41 @@ import { LabelInput } from '@/components/ui/inputs';
 import { Text } from '@/components/ui/text/Text';
 import { StatusPill } from '@/app/Feedback';
 import { useCrudUi } from '@/crud/useCrudUi';
+import { useProductoConsulta } from '@/features/producto/hooks/useProductoConsulta';
 import { appPath } from '@/routes/paths';
-import type { ProductoConsultaDetalle } from '@/types/api';
 
 export function ConsultaProductoPage() {
   const navigate = useNavigate();
   const { notifyApiError } = useCrudUi();
 
   const [termino, setTermino] = useState('');
-  const [buscando, setBuscando] = useState(false);
-  const [detalle, setDetalle] = useState<ProductoConsultaDetalle | null>(null);
+  const [codigoBusqueda, setCodigoBusqueda] = useState('');
 
-  const ejecutarBusqueda = useCallback(
-    async (codigo: string) => {
-      const term = codigo.trim();
-      if (!term) return;
-      setBuscando(true);
-      try {
-        const res = await consultarProducto(term);
-        setDetalle(res);
-      } catch (err) {
-        setDetalle(null);
-        notifyApiError(err, 'Producto no encontrado');
-      } finally {
-        setBuscando(false);
-      }
-    },
-    [notifyApiError],
-  );
+  const consultaQuery = useProductoConsulta(codigoBusqueda, codigoBusqueda.length > 0);
+  const detalle = consultaQuery.data ?? null;
+  const buscando = consultaQuery.isFetching;
+
+  useEffect(() => {
+    if (consultaQuery.isError && codigoBusqueda && !consultaQuery.isFetching) {
+      notifyApiError(consultaQuery.error, 'Producto no encontrado');
+    }
+  }, [consultaQuery.isError, consultaQuery.error, consultaQuery.isFetching, codigoBusqueda, notifyApiError]);
+
+  const ejecutarBusqueda = useCallback((codigo: string) => {
+    const term = codigo.trim();
+    if (!term) return;
+    setCodigoBusqueda(term);
+  }, []);
 
   const buscarOtro = () => {
-    setDetalle(null);
     setTermino('');
+    setCodigoBusqueda('');
     setTimeout(() => document.getElementById('consulta-codigo')?.focus(), 0);
   };
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    void ejecutarBusqueda(termino);
+    ejecutarBusqueda(termino);
   };
 
   const viaLabel =
@@ -87,6 +83,9 @@ export function ConsultaProductoPage() {
             Buscar
           </PrimaryButton>
         </form>
+        {consultaQuery.isError && codigoBusqueda && (
+          <p className="mt-2 text-sm text-destructive">Producto no encontrado</p>
+        )}
       </Card>
 
       {detalle && (

@@ -4,10 +4,8 @@ Endpoints CRUD de Unidades de Medida (Capa de Presentación).
 Multi-tenant con soporte para super admin.
 """
 from fastapi import APIRouter, Depends, HTTPException, status, Query
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.infrastructure.database import get_db_session
-from app.infrastructure.repositories.unidadMedida_crud_repository import UnidadMedidaCRUDRepository
 from app.domain.services.unidadMedidad_service import UnidadMedidaService
+from app.modules.catalog.presentation.http.dependencies import obtener_unidad_medida_service
 from app.api.v1.dependencies import obtener_usuario_autenticado, requiere_permiso, es_super_admin
 from app.api.v1.empresa_contexto import ContextoEmpresa, kwargs_listado, obtener_contexto_empresa, resolver_empresa_creacion, contexto_requiere_permiso
 from app.api.v1.listado_query import orden_listado
@@ -21,13 +19,6 @@ from app.schemas.unidadMedida import (
 
 
 router = APIRouter(prefix="/api/v1/unidades-medida", tags=["Unidades de Medida"])
-
-
-# ============ DEPENDENCIAS ============
-async def obtener_unidad_medida_service(session: AsyncSession = Depends(get_db_session)) -> UnidadMedidaService:
-    """Factory para instanciar el servicio de unidades de medida."""
-    repository = UnidadMedidaCRUDRepository(session)
-    return UnidadMedidaService(repository)
 
 
 # ============ GET: LISTAR BODEGAS (CON PAGINACIÓN) ============
