@@ -13,3 +13,6 @@ pymysql
 openpyxl
 reportlab
 resend
+pytest
+pytest-asyncio
+import-linter

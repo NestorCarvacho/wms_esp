@@ -1,0 +1,35 @@
+[importlinter]
+root_packages =
+    app
+include_external_packages = True
+
+[importlinter:contract:inventory-domain-isolation]
+name = Inventory domain no importa infraestructura
+type = forbidden
+source_modules =
+    app.modules.inventory.domain
+forbidden_modules =
+    app.infrastructure
+    app.api
+    sqlalchemy
+
+[importlinter:contract:inventory-application-isolation]
+name = Inventory application no importa API ni SQLAlchemy directo
+type = forbidden
+source_modules =
+    app.modules.inventory.application
+forbidden_modules =
+    app.api
+    app.infrastructure
+    sqlalchemy
+
+[importlinter:contract:shared-kernel-isolation]
+name = Shared kernel sin dependencias externas de app
+type = forbidden
+source_modules =
+    app.shared.kernel
+forbidden_modules =
+    app.infrastructure
+    app.api
+    app.modules
+    sqlalchemy

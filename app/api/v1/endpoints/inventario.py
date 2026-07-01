@@ -3,11 +3,12 @@ from io import BytesIO
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import StreamingResponse
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.infrastructure.database import get_db_session
-from app.infrastructure.repositories.inventario_crud_repository import InventarioCRUDRepository
 from app.domain.services.inventario_operacion_service import InventarioOperacionService
 from app.domain.services.inventario_reporte_service import InventarioReporteService
+from app.modules.inventory.presentation.http.dependencies import (
+    obtener_inventario_reporte_service,
+    obtener_inventario_service,
+)
 from app.api.v1.dependencies import obtener_id
 from app.api.v1.empresa_contexto import ContextoEmpresa, kwargs_listado, contexto_requiere_permiso
 from app.api.v1.listado_query import orden_listado
@@ -20,18 +21,6 @@ from app.schemas.inventario import (
 )
 
 router = APIRouter(prefix="/api/v1/inventario", tags=["Inventario"])
-
-
-async def obtener_inventario_service(
-    session: AsyncSession = Depends(get_db_session),
-) -> InventarioOperacionService:
-    return InventarioOperacionService(InventarioCRUDRepository(session))
-
-
-async def obtener_inventario_reporte_service(
-    session: AsyncSession = Depends(get_db_session),
-) -> InventarioReporteService:
-    return InventarioReporteService(InventarioOperacionService(InventarioCRUDRepository(session)))
 
 
 @router.get("/dashboard", response_model=RespuestaAPIDTO, status_code=status.HTTP_200_OK)

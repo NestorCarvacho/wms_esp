@@ -8,7 +8,6 @@ import {
   listarMovimientosInventario,
   listarStockInventario,
   obtenerConfigInventarioBodega,
-  obtenerDashboardInventario,
   type InventarioExportFormat,
 } from '@/api/inventario';
 import { InventarioDashboardCharts } from '@/components/inventario/InventarioDashboardCharts';
@@ -29,7 +28,6 @@ import { usePaginatedCrudTable } from '@/crud/usePaginatedCrudTable';
 import { useCrudUi } from '@/crud/useCrudUi';
 import type {
   Bodega,
-  InventarioDashboardResumen,
   MovimientoInventarioItem,
   Producto,
   StockZonaItem,
@@ -43,6 +41,7 @@ import {
 } from '@/pages/inventario/inventarioViews';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useInventarioWebSocket } from '@/hooks/useInventarioWebSocket';
+import { useInventarioDashboard } from '@/features/inventario/hooks/useInventarioDashboard';
 import { appPath } from '@/routes/paths';
 
 const OP_VISTAS: InventarioVista[] = ['recepcion', 'traslado', 'despacho'];
@@ -67,10 +66,18 @@ export function InventarioPage({ vista }: InventarioPageProps) {
   const { tienePermiso } = usePermissions();
   const listFilter = useCrudEmpresaFilterCard();
   const empresaIdParam = listFilter.empresaIdParam;
-  const [dashboard, setDashboard] = useState<InventarioDashboardResumen | null>(null);
-  const [dashboardLoading, setDashboardLoading] = useState(vista === 'dashboard');
   const [chartBodegaId, setChartBodegaId] = useState('');
   const [dashboardBodegas, setDashboardBodegas] = useState<Bodega[]>([]);
+
+  const dashboardQuery = useInventarioDashboard(
+    {
+      empresaId: empresaIdParam,
+      bodegaId: chartBodegaId ? Number(chartBodegaId) : undefined,
+    },
+    vista === 'dashboard',
+  );
+  const dashboard = dashboardQuery.data ?? null;
+  const dashboardLoading = dashboardQuery.isLoading;
 
   const stockTable = usePaginatedCrudTable<StockZonaItem>({
     empresaFilterId: empresaIdParam,
@@ -159,29 +166,10 @@ export function InventarioPage({ vista }: InventarioPageProps) {
   }, [vista, empresaIdParam]);
 
   useEffect(() => {
-    if (vista !== 'dashboard') return;
-    let cancelled = false;
-    setDashboardLoading(true);
-    obtenerDashboardInventario({
-      empresaId: empresaIdParam,
-      bodegaId: chartBodegaId ? Number(chartBodegaId) : undefined,
-    })
-      .then((data) => {
-        if (!cancelled) setDashboard(data);
-      })
-      .catch((err) => {
-        if (!cancelled) {
-          notifyApiError(err, 'Error al cargar el dashboard');
-          setDashboard(null);
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setDashboardLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [vista, empresaIdParam, chartBodegaId, notifyApiError]);
+    if (dashboardQuery.isError) {
+      notifyApiError(dashboardQuery.error, 'Error al cargar el dashboard');
+    }
+  }, [dashboardQuery.isError, dashboardQuery.error, notifyApiError]);
 
   useEffect(() => {
     if (!needsMaestros(vista)) return;

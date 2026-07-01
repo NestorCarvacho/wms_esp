@@ -1,6 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import type { ReactNode } from 'react';
 
+import { QueryProvider } from '@/app/providers/QueryProvider';
 import { AuthProvider } from '@/context/AuthContext';
 import { LocaleProvider } from '@/context/LocaleContext';
 import { ThemeProvider } from '@/context/ThemeContext';
@@ -63,6 +64,7 @@ function guarded(path: string, element: ReactNode) {
 export default function App() {
   return (
     <ThemeProvider>
+    <QueryProvider>
     <AuthProvider>
     <LocaleProvider>
       <UIProvider>
@@ -138,6 +140,7 @@ export default function App() {
       </UIProvider>
     </LocaleProvider>
     </AuthProvider>
+    </QueryProvider>
     </ThemeProvider>
   );
 }
