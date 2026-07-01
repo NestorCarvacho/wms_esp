@@ -37,15 +37,26 @@ Crear `app/modules/iam/` con vertical slice **autenticación + resolución de pe
 - `/auth/registrar` sigue roto (sin handler) — pendiente Fase 1b con `UsuarioService`
 - `app/api/v1/dependencies.py` sin cambios de contrato JWT
 
-## Próximos pasos (Fase 1c)
+## Fase 1c (completada)
 
-- CRUD mecánico: Rol, Permiso, Cargo (handlers + fachadas)
-- `ProvisionarRbacEmpresaHandler` con puerto `ITenantRepository`
-- Perfil usuario (`perfil_usuario` endpoint)
+- CRUD handlers: Rol, Permiso, Cargo
+- `ProvisionarRbacEmpresaHandler` (bootstrap catálogo RBAC)
+- Puertos `IRolRepository`, `IPermisoRepository`, `ICargoRepository`, `IRbacBootstrapRepository`
 
-## Fase 1b (completada)
+## Fase 2 — tenant (piloto, ADR 003)
 
-- Handlers CRUD usuario + herencia roles desde cargo
-- `SincronizarRolesUsuario`, `SincronizarPermisosRol`, `SincronizarRolesCargo`
-- Puertos `IUserCrudRepository`, `IUsuarioRolRepository`, `IRolPermisoRepository`, `IPermisoCargoRepository`, `ITenantAccessValidator`
-- `/auth/registrar` reparado vía `CrearUsuarioHandler`
+- Módulo `app/modules/tenant/` con `ITenantRepository`
+- `EmpresaMaestraService` como fachada
+- IAM consume `TenantAccessAdapter`
+
+## Próximos pasos
+
+- CRUD empresa en módulo tenant
+- Módulo `catalog` (productos)
+- `notification-service` (WebSocket/email)
+
+## Historial de fases IAM
+
+**1b:** Handlers CRUD usuario, sync RBAC, `/auth/registrar` vía `CrearUsuarioHandler`.
+
+**1a:** Login, permisos, recuperación contraseña; fachadas `AuthService` / `AutorizacionService`.

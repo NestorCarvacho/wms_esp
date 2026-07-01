@@ -5,6 +5,23 @@ from dataclasses import dataclass
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.modules.iam.application.handlers.bootstrap_handler import ProvisionarRbacEmpresaHandler
+from app.modules.iam.application.handlers.catalog_handlers import (
+    ActualizarCargoHandler,
+    ActualizarPermisoHandler,
+    ActualizarRolHandler,
+    CrearCargoHandler,
+    CrearPermisoHandler,
+    CrearRolHandler,
+    EliminarCargoHandler,
+    EliminarPermisoHandler,
+    EliminarRolHandler,
+    ListarCargosQueryHandler,
+    ListarPermisosQueryHandler,
+    ListarRolesQueryHandler,
+    ObtenerCargoQueryHandler,
+    ObtenerRolQueryHandler,
+)
 from app.modules.iam.application.handlers.cambiar_contrasena_handler import CambiarContrasenaHandler
 from app.modules.iam.application.handlers.login_handler import LoginHandler
 from app.modules.iam.application.handlers.restablecer_contrasena_handler import (
@@ -36,6 +53,18 @@ from app.modules.iam.infrastructure.security_adapters import (
     BcryptPasswordHasher,
     JwtTokenIssuer,
     ResendEmailNotifier,
+)
+from app.modules.iam.infrastructure.crud_repositories import (
+    SqlAlchemyCargoRepository,
+    SqlAlchemyEmpresaReadRepository,
+    SqlAlchemyPermisoCargoRepository,
+    SqlAlchemyPermisoRepository,
+    SqlAlchemyRbacBootstrapRepository,
+    SqlAlchemyRolPermisoRepository,
+    SqlAlchemyRolRepository,
+    SqlAlchemyTenantAccessValidator,
+    SqlAlchemyUsuarioCrudRepository,
+    SqlAlchemyUsuarioRolRepository,
 )
 from app.modules.iam.infrastructure.sqlalchemy_repositories import (
     SqlAlchemyAutorizacionRepository,
@@ -81,6 +110,21 @@ class IamHandlers:
     sincronizar_permisos_rol: SincronizarPermisosRolHandler
     listar_roles_cargo: ListarRolesCargoQueryHandler
     sincronizar_roles_cargo: SincronizarRolesCargoHandler
+    listar_roles: ListarRolesQueryHandler
+    obtener_rol: ObtenerRolQueryHandler
+    crear_rol: CrearRolHandler
+    actualizar_rol: ActualizarRolHandler
+    eliminar_rol: EliminarRolHandler
+    listar_permisos: ListarPermisosQueryHandler
+    crear_permiso: CrearPermisoHandler
+    actualizar_permiso: ActualizarPermisoHandler
+    eliminar_permiso: EliminarPermisoHandler
+    listar_cargos: ListarCargosQueryHandler
+    obtener_cargo: ObtenerCargoQueryHandler
+    crear_cargo: CrearCargoHandler
+    actualizar_cargo: ActualizarCargoHandler
+    eliminar_cargo: EliminarCargoHandler
+    provisionar_rbac: ProvisionarRbacEmpresaHandler
 
 
 def build_iam_handlers(session: AsyncSession) -> IamHandlers:
@@ -90,6 +134,11 @@ def build_iam_handlers(session: AsyncSession) -> IamHandlers:
     usuario_rol = SqlAlchemyUsuarioRolRepository(session)
     rol_permiso = SqlAlchemyRolPermisoRepository(session)
     permiso_cargo = SqlAlchemyPermisoCargoRepository(session)
+    permiso = SqlAlchemyPermisoRepository(session)
+    rol = SqlAlchemyRolRepository(session)
+    cargo = SqlAlchemyCargoRepository(session)
+    bootstrap = SqlAlchemyRbacBootstrapRepository(session)
+    empresas = SqlAlchemyEmpresaReadRepository(session)
     tenant = SqlAlchemyTenantAccessValidator(session)
     autorizacion = SqlAlchemyAutorizacionRepository(session)
     token_issuer = JwtTokenIssuer()
@@ -117,6 +166,23 @@ def build_iam_handlers(session: AsyncSession) -> IamHandlers:
         sincronizar_permisos_rol=SincronizarPermisosRolHandler(rol_permiso, tenant),
         listar_roles_cargo=ListarRolesCargoQueryHandler(permiso_cargo),
         sincronizar_roles_cargo=SincronizarRolesCargoHandler(permiso_cargo),
+        listar_roles=ListarRolesQueryHandler(rol),
+        obtener_rol=ObtenerRolQueryHandler(rol),
+        crear_rol=CrearRolHandler(rol),
+        actualizar_rol=ActualizarRolHandler(rol),
+        eliminar_rol=EliminarRolHandler(rol),
+        listar_permisos=ListarPermisosQueryHandler(permiso),
+        crear_permiso=CrearPermisoHandler(permiso),
+        actualizar_permiso=ActualizarPermisoHandler(permiso),
+        eliminar_permiso=EliminarPermisoHandler(permiso),
+        listar_cargos=ListarCargosQueryHandler(cargo),
+        obtener_cargo=ObtenerCargoQueryHandler(cargo),
+        crear_cargo=CrearCargoHandler(cargo),
+        actualizar_cargo=ActualizarCargoHandler(cargo),
+        eliminar_cargo=EliminarCargoHandler(cargo),
+        provisionar_rbac=ProvisionarRbacEmpresaHandler(
+            bootstrap, empresas, tenant, password_hasher
+        ),
     )
 
 

@@ -53,3 +53,13 @@ forbidden_modules =
     app.api
     app.infrastructure
     sqlalchemy
+
+[importlinter:contract:tenant-domain-isolation]
+name = Tenant domain no importa infraestructura
+type = forbidden
+source_modules =
+    app.modules.tenant.domain
+forbidden_modules =
+    app.infrastructure
+    app.api
+    sqlalchemy

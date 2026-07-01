@@ -1,21 +1,15 @@
 """Endpoints CRUD de permisos atómicos."""
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.dependencies import requiere_permiso
 from app.api.v1.empresa_contexto import ContextoEmpresa, kwargs_listado, resolver_empresa_creacion, contexto_requiere_permiso
 from app.api.v1.listado_query import orden_listado
 from app.domain.services.permiso_service import PermisoService
-from app.infrastructure.database import get_db_session
-from app.infrastructure.repositories.permiso_crud_repository import PermisoCRUDRepository
+from app.modules.iam.presentation.http.dependencies import obtener_permiso_service
 from app.schemas.permiso import PermisoActualizarDTO, PermisoCrearDTO
 from app.schemas.usuario import RespuestaAPIDTO
 
 router = APIRouter(prefix="/api/v1/permisos", tags=["Permisos"])
-
-
-async def obtener_permiso_service(session: AsyncSession = Depends(get_db_session)) -> PermisoService:
-    return PermisoService(PermisoCRUDRepository(session))
 
 
 @router.get("", response_model=RespuestaAPIDTO)

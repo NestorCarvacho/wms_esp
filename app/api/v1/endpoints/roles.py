@@ -5,11 +5,8 @@ Multi-tenant con soporte para super admin.
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status, Query
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import relationship
-from app.infrastructure.database import get_db_session
-from app.infrastructure.repositories.rol_crud_repository import RolCRUDRepository
 from app.domain.services.rol_service import RolService
+from app.modules.iam.presentation.http.dependencies import obtener_rol_service
 from app.api.v1.dependencies import obtener_usuario_autenticado, requiere_permiso, es_super_admin
 from app.api.v1.empresa_contexto import ContextoEmpresa, kwargs_listado, obtener_contexto_empresa, resolver_empresa_creacion, contexto_requiere_permiso
 from app.api.v1.listado_query import orden_listado
@@ -22,12 +19,6 @@ from app.schemas.rol import (
 )
 
 router = APIRouter(prefix="/api/v1/roles", tags=["Roles"])
-
-# ============ DEPENDENCIAS ============
-async def obtener_rol_service(session: AsyncSession = Depends(get_db_session)) -> RolService:
-    """Factory para instanciar el servicio de roles."""
-    repository = RolCRUDRepository(session)
-    return RolService(repository)
 
 
 # ============ GET: LISTAR ROLES (CON PAGINACIÓN) ============

@@ -4,8 +4,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.bootstrap.container import IamHandlers, build_iam_handlers
 from app.domain.services.auth_service import AuthService
+from app.domain.services.cargo_service import CargoService
+from app.domain.services.empresa_rbac_bootstrap_service import EmpresaRbacBootstrapService
 from app.domain.services.permiso_cargo_service import PermisoCargoService
+from app.domain.services.permiso_service import PermisoService
 from app.domain.services.rol_permiso_service import RolPermisoService
+from app.domain.services.rol_service import RolService
 from app.domain.services.usuario_rol_service import UsuarioRolService
 from app.domain.services.usuario_service import UsuarioService
 from app.infrastructure.database import get_db_session
@@ -51,4 +55,22 @@ async def obtener_permiso_cargo_service(
     session: AsyncSession = Depends(get_db_session),
 ) -> PermisoCargoService:
     return PermisoCargoService(PermisoCargoCRUDRepository(session))
+
+
+async def obtener_rol_service(session: AsyncSession = Depends(get_db_session)) -> RolService:
+    return RolService(session=session)
+
+
+async def obtener_permiso_service(session: AsyncSession = Depends(get_db_session)) -> PermisoService:
+    return PermisoService(session=session)
+
+
+async def obtener_cargo_service(session: AsyncSession = Depends(get_db_session)) -> CargoService:
+    return CargoService(session=session)
+
+
+async def obtener_empresa_rbac_bootstrap_service(
+    session: AsyncSession = Depends(get_db_session),
+) -> EmpresaRbacBootstrapService:
+    return EmpresaRbacBootstrapService(session=session)
 

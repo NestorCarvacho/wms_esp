@@ -8,10 +8,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.infrastructure.database import get_db_session
 from app.infrastructure.repositories.empresa_crud_repository import EmpresaCRUDRepository
 from app.domain.services.empresa_service import EmpresaService
-from app.domain.services.empresa_maestra_service import EmpresaMaestraService
 from app.domain.services.empresa_rbac_bootstrap_service import EmpresaRbacBootstrapService
-from app.infrastructure.repositories.empresa_administrada_repository import EmpresaAdministradaRepository
-from app.infrastructure.repositories.empresa_rbac_bootstrap_repository import EmpresaRbacBootstrapRepository
+from app.modules.iam.presentation.http.dependencies import obtener_empresa_rbac_bootstrap_service
+from app.modules.tenant.presentation.http.dependencies import obtener_empresa_maestra_service
 from app.api.v1.dependencies import obtener_usuario_autenticado, requiere_permiso, es_super_admin
 from app.api.v1.listado_query import orden_listado
 from app.schemas.empresa import (
@@ -31,20 +30,6 @@ async def obtener_empresa_service(session: AsyncSession = Depends(get_db_session
     """Factory para instanciar el servicio de empresas."""
     repository = EmpresaCRUDRepository(session)
     return EmpresaService(repository)
-
-
-async def obtener_empresa_maestra_service(session: AsyncSession = Depends(get_db_session)) -> EmpresaMaestraService:
-    return EmpresaMaestraService(EmpresaAdministradaRepository(session))
-
-
-async def obtener_empresa_rbac_bootstrap_service(
-    session: AsyncSession = Depends(get_db_session),
-) -> EmpresaRbacBootstrapService:
-    return EmpresaRbacBootstrapService(
-        EmpresaRbacBootstrapRepository(session),
-        EmpresaCRUDRepository(session),
-        session,
-    )
 
 
 def validar_super_admin(es_admin: bool = Depends(es_super_admin)):
