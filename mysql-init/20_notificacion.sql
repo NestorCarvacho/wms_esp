@@ -26,3 +26,10 @@ FROM DUAL
 WHERE NOT EXISTS (
   SELECT 1 FROM permiso WHERE empresa_id = 1 AND codigo = 'notificaciones.leer'
 );
+
+-- === BLOQUE 3 ===
+INSERT IGNORE INTO rol_permiso (rol_id, permiso_id, activo)
+SELECT r.id, p.id, 1
+FROM rol r
+JOIN permiso p ON p.empresa_id = r.empresa_id AND p.codigo = 'notificaciones.leer' AND p.activo = 1
+WHERE r.empresa_id = 1 AND r.activo = 1;
