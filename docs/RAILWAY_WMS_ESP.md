@@ -65,9 +65,9 @@ Free plan resource provision limit exceeded
 
 **Opciones:**
 
-1. **Upgrade** a Hobby/Pro → añadir Redis + `wms-notifications` (recomendado).
-2. **Upstash Redis** (gratis, sin volumen Railway) + upgrade solo para el 4.º servicio.
-3. **Mantener `NOTIFICATIONS_MODE=local`** hasta upgrade (comportamiento actual, sin regresión).
+1. **Upstash + Render/Fly** (gratis) → [docs/DEPLOY_NOTIFICATIONS_EXTERNAL.md](DEPLOY_NOTIFICATIONS_EXTERNAL.md) **recomendado sin pagar**
+2. **Upgrade** Railway Hobby/Pro → añadir Redis + `wms-notifications` en el mismo proyecto
+3. **Mantener `NOTIFICATIONS_MODE=local`** (comportamiento actual, sin regresión)
 
 ### Pasos tras upgrade (Dashboard o CLI)
 

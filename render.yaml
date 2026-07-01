@@ -1,0 +1,31 @@
+# Blueprint Render — notification-service (Fase 2)
+# https://render.com/docs/blueprint-spec
+#
+# Uso: Dashboard → New → Blueprint → conectar repo NestorCarvacho/wms_esp
+
+services:
+  - type: web
+    name: wms-notifications
+    runtime: docker
+    plan: free
+    dockerfilePath: ./services/notification-service/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    buildFilter:
+      paths:
+        - app/**
+        - services/notification-service/**
+        - requirements.txt
+    envVars:
+      - key: NOTIFICATIONS_MODE
+        value: local
+      - key: DEBUG
+        value: "False"
+      - key: DATABASE_URL
+        sync: false
+      - key: SECRET_KEY
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false

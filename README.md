@@ -162,6 +162,7 @@ Guías:
 
 - [`docs/DEPLOY_RAILWAY.md`](docs/DEPLOY_RAILWAY.md) — guía general paso a paso
 - [`docs/RAILWAY_WMS_ESP.md`](docs/RAILWAY_WMS_ESP.md) — estado y variables del proyecto WMS_ESP
+- [`docs/DEPLOY_NOTIFICATIONS_EXTERNAL.md`](docs/DEPLOY_NOTIFICATIONS_EXTERNAL.md) — Fase 2 sin upgrade (Upstash + Render)
 
 ```bash
 npm i -g @railway/cli
@@ -200,5 +201,6 @@ railway up ./frontend --path-as-root --detach
 | [docs/capas/](docs/capas/) | Capas presentación, negocio, datos, seguridad |
 | [docs/DEPLOY_RAILWAY.md](docs/DEPLOY_RAILWAY.md) | Despliegue en Railway |
 | [docs/RAILWAY_WMS_ESP.md](docs/RAILWAY_WMS_ESP.md) | Configuración actual en Railway |
+| [docs/DEPLOY_NOTIFICATIONS_EXTERNAL.md](docs/DEPLOY_NOTIFICATIONS_EXTERNAL.md) | Notification-service en Render + Upstash |
 | [mysql-init/README_RAILWAY.md](mysql-init/README_RAILWAY.md) | Migraciones SQL en Railway |
 | [frontend/src/hooks/README.md](frontend/src/hooks/README.md) | Convenciones de hooks |

@@ -44,3 +44,17 @@ VITE_NOTIFICATIONS_WS_URL=http://localhost:8010
 ## Rollback
 
 Monolito: `NOTIFICATIONS_MODE=local` — restaura WS + inbox en el API principal sin Redis.
+
+## Despliegue externo (sin upgrade Railway)
+
+**Upstash Redis + Render/Fly.io** — guía completa:
+
+→ [docs/DEPLOY_NOTIFICATIONS_EXTERNAL.md](../../docs/DEPLOY_NOTIFICATIONS_EXTERNAL.md)
+
+Archivos:
+
+| Archivo | Uso |
+|---------|-----|
+| `/render.yaml` | Blueprint Render (Dashboard → New → Blueprint) |
+| `fly.toml` | `fly deploy --config services/notification-service/fly.toml` |
+| `scripts/cutover_notifications_external.ps1` | Cutover Railway tras desplegar en Render |
