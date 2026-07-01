@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions
+  xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+  id="wms_escaneo_decision"
+  targetNamespace="http://wms-esp.local"
+  exporter="WMS ESP">
+
+  <process id="proc_escaneo" name="Escaneo de Código en WMS" isExecutable="false">
+
+    <!-- Eventos -->
+    <startEvent id="start" name="Escanear código de barras" />
+    <endEvent   id="end_ok"    name="Producto registrado" />
+    <endEvent   id="end_error" name="Error notificado" />
+
+    <!-- Gateways -->
+    <exclusiveGateway id="gw_bodega"      name="¿Bodega seleccionada?" />
+    <exclusiveGateway id="gw_presentacion" name="¿Código en producto_presentacion?" />
+    <exclusiveGateway id="gw_sku"         name="¿SKU encontrado?" />
+    <exclusiveGateway id="gw_serial"      name="¿Producto serializado?" />
+
+    <!-- Tareas principales -->
+    <task id="api_barcode"    name="GET /productos/barcode/{código}&#10;busca en producto_presentacion" />
+    <task id="set_factor"     name="cantidad = factor_conversion&#10;presentacion_id = id" />
+    <task id="buscar_sku"     name="Buscar por SKU en tabla producto" />
+    <task id="set_unidad"     name="cantidad = 1 unidad base&#10;presentacion_id = null" />
+    <task id="crear_serie"    name="Crear registro en serie_producto&#10;estado = EN_BODEGA / zona actual" />
+    <task id="stock_zona"     name="stock_zona += cantidad" />
+    <task id="mov_inventario" name="Registrar movimiento_inventario&#10;tipo = RECEPCION" />
+    <task id="confirmacion"   name="Mostrar confirmación al operador" />
+
+    <!-- Tareas de error -->
+    <task id="err_bodega" name="Mostrar error: seleccione bodega" />
+    <task id="err_codigo" name="Mostrar error: código no reconocido" />
+
+    <!-- Flujo principal -->
+    <sequenceFlow id="sf01" sourceRef="start"           targetRef="gw_bodega" />
+    <sequenceFlow id="sf02" sourceRef="gw_bodega"       targetRef="err_bodega"      name="No" />
+    <sequenceFlow id="sf03" sourceRef="gw_bodega"       targetRef="api_barcode"     name="Sí" />
+    <sequenceFlow id="sf04" sourceRef="err_bodega"      targetRef="end_error" />
+    <sequenceFlow id="sf05" sourceRef="api_barcode"     targetRef="gw_presentacion" />
+    <sequenceFlow id="sf06" sourceRef="gw_presentacion" targetRef="set_factor"      name="Sí (HTTP 200)" />
+    <sequenceFlow id="sf07" sourceRef="gw_presentacion" targetRef="buscar_sku"      name="No (HTTP 404)" />
+    <sequenceFlow id="sf08" sourceRef="set_factor"      targetRef="gw_serial" />
+    <sequenceFlow id="sf09" sourceRef="buscar_sku"      targetRef="gw_sku" />
+    <sequenceFlow id="sf10" sourceRef="gw_sku"          targetRef="set_unidad"      name="Sí" />
+    <sequenceFlow id="sf11" sourceRef="gw_sku"          targetRef="err_codigo"      name="No" />
+    <sequenceFlow id="sf12" sourceRef="err_codigo"      targetRef="end_error" />
+    <sequenceFlow id="sf13" sourceRef="set_unidad"      targetRef="gw_serial" />
+    <sequenceFlow id="sf14" sourceRef="gw_serial"       targetRef="crear_serie"     name="Sí (serializado=1)" />
+    <sequenceFlow id="sf15" sourceRef="gw_serial"       targetRef="stock_zona"      name="No (serializado=0)" />
+    <sequenceFlow id="sf16" sourceRef="crear_serie"     targetRef="mov_inventario" />
+    <sequenceFlow id="sf17" sourceRef="stock_zona"      targetRef="mov_inventario" />
+    <sequenceFlow id="sf18" sourceRef="mov_inventario"  targetRef="confirmacion" />
+    <sequenceFlow id="sf19" sourceRef="confirmacion"    targetRef="end_ok" />
+
+  </process>
+
+  <bpmndi:BPMNDiagram id="diagram1">
+    <bpmndi:BPMNPlane bpmnElement="proc_escaneo">
+
+      <!-- Start -->
+      <bpmndi:BPMNShape id="s_start" bpmnElement="start">
+        <dc:Bounds x="60" y="262" width="36" height="36"/>
+        <bpmndi:BPMNLabel><dc:Bounds x="38" y="302" width="80" height="28"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- gw_bodega -->
+      <bpmndi:BPMNShape id="s_gw_bodega" bpmnElement="gw_bodega" isMarkerVisible="true">
+        <dc:Bounds x="150" y="255" width="50" height="50"/>
+        <bpmndi:BPMNLabel><dc:Bounds x="130" y="310" width="90" height="28"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- err_bodega -->
+      <bpmndi:BPMNShape id="s_err_bodega" bpmnElement="err_bodega">
+        <dc:Bounds x="135" y="390" width="160" height="55"/>
+      </bpmndi:BPMNShape>
+
+      <!-- api_barcode -->
+      <bpmndi:BPMNShape id="s_api_barcode" bpmnElement="api_barcode">
+        <dc:Bounds x="265" y="253" width="170" height="55"/>
+      </bpmndi:BPMNShape>
+
+      <!-- gw_presentacion -->
+      <bpmndi:BPMNShape id="s_gw_presentacion" bpmnElement="gw_presentacion" isMarkerVisible="true">
+        <dc:Bounds x="495" y="255" width="50" height="50"/>
+        <bpmndi:BPMNLabel><dc:Bounds x="470" y="310" width="100" height="28"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- set_factor -->
+      <bpmndi:BPMNShape id="s_set_factor" bpmnElement="set_factor">
+        <dc:Bounds x="610" y="150" width="170" height="55"/>
+      </bpmndi:BPMNShape>
+
+      <!-- buscar_sku -->
+      <bpmndi:BPMNShape id="s_buscar_sku" bpmnElement="buscar_sku">
+        <dc:Bounds x="610" y="360" width="170" height="55"/>
+      </bpmndi:BPMNShape>
+
+      <!-- gw_sku -->
+      <bpmndi:BPMNShape id="s_gw_sku" bpmnElement="gw_sku" isMarkerVisible="true">
+        <dc:Bounds x="845" y="363" width="50" height="50"/>
+        <bpmndi:BPMNLabel><dc:Bounds x="825" y="418" width="90" height="28"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- err_codigo -->
+      <bpmndi:BPMNShape id="s_err_codigo" bpmnElement="err_codigo">
+        <dc:Bounds x="830" y="480" width="160" height="55"/>
+      </bpmndi:BPMNShape>
+
+      <!-- set_unidad -->
+      <bpmndi:BPMNShape id="s_set_unidad" bpmnElement="set_unidad">
+        <dc:Bounds x="960" y="360" width="170" height="55"/>
+      </bpmndi:BPMNShape>
+
+      <!-- gw_serial -->
+      <bpmndi:BPMNShape id="s_gw_serial" bpmnElement="gw_serial" isMarkerVisible="true">
+        <dc:Bounds x="1195" y="255" width="50" height="50"/>
+        <bpmndi:BPMNLabel><dc:Bounds x="1170" y="310" width="100" height="28"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- crear_serie -->
+      <bpmndi:BPMNShape id="s_crear_serie" bpmnElement="crear_serie">
+        <dc:Bounds x="1310" y="150" width="180" height="55"/>
+      </bpmndi:BPMNShape>
+
+      <!-- stock_zona -->
+      <bpmndi:BPMNShape id="s_stock_zona" bpmnElement="stock_zona">
+        <dc:Bounds x="1310" y="360" width="180" height="55"/>
+      </bpmndi:BPMNShape>
+
+      <!-- mov_inventario -->
+      <bpmndi:BPMNShape id="s_mov_inventario" bpmnElement="mov_inventario">
+        <dc:Bounds x="1560" y="253" width="180" height="55"/>
+      </bpmndi:BPMNShape>
+
+      <!-- confirmacion -->
+      <bpmndi:BPMNShape id="s_confirmacion" bpmnElement="confirmacion">
+        <dc:Bounds x="1800" y="253" width="160" height="55"/>
+      </bpmndi:BPMNShape>
+
+      <!-- end_ok -->
+      <bpmndi:BPMNShape id="s_end_ok" bpmnElement="end_ok">
+        <dc:Bounds x="2025" y="262" width="36" height="36"/>
+        <bpmndi:BPMNLabel><dc:Bounds x="2005" y="302" width="80" height="28"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- end_error -->
+      <bpmndi:BPMNShape id="s_end_error" bpmnElement="end_error">
+        <dc:Bounds x="900" y="600" width="36" height="36"/>
+        <bpmndi:BPMNLabel><dc:Bounds x="880" y="640" width="80" height="28"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- EDGES -->
+      <bpmndi:BPMNEdge id="e_sf01" bpmnElement="sf01">
+        <di:waypoint x="96"  y="280"/><di:waypoint x="150" y="280"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_sf02" bpmnElement="sf02">
+        <di:waypoint x="175" y="305"/><di:waypoint x="175" y="390"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_sf03" bpmnElement="sf03">
+        <di:waypoint x="200" y="280"/><di:waypoint x="265" y="280"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_sf04" bpmnElement="sf04">
+        <di:waypoint x="215" y="417"/><di:waypoint x="918" y="417"/><di:waypoint x="918" y="600"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_sf05" bpmnElement="sf05">
+        <di:waypoint x="435" y="280"/><di:waypoint x="495" y="280"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_sf06" bpmnElement="sf06">
+        <di:waypoint x="520" y="255"/><di:waypoint x="520" y="177"/><di:waypoint x="610" y="177"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_sf07" bpmnElement="sf07">
+        <di:waypoint x="520" y="305"/><di:waypoint x="520" y="387"/><di:waypoint x="610" y="387"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_sf08" bpmnElement="sf08">
+        <di:waypoint x="780" y="177"/><di:waypoint x="1220" y="177"/><di:waypoint x="1220" y="255"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_sf09" bpmnElement="sf09">
+        <di:waypoint x="780" y="387"/><di:waypoint x="845" y="387"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_sf10" bpmnElement="sf10">
+        <di:waypoint x="895" y="387"/><di:waypoint x="960" y="387"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_sf11" bpmnElement="sf11">
+        <di:waypoint x="870" y="413"/><di:waypoint x="870" y="480"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_sf12" bpmnElement="sf12">
+        <di:waypoint x="918" y="507"/><di:waypoint x="918" y="600"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_sf13" bpmnElement="sf13">
+        <di:waypoint x="1130" y="387"/><di:waypoint x="1220" y="387"/><di:waypoint x="1220" y="305"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_sf14" bpmnElement="sf14">
+        <di:waypoint x="1220" y="255"/><di:waypoint x="1220" y="177"/><di:waypoint x="1310" y="177"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_sf15" bpmnElement="sf15">
+        <di:waypoint x="1220" y="305"/><di:waypoint x="1220" y="387"/><di:waypoint x="1310" y="387"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_sf16" bpmnElement="sf16">
+        <di:waypoint x="1490" y="177"/><di:waypoint x="1650" y="177"/><di:waypoint x="1650" y="253"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_sf17" bpmnElement="sf17">
+        <di:waypoint x="1490" y="387"/><di:waypoint x="1650" y="387"/><di:waypoint x="1650" y="308"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_sf18" bpmnElement="sf18">
+        <di:waypoint x="1740" y="280"/><di:waypoint x="1800" y="280"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_sf19" bpmnElement="sf19">
+        <di:waypoint x="1960" y="280"/><di:waypoint x="2025" y="280"/>
+      </bpmndi:BPMNEdge>
+
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>

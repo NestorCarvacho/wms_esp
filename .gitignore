@@ -30,7 +30,7 @@ frontend/dist/
 # Artefactos shadcn CLI (ruta errónea en Windows)
 frontend/@/
 
-.docs/
-docs/
-docs/documentacion ejemplo/
-docs/proyecto/
+#.docs/
+#docs/
+#docs/documentacion ejemplo/
+#docs/proyecto/

@@ -49,6 +49,7 @@ railway run python scripts/apply_railway_migrations.py --diagnose
 | 10 | `14_auth_security.sql` | Seguridad login (intentos fallidos, bloqueos, reset password) |
 | 11 | `17_presentacion_codigo_barras.sql` | Código de barras por presentación (escaneo caja/display) |
 | 12 | `18_serie_producto.sql` | Inventario serializado (`producto.serializado`, `serie_producto`) |
+| 13 | `19_locale_currency.sql` | Locale/timezone/moneda por empresa, catálogo `moneda`, `tipo_cambio_historico` |
 
 **No usar** en Railway con datos: `01_setup.sql`, `03_rbac_hierarchy.sql`, `schema_completo.sql` (recrea todo desde cero).
 

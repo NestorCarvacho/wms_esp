@@ -186,14 +186,18 @@ railway up ./frontend --path-as-root --detach
 - [x] Tipos de zona y zonas de bodega
 - [x] Importación masiva de productos (Excel)
 - [x] Paginación y búsqueda server-side en tablas CRUD
-- [ ] Inventario y movimientos de stock
-- [ ] Órdenes de compra y venta
+- [x] Inventario operativo (stock, recepción, traslado, despacho, exportaciones)
+- [x] Regionalización por empresa (locale, timezone, moneda)
 
 ## Documentación
 
 | Recurso | Contenido |
 |---------|-----------|
-| [`docs/capas/`](docs/capas/) | Capas presentación, negocio, datos, seguridad |
-| [`docs/DEPLOY_RAILWAY.md`](docs/DEPLOY_RAILWAY.md) | Despliegue en Railway |
-| [`docs/RAILWAY_WMS_ESP.md`](docs/RAILWAY_WMS_ESP.md) | Configuración actual en Railway |
-| [`frontend/src/hooks/README.md`](frontend/src/hooks/README.md) | Convenciones de hooks |
+| [**docs/INDEX.md**](docs/INDEX.md) | **Índice maestro** de toda la documentación |
+| [**docs/MANUAL_USUARIO.md**](docs/MANUAL_USUARIO.md) | **Manual de uso** para operadores y administradores |
+| [docs/CORE_WMS.md](docs/CORE_WMS.md) | Inventario operativo (referencia técnica) |
+| [docs/capas/](docs/capas/) | Capas presentación, negocio, datos, seguridad |
+| [docs/DEPLOY_RAILWAY.md](docs/DEPLOY_RAILWAY.md) | Despliegue en Railway |
+| [docs/RAILWAY_WMS_ESP.md](docs/RAILWAY_WMS_ESP.md) | Configuración actual en Railway |
+| [mysql-init/README_RAILWAY.md](mysql-init/README_RAILWAY.md) | Migraciones SQL en Railway |
+| [frontend/src/hooks/README.md](frontend/src/hooks/README.md) | Convenciones de hooks |

@@ -1,7 +1,9 @@
 # Núcleo WMS — inventario operativo
 
-## Estado (MVP implementado)
+> Manual de uso para operadores: [MANUAL_USUARIO.md § Inventario operativo](./MANUAL_USUARIO.md#6-inventario-operativo)  
+> Índice general: [INDEX.md](./INDEX.md)
 
+## Estado (MVP implementado)
 | Capacidad | API | UI |
 |-----------|-----|-----|
 | Dashboard operativo | `GET /api/v1/inventario/dashboard` | Pestaña *Dashboard* |
@@ -13,7 +15,8 @@
 | Escaneo (pistola) | SKU = `producto.sku` | Recepción / Traslado / Despacho: lista lateral + lote |
 | Zona recepción por bodega | `GET/PUT .../bodegas/{id}/configuracion` | Pestaña *Recepción por bodega* |
 
-Migración: `mysql-init/12_inventario_operativo.sql` (tablas + permisos `inventario.*`).
+Migración: `mysql-init/12_inventario_operativo.sql` (tablas + permisos `inventario.*`).  
+Regionalización: `mysql-init/19_locale_currency.sql` (locale, timezone, moneda por empresa).
 
 ## Modelo
 
