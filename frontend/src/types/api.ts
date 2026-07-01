@@ -119,6 +119,7 @@ export interface Producto {
   tipo_producto_id?: number | null;
   tipo_producto_nombre?: string | null;
   precio_costo?: number | null;
+  stock_minimo?: number | null;
 }
 
 export interface SerieProducto {
@@ -177,6 +178,7 @@ export interface ProductoCrear {
   tipo_producto_id?: number | null;
   precio_costo?: number | null;
   serializado?: boolean;
+  stock_minimo?: number | null;
   empresa_id?: number;
 }
 
@@ -188,6 +190,7 @@ export interface ProductoActualizar {
   tipo_producto_id?: number | null;
   precio_costo?: number | null;
   serializado?: boolean;
+  stock_minimo?: number | null;
 }
 
 export interface TipoProducto {

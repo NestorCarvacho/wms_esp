@@ -5,6 +5,7 @@ from app.infrastructure.database import get_db_session
 from app.infrastructure.repositories.serie_producto_crud_repository import SerieProductoCRUDRepository
 from app.infrastructure.repositories.inventario_crud_repository import InventarioCRUDRepository
 from app.domain.services.serie_producto_service import SerieProductoService
+from app.bootstrap.notification_container import build_notification_handlers
 from app.api.v1.dependencies import obtener_id
 from app.api.v1.empresa_contexto import ContextoEmpresa, contexto_requiere_permiso
 from app.schemas.inventario import RespuestaAPIDTO
@@ -16,9 +17,11 @@ router = APIRouter(prefix="/api/v1/inventario/series", tags=["Inventario Seriali
 async def obtener_serie_service(
     session: AsyncSession = Depends(get_db_session),
 ) -> SerieProductoService:
+    handlers = build_notification_handlers(session)
     return SerieProductoService(
         SerieProductoCRUDRepository(session),
         InventarioCRUDRepository(session),
+        notifications=handlers.dispatcher,
     )
 
 

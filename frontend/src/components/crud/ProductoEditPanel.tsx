@@ -7,6 +7,7 @@ import { ApiError } from '@/api/client';
 import type { Producto, UnidadMedida } from '@/types/api';
 import { useProductoCatalogOptions } from '@/features/producto/hooks/useProductoCatalogOptions';
 import { useProductoMutations } from '@/features/producto/hooks/useProductoMutations';
+import { formatStockMinimo, parseStockMinimo } from '@/features/producto/lib/stockMinimo';
 import { preserveActivoNumber } from './preserveActivo';
 
 export interface ProductoEditPanelProps {
@@ -29,6 +30,7 @@ export function ProductoEditPanel({ producto, unidades, onSaved }: ProductoEditP
     producto.tipo_producto_id != null ? String(producto.tipo_producto_id) : '',
   );
   const [serializado, setSerializado] = useState(producto.serializado ?? false);
+  const [stockMinimo, setStockMinimo] = useState(formatStockMinimo(producto.stock_minimo));
 
   const unidadOptions = unidades.map((u) => ({
     label: `${u.nombre}${u.codigo ? ` (${u.codigo})` : ''}`,
@@ -57,6 +59,7 @@ export function ProductoEditPanel({ producto, unidades, onSaved }: ProductoEditP
           tipo_producto_id: tipoProductoId ? Number(tipoProductoId) : null,
           activo: preserveActivoNumber(producto.activo),
           serializado,
+          stock_minimo: parseStockMinimo(stockMinimo),
         },
       });
       showNotification({ type: 'success', message: 'Producto actualizado correctamente' });
@@ -108,6 +111,15 @@ export function ProductoEditPanel({ producto, unidades, onSaved }: ProductoEditP
           </p>
         </div>
       </label>
+
+      <LabelInput
+        id="edit-stock-minimo"
+        type="number"
+        label="Stock mínimo (alerta)"
+        value={stockMinimo}
+        onChange={setStockMinimo}
+        helperText="Opcional. Tras un despacho, se alerta si el stock en la zona origen queda en o bajo este valor."
+      />
 
       <div className="flex gap-3 pt-2">
         <PrimaryButton type="button" variant="outline" onClick={closeSidePanel}>

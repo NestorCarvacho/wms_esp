@@ -429,6 +429,7 @@ CREATE TABLE producto (
   unidad_medida_id BIGINT       NOT NULL,
   tipo_producto_id BIGINT       DEFAULT NULL,
   precio_costo     DECIMAL(12,2) DEFAULT NULL,
+  stock_minimo     DECIMAL(18,6) DEFAULT NULL,
   activo           TINYINT(1)   DEFAULT 1,
   serializado      TINYINT(1)   NOT NULL DEFAULT 0,
   PRIMARY KEY (id),
@@ -591,6 +592,27 @@ CREATE TABLE movimiento_inventario (
   CONSTRAINT fk_mov_inv_serie             FOREIGN KEY (serie_id)         REFERENCES serie_producto       (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- ----------------------------------------------------------------------------
+-- notificacion  — bandeja in-app por usuario
+-- ----------------------------------------------------------------------------
+CREATE TABLE notificacion (
+  id           BIGINT       NOT NULL AUTO_INCREMENT,
+  empresa_id   BIGINT       NOT NULL,
+  usuario_id   BIGINT       NOT NULL,
+  tipo         VARCHAR(50)  NOT NULL,
+  titulo       VARCHAR(255) NOT NULL,
+  mensaje      TEXT,
+  payload_json JSON         DEFAULT NULL,
+  leida        TINYINT(1)   NOT NULL DEFAULT 0,
+  creado_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  leida_at     DATETIME     DEFAULT NULL,
+  PRIMARY KEY (id),
+  KEY idx_notif_usuario_leida (usuario_id, leida, creado_at),
+  KEY idx_notif_empresa (empresa_id),
+  CONSTRAINT fk_notificacion_empresa FOREIGN KEY (empresa_id) REFERENCES empresa (id),
+  CONSTRAINT fk_notificacion_usuario FOREIGN KEY (usuario_id) REFERENCES usuario (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 SET FOREIGN_KEY_CHECKS = 1;
 
 -- =============================================================================
@@ -655,6 +677,7 @@ INSERT INTO permiso (empresa_id, codigo, descripcion, activo) VALUES
 (1, 'producto_presentacion.crear',      'Crear presentaciones de producto', 1),
 (1, 'producto_presentacion.editar',     'Editar presentaciones de producto', 1),
 (1, 'producto_presentacion.eliminar',   'Eliminar presentaciones de producto', 1),
+(1, 'notificaciones.leer',              'Ver bandeja de notificaciones', 1),
 (1, 'inventario.leer',                  'Ver stock y movimientos de inventario', 1),
 (1, 'inventario.recepcionar',           'Registrar recepciones de mercancía', 1),
 (1, 'inventario.trasladar',             'Trasladar stock entre ubicaciones', 1),
