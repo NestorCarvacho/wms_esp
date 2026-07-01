@@ -1,19 +1,13 @@
 """Endpoints CRUD de Tipos de Zona."""
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.infrastructure.database import get_db_session
-from app.infrastructure.repositories.tipo_zona_crud_repository import TipoZonaCRUDRepository
 from app.domain.services.tipo_zona_service import TipoZonaService
+from app.modules.warehouse.presentation.http.dependencies import obtener_tipo_zona_service
 from app.api.v1.dependencies import obtener_usuario_autenticado, requiere_permiso, es_super_admin
 from app.api.v1.empresa_contexto import ContextoEmpresa, kwargs_listado, obtener_contexto_empresa, contexto_requiere_permiso
 from app.api.v1.listado_query import orden_listado
 from app.schemas.tipo_zona import TipoZonaCrearDTO, TipoZonaActualizarDTO, RespuestaAPIDTO
 
 router = APIRouter(prefix="/api/v1/tipos-zona", tags=["Tipos de Zona"])
-
-
-async def obtener_tipo_zona_service(session: AsyncSession = Depends(get_db_session)) -> TipoZonaService:
-    return TipoZonaService(TipoZonaCRUDRepository(session))
 
 
 @router.get("", response_model=RespuestaAPIDTO, status_code=status.HTTP_200_OK)

@@ -47,6 +47,6 @@ presentation/    → dependencias FastAPI
 
 ## Próximos pasos
 
-1. Fase 1: módulos `iam`, `catalog`, `warehouse`, `tenant`
+1. ~~Fase 1: módulos `iam`, `catalog`, `warehouse`, `tenant`~~ — **completada** (ver ADR 002–006)
 2. Fase 2: extraer `notification-service` (WebSocket + email)
 3. Fase 3: `inventory-service` independiente con API propia

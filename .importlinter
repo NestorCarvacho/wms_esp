@@ -113,3 +113,23 @@ forbidden_modules =
     app.api
     app.infrastructure
     sqlalchemy
+
+[importlinter:contract:warehouse-domain-isolation]
+name = Warehouse domain no importa infraestructura
+type = forbidden
+source_modules =
+    app.modules.warehouse.domain
+forbidden_modules =
+    app.infrastructure
+    app.api
+    sqlalchemy
+
+[importlinter:contract:warehouse-application-isolation]
+name = Warehouse application no importa API ni SQLAlchemy directo
+type = forbidden
+source_modules =
+    app.modules.warehouse.application
+forbidden_modules =
+    app.api
+    app.infrastructure
+    sqlalchemy

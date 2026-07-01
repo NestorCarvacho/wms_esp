@@ -4,10 +4,8 @@ Endpoints CRUD de Bodegas (Capa de Presentación).
 Multi-tenant con soporte para super admin.
 """
 from fastapi import APIRouter, Depends, HTTPException, status, Query
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.infrastructure.database import get_db_session
-from app.infrastructure.repositories.bodega_crud_repository import BodegaCRUDRepository
 from app.domain.services.bodega_service import BodegaService
+from app.modules.warehouse.presentation.http.dependencies import obtener_bodega_service
 from app.api.v1.dependencies import obtener_usuario_autenticado, requiere_permiso, es_super_admin
 from app.api.v1.empresa_contexto import ContextoEmpresa, kwargs_listado, obtener_contexto_empresa, contexto_requiere_permiso
 from app.api.v1.listado_query import orden_listado
@@ -21,13 +19,6 @@ from app.schemas.bodega import (
 
 
 router = APIRouter(prefix="/api/v1/bodegas", tags=["Bodegas"])
-
-
-# ============ DEPENDENCIAS ============
-async def obtener_bodega_service(session: AsyncSession = Depends(get_db_session)) -> BodegaService:
-    """Factory para instanciar el servicio de bodegas."""
-    repository = BodegaCRUDRepository(session)
-    return BodegaService(repository)
 
 
 # ============ GET: LISTAR BODEGAS (CON PAGINACIÓN) ============

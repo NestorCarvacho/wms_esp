@@ -1,19 +1,13 @@
 """Endpoints CRUD de Zonas de Bodega."""
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.infrastructure.database import get_db_session
-from app.infrastructure.repositories.zona_bodega_crud_repository import ZonaBodegaCRUDRepository
 from app.domain.services.zona_bodega_service import ZonaBodegaService
+from app.modules.warehouse.presentation.http.dependencies import obtener_zona_bodega_service
 from app.api.v1.dependencies import obtener_usuario_autenticado, requiere_permiso, es_super_admin
 from app.api.v1.empresa_contexto import ContextoEmpresa, kwargs_listado, obtener_contexto_empresa, contexto_requiere_permiso
 from app.api.v1.listado_query import orden_listado
 from app.schemas.zona_bodega import ZonaBodegaCrearDTO, ZonaBodegaActualizarDTO, RespuestaAPIDTO
 
 router = APIRouter(prefix="/api/v1/zonas-bodega", tags=["Zonas de Bodega"])
-
-
-async def obtener_zona_bodega_service(session: AsyncSession = Depends(get_db_session)) -> ZonaBodegaService:
-    return ZonaBodegaService(ZonaBodegaCRUDRepository(session), session)
 
 
 @router.get("", response_model=RespuestaAPIDTO, status_code=status.HTTP_200_OK)
