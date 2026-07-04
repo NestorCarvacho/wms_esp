@@ -3,12 +3,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from app.modules.catalog.infrastructure.producto_consulta_service import ProductoConsultaService
-from app.modules.catalog.infrastructure.producto_importacion_service import ProductoImportacionService
+from app.modules.catalog.domain.ports import IProductoConsultaService, IProductoImportacionService
 
 
 class GenerarPlantillaImportacionHandler:
-    def __init__(self, service: ProductoImportacionService):
+    def __init__(self, service: IProductoImportacionService):
         self._service = service
 
     async def handle(self, empresa_id: int) -> bytes:
@@ -16,7 +15,7 @@ class GenerarPlantillaImportacionHandler:
 
 
 class ImportarProductosHandler:
-    def __init__(self, service: ProductoImportacionService):
+    def __init__(self, service: IProductoImportacionService):
         self._service = service
 
     async def handle(self, contenido: bytes, empresa_id: int) -> dict[str, Any]:
@@ -24,7 +23,7 @@ class ImportarProductosHandler:
 
 
 class ConsultarProductoHandler:
-    def __init__(self, service: ProductoConsultaService):
+    def __init__(self, service: IProductoConsultaService):
         self._service = service
 
     async def handle(self, codigo: str, empresas_ids: list[int]) -> dict[str, Any]:

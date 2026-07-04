@@ -3,11 +3,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from app.modules.inventory.infrastructure.serie_producto_service import SerieProductoService
+from app.modules.inventory.domain.ports import ISerieProductoService
 
 
 class RecepcionarSerieHandler:
-    def __init__(self, service: SerieProductoService):
+    def __init__(self, service: ISerieProductoService):
         self._service = service
 
     async def handle(self, **kwargs: Any) -> dict[str, Any]:
@@ -15,7 +15,7 @@ class RecepcionarSerieHandler:
 
 
 class TrasladarSerieHandler:
-    def __init__(self, service: SerieProductoService):
+    def __init__(self, service: ISerieProductoService):
         self._service = service
 
     async def handle(self, **kwargs: Any) -> dict[str, Any]:
@@ -23,7 +23,7 @@ class TrasladarSerieHandler:
 
 
 class DespacharSerieHandler:
-    def __init__(self, service: SerieProductoService):
+    def __init__(self, service: ISerieProductoService):
         self._service = service
 
     async def handle(self, **kwargs: Any) -> dict[str, Any]:
@@ -31,7 +31,7 @@ class DespacharSerieHandler:
 
 
 class UbicarSerieQueryHandler:
-    def __init__(self, service: SerieProductoService):
+    def __init__(self, service: ISerieProductoService):
         self._service = service
 
     async def handle(self, empresa_id: int, numero_serie: str) -> dict[str, Any]:
@@ -39,7 +39,7 @@ class UbicarSerieQueryHandler:
 
 
 class ListarSeriesProductoQueryHandler:
-    def __init__(self, service: SerieProductoService):
+    def __init__(self, service: ISerieProductoService):
         self._service = service
 
     async def handle(self, **kwargs: Any) -> dict[str, Any]:

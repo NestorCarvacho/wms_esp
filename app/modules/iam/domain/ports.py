@@ -88,7 +88,27 @@ class IRolPermisoRepository(Protocol):
 
 
 class IPermisoCargoRepository(Protocol):
+    async def listar(
+        self,
+        empresa_id: int,
+        pagina: int = 1,
+        por_pagina: int = 10,
+        es_super_admin: bool = False,
+    ) -> tuple[list[Any], int]: ...
+
+    async def obtener(
+        self, cargo_id: int, rol_id: int, empresa_id: int | None = None
+    ) -> Any | None: ...
+
+    async def crear(self, cargo_id: int, rol_id: int, activo: bool = True) -> Any: ...
+
+    async def actualizar(self, cargo_id: int, rol_id: int, activo: bool) -> Any | None: ...
+
+    async def eliminar(self, cargo_id: int, rol_id: int) -> bool: ...
+
     async def obtener_cargo(self, cargo_id: int, empresa_id: int | None) -> Any | None: ...
+
+    async def obtener_rol(self, rol_id: int, empresa_id: int | None) -> Any | None: ...
 
     async def listar_roles_por_cargo(self, cargo_id: int, empresa_id: int) -> list[int]: ...
 

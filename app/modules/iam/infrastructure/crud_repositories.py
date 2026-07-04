@@ -1,4 +1,4 @@
-"""Adaptadores CRUD y RBAC sobre repositorios legacy."""
+"""Adaptadores CRUD y RBAC — persistencia en módulo IAM."""
 from __future__ import annotations
 
 from typing import Any
@@ -6,19 +6,17 @@ from typing import Any
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.tenant.infrastructure.empresa_crud import EmpresaCRUDRepository
-from app.infrastructure.repositories.empresa_rbac_bootstrap_repository import (
-    EmpresaRbacBootstrapRepository,
-)
-from app.infrastructure.repositories.cargo_crud_repository import CargoCRUDRepository
-from app.infrastructure.repositories.permiso_crud_repository import PermisoCRUDRepository
-from app.infrastructure.repositories.permiso_cargo_crud_repository import PermisoCargoCRUDRepository
-from app.infrastructure.repositories.rol_crud_repository import RolCRUDRepository
-from app.infrastructure.repositories.rol_permiso_crud_repository import RolPermisoCRUDRepository
-from app.infrastructure.repositories.usuario_crud_repository import UsuarioCRUDRepository
-from app.infrastructure.repositories.usuario_rol_crud_repository import UsuarioRolCRUDRepository
 from app.modules.tenant.infrastructure.tenant_access_adapter import TenantAccessAdapter
 from app.modules.iam.domain.entities import Usuario
+from app.modules.iam.infrastructure.cargo_crud import CargoCRUDRepository
 from app.modules.iam.infrastructure.orm_mappers import usuario_desde_orm
+from app.modules.iam.infrastructure.permiso_cargo_crud import PermisoCargoCRUDRepository
+from app.modules.iam.infrastructure.permiso_crud import PermisoCRUDRepository
+from app.modules.iam.infrastructure.rbac_bootstrap import EmpresaRbacBootstrapRepository
+from app.modules.iam.infrastructure.rol_crud import RolCRUDRepository
+from app.modules.iam.infrastructure.rol_permiso_crud import RolPermisoCRUDRepository
+from app.modules.iam.infrastructure.usuario_crud import UsuarioCRUDRepository
+from app.modules.iam.infrastructure.usuario_rol_crud import UsuarioRolCRUDRepository
 
 
 class SqlAlchemyUsuarioCrudRepository:

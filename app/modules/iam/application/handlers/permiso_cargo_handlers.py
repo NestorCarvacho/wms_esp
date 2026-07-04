@@ -8,12 +8,12 @@ from app.modules.iam.application.commands_rbac import (
     CrearPermisoCargoCommand,
     EliminarPermisoCargoCommand,
 )
-from app.modules.iam.infrastructure.crud_repositories import SqlAlchemyPermisoCargoRepository
+from app.modules.iam.domain.ports import IPermisoCargoRepository
 from app.shared.formatting import format_empresa_nombre
 
 
 class ListarPermisosCargoQueryHandler:
-    def __init__(self, repo: SqlAlchemyPermisoCargoRepository):
+    def __init__(self, repo: IPermisoCargoRepository):
         self._repo = repo
 
     async def handle(
@@ -49,7 +49,7 @@ class ListarPermisosCargoQueryHandler:
 
 
 class CrearPermisoCargoHandler:
-    def __init__(self, repo: SqlAlchemyPermisoCargoRepository):
+    def __init__(self, repo: IPermisoCargoRepository):
         self._repo = repo
 
     async def handle(self, cmd: CrearPermisoCargoCommand) -> dict[str, Any]:
@@ -76,7 +76,7 @@ class CrearPermisoCargoHandler:
 
 
 class ActualizarPermisoCargoHandler:
-    def __init__(self, repo: SqlAlchemyPermisoCargoRepository):
+    def __init__(self, repo: IPermisoCargoRepository):
         self._repo = repo
 
     async def handle(self, cmd: ActualizarPermisoCargoCommand) -> dict[str, Any]:
@@ -101,7 +101,7 @@ class ActualizarPermisoCargoHandler:
 
 
 class EliminarPermisoCargoHandler:
-    def __init__(self, repo: SqlAlchemyPermisoCargoRepository):
+    def __init__(self, repo: IPermisoCargoRepository):
         self._repo = repo
 
     async def handle(self, cmd: EliminarPermisoCargoCommand) -> dict[str, str]:

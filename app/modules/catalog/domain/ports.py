@@ -91,3 +91,64 @@ class IUnidadMedidaRepository(Protocol):
     ) -> UnidadMedida | None: ...
 
     async def eliminar(self, unidad_medida_id: int, empresa_id: int) -> bool: ...
+
+
+class IProductoPresentacionService(Protocol):
+    async def resolver_empresa_para_producto(
+        self,
+        producto_id: int,
+        empresa_usuario_id: int,
+        es_maestra: bool,
+        empresas_administradas_ids: list[int],
+    ) -> int: ...
+
+    async def resolver_empresa_para_presentacion(
+        self,
+        presentacion_id: int,
+        empresa_usuario_id: int,
+        es_maestra: bool,
+        empresas_administradas_ids: list[int],
+    ) -> int: ...
+
+    async def listar_presentaciones(
+        self,
+        producto_id: int,
+        empresa_id: int,
+        pagina: int = 1,
+        por_pagina: int = 50,
+        buscar: str | None = None,
+    ) -> dict[str, Any]: ...
+
+    async def buscar_por_barcode(self, empresa_id: int, codigo: str) -> dict[str, Any] | None: ...
+
+    async def crear_presentacion(
+        self, producto_id: int, empresa_id: int, nombre: str, **kwargs: Any
+    ) -> dict[str, Any]: ...
+
+    async def actualizar_presentacion(
+        self, presentacion_id: int, empresa_id: int, **datos: Any
+    ) -> dict[str, Any]: ...
+
+    async def eliminar_presentacion(
+        self, presentacion_id: int, empresa_id: int
+    ) -> dict[str, Any]: ...
+
+    async def calcular_descuento_stock(
+        self,
+        presentacion_id: int,
+        empresa_id: int,
+        cantidad: Any,
+        venta_por_presentacion: bool,
+    ) -> dict[str, Any]: ...
+
+
+class IProductoImportacionService(Protocol):
+    async def generar_plantilla(self, empresa_id: int) -> bytes: ...
+
+    async def importar_desde_excel(self, contenido: bytes, empresa_id: int) -> dict[str, Any]: ...
+
+
+class IProductoConsultaService(Protocol):
+    async def consultar_por_codigo(
+        self, codigo: str, empresas_ids: list[int]
+    ) -> dict[str, Any]: ...

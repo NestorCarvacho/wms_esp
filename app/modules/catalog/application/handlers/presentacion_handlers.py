@@ -4,13 +4,13 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import Any
 
-from app.modules.catalog.infrastructure.producto_presentacion_service import ProductoPresentacionService
+from app.modules.catalog.domain.ports import IProductoPresentacionService
 
 
 class PresentacionHandlers:
     """Agrupa casos de uso de presentaciones (facilita inyección)."""
 
-    def __init__(self, service: ProductoPresentacionService):
+    def __init__(self, service: IProductoPresentacionService):
         self._service = service
 
     async def resolver_empresa_producto(

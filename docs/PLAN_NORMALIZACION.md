@@ -37,7 +37,7 @@ Estado de avance del roadmap acordado.
 - [x] Adaptadores IAM: auth y perfil con SQL propio; CRUD usuario mapea a dominio
 - [x] Puertos catalog tipados con entidades de dominio
 - [x] Absorber repos legacy: warehouse, tenant, catalog CRUD, inventory (SQL en módulos)
-- [ ] Absorber repos legacy IAM RBAC (cargo, rol, permiso, usuario_rol, bootstrap)
+- [x] Absorber repos legacy IAM RBAC (cargo, rol, permiso, usuario_rol, bootstrap, junctions)
 
 ## BBDD pendiente (opcional)
 

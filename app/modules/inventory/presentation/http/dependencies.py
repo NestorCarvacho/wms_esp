@@ -16,4 +16,4 @@ async def obtener_inventory_handlers(
 async def obtener_inventario_reporte_service(
     handlers: InventoryHandlers = Depends(obtener_inventory_handlers),
 ) -> InventarioReporteService:
-    return InventarioReporteService(handlers)
+    return InventarioReporteService(handlers.listar_stock, handlers.listar_movimientos)
