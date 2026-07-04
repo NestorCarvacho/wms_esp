@@ -1,11 +1,11 @@
 """Servicio de presentaciones comerciales de producto."""
 from decimal import Decimal
 from typing import Dict, Any
-from app.infrastructure.repositories.producto_presentacion_crud_repository import (
+from app.modules.catalog.infrastructure.producto_presentacion_crud import (
     ProductoPresentacionCRUDRepository,
 )
-from app.infrastructure.repositories.producto_crud_repository import ProductoCRUDRepository
-from app.infrastructure.repositories.unidadMedida_crud_repository import UnidadMedidaCRUDRepository
+from app.modules.catalog.infrastructure.producto_crud import ProductoCRUDRepository
+from app.modules.catalog.infrastructure.unidad_medida_crud import UnidadMedidaCRUDRepository
 from app.modules.catalog.domain.services.presentacion_stock_converter import InventarioPresentacionService
 
 

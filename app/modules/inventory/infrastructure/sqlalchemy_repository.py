@@ -6,8 +6,8 @@ from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.infrastructure.repositories.bodega_crud_repository import BodegaCRUDRepository
-from app.infrastructure.repositories.inventario_crud_repository import InventarioCRUDRepository
+from app.modules.inventory.infrastructure.inventario_crud import InventarioCRUDRepository
+from app.modules.warehouse.infrastructure.bodega_crud import BodegaCRUDRepository
 
 
 class SqlAlchemyInventarioRepository:

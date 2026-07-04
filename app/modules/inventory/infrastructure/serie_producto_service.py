@@ -2,8 +2,8 @@
 from decimal import Decimal
 from typing import Any
 
-from app.infrastructure.repositories.inventario_crud_repository import InventarioCRUDRepository
-from app.infrastructure.repositories.serie_producto_crud_repository import SerieProductoCRUDRepository
+from app.modules.inventory.infrastructure.inventario_crud import InventarioCRUDRepository
+from app.modules.inventory.infrastructure.serie_producto_crud import SerieProductoCRUDRepository
 
 
 class SerieProductoService:

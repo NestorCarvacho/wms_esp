@@ -5,9 +5,7 @@ from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.infrastructure.repositories.empresa_administrada_repository import (
-    EmpresaAdministradaRepository,
-)
+from app.modules.tenant.infrastructure.empresa_administrada import EmpresaAdministradaRepository
 
 
 class SqlAlchemyTenantRepository:

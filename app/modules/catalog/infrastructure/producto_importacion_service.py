@@ -11,12 +11,12 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.infrastructure.models.usuario import Producto, ProductoPresentacion
-from app.infrastructure.repositories.producto_crud_repository import ProductoCRUDRepository
-from app.infrastructure.repositories.producto_presentacion_crud_repository import (
+from app.modules.catalog.infrastructure.producto_crud import ProductoCRUDRepository
+from app.modules.catalog.infrastructure.producto_presentacion_crud import (
     ProductoPresentacionCRUDRepository,
 )
-from app.infrastructure.repositories.tipo_producto_crud_repository import TipoProductoCRUDRepository
-from app.infrastructure.repositories.unidadMedida_crud_repository import UnidadMedidaCRUDRepository
+from app.modules.catalog.infrastructure.tipo_producto_crud import TipoProductoCRUDRepository
+from app.modules.catalog.infrastructure.unidad_medida_crud import UnidadMedidaCRUDRepository
 
 SHEET_PRODUCTOS = "Productos"
 SHEET_PRESENTACIONES = "Presentaciones"

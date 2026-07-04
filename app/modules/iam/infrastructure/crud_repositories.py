@@ -5,7 +5,7 @@ from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.infrastructure.repositories.empresa_crud_repository import EmpresaCRUDRepository
+from app.modules.tenant.infrastructure.empresa_crud import EmpresaCRUDRepository
 from app.infrastructure.repositories.empresa_rbac_bootstrap_repository import (
     EmpresaRbacBootstrapRepository,
 )

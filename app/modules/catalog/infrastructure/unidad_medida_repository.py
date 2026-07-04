@@ -5,7 +5,7 @@ from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.infrastructure.repositories.unidadMedida_crud_repository import UnidadMedidaCRUDRepository
+from app.modules.catalog.infrastructure.unidad_medida_crud import UnidadMedidaCRUDRepository
 from app.modules.catalog.domain.entities import UnidadMedida
 from app.modules.catalog.infrastructure.orm_mappers import unidad_medida_desde_orm
 

@@ -5,7 +5,7 @@ from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.infrastructure.repositories.tipo_producto_crud_repository import TipoProductoCRUDRepository
+from app.modules.catalog.infrastructure.tipo_producto_crud import TipoProductoCRUDRepository
 from app.modules.catalog.domain.entities import TipoProducto
 from app.modules.catalog.infrastructure.orm_mappers import tipo_producto_desde_orm
 

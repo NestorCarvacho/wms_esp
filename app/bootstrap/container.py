@@ -97,8 +97,8 @@ from app.modules.inventory.domain.services.presentacion_converter import Present
 from app.modules.inventory.infrastructure.sqlalchemy_repository import SqlAlchemyInventarioRepository
 from app.modules.inventory.infrastructure.serie_producto_service import SerieProductoService
 from app.modules.inventory.infrastructure.unit_of_work import SqlAlchemyInventoryUnitOfWork
-from app.infrastructure.repositories.inventario_crud_repository import InventarioCRUDRepository
-from app.infrastructure.repositories.serie_producto_crud_repository import SerieProductoCRUDRepository
+from app.modules.inventory.infrastructure.inventario_crud import InventarioCRUDRepository
+from app.modules.inventory.infrastructure.serie_producto_crud import SerieProductoCRUDRepository
 
 
 @dataclass

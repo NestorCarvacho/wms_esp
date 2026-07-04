@@ -5,12 +5,12 @@ from dataclasses import dataclass
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.infrastructure.repositories.inventario_crud_repository import InventarioCRUDRepository
-from app.infrastructure.repositories.producto_crud_repository import ProductoCRUDRepository
-from app.infrastructure.repositories.producto_presentacion_crud_repository import (
+from app.modules.inventory.infrastructure.inventario_crud import InventarioCRUDRepository
+from app.modules.catalog.infrastructure.producto_crud import ProductoCRUDRepository
+from app.modules.catalog.infrastructure.producto_presentacion_crud import (
     ProductoPresentacionCRUDRepository,
 )
-from app.infrastructure.repositories.unidadMedida_crud_repository import UnidadMedidaCRUDRepository
+from app.modules.catalog.infrastructure.unidad_medida_crud import UnidadMedidaCRUDRepository
 from app.modules.catalog.application.handlers.presentacion_handlers import PresentacionHandlers
 from app.modules.catalog.application.handlers.producto_extended_handlers import (
     ConsultarProductoHandler,
