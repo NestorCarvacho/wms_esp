@@ -91,7 +91,7 @@ async def obtener_cargo(
     id: int,
     usuario_autenticado: dict = Depends(requiere_permiso("cargos.leer")),
     es_admin: bool = Depends(es_super_admin),
-    handlers: IamHandlers = Depends(obtener_iam_handlers),,
+    handlers: IamHandlers = Depends(obtener_iam_handlers),
 ):
     """
     Obtiene los datos de un cargo específico.
@@ -222,7 +222,7 @@ async def actualizar_cargo(
     actualizar_dto: CargoActualizarDTO,
     usuario_autenticado: dict = Depends(requiere_permiso("cargos.editar")),
     es_admin: bool = Depends(es_super_admin),
-    handlers: IamHandlers = Depends(obtener_iam_handlers),,
+    handlers: IamHandlers = Depends(obtener_iam_handlers),
 ):
     """
     Actualiza los datos de un cargo existente.
@@ -302,7 +302,7 @@ async def eliminar_cargo(
     id: int,
     usuario_autenticado: dict = Depends(requiere_permiso("cargos.eliminar")),
     es_admin: bool = Depends(es_super_admin),
-    handlers: IamHandlers = Depends(obtener_iam_handlers),,
+    handlers: IamHandlers = Depends(obtener_iam_handlers),
 ):
     """
     Elimina un cargo.

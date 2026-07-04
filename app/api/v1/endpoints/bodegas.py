@@ -87,7 +87,7 @@ async def obtener_bodega(
     id: int,
     usuario_autenticado: dict = Depends(requiere_permiso("bodegas.leer")),
     es_admin: bool = Depends(es_super_admin),
-    handlers: WarehouseHandlers = Depends(obtener_warehouse_handlers),,
+    handlers: WarehouseHandlers = Depends(obtener_warehouse_handlers),
 ):
     """
     Obtiene los datos de una bodega específica.
@@ -149,7 +149,7 @@ async def crear_bodega(
     bodega_dto: BodegaCrearDTO,
     usuario_autenticado: dict = Depends(requiere_permiso("bodegas.crear")),
     es_admin: bool = Depends(es_super_admin),
-    handlers: WarehouseHandlers = Depends(obtener_warehouse_handlers),,
+    handlers: WarehouseHandlers = Depends(obtener_warehouse_handlers),
 ):
     """
     Crea un nueva bodega en la empresa.
@@ -222,7 +222,7 @@ async def actualizar_bodega(
     actualizar_dto: BodegaActualizarDTO,
     usuario_autenticado: dict = Depends(requiere_permiso("bodegas.editar")),
     es_admin: bool = Depends(es_super_admin),
-    handlers: WarehouseHandlers = Depends(obtener_warehouse_handlers),,
+    handlers: WarehouseHandlers = Depends(obtener_warehouse_handlers),
 ):
     """
     Actualiza los datos de una bodega existente.
@@ -306,7 +306,7 @@ async def eliminar_bodega(
     id: int,
     usuario_autenticado: dict = Depends(requiere_permiso("bodegas.eliminar")),
     es_admin: bool = Depends(es_super_admin),
-    handlers: WarehouseHandlers = Depends(obtener_warehouse_handlers),,
+    handlers: WarehouseHandlers = Depends(obtener_warehouse_handlers),
 ):
     """
     Elimina una bodega.

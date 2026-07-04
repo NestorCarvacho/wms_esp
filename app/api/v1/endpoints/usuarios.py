@@ -95,7 +95,7 @@ async def obtener_usuario(
     id: int,
     usuario_autenticado: dict = Depends(requiere_permiso("usuarios.leer")),
     es_admin: bool = Depends(es_super_admin),
-    handlers: IamHandlers = Depends(obtener_iam_handlers),,
+    handlers: IamHandlers = Depends(obtener_iam_handlers),
 ):
     """
     Obtiene los datos de un usuario específico.
@@ -157,7 +157,7 @@ async def crear_usuario(
     usuario_dto: UsuarioCrearDTO,
     usuario_autenticado: dict = Depends(requiere_permiso("usuarios.crear")),
     es_admin: bool = Depends(es_super_admin),
-    handlers: IamHandlers = Depends(obtener_iam_handlers),,
+    handlers: IamHandlers = Depends(obtener_iam_handlers),
 ):
     """
     Crea un nuevo usuario en la empresa.
@@ -238,7 +238,7 @@ async def actualizar_usuario(
     actualizar_dto: UsuarioActualizarDTO,
     usuario_autenticado: dict = Depends(requiere_permiso("usuarios.editar")),
     es_admin: bool = Depends(es_super_admin),
-    handlers: IamHandlers = Depends(obtener_iam_handlers),,
+    handlers: IamHandlers = Depends(obtener_iam_handlers),
 ):
     """
     Actualiza los datos de un usuario existente.
@@ -305,7 +305,7 @@ async def eliminar_usuario(
     id: int,
     usuario_autenticado: dict = Depends(requiere_permiso("usuarios.eliminar")),
     es_admin: bool = Depends(es_super_admin),
-    handlers: IamHandlers = Depends(obtener_iam_handlers),,
+    handlers: IamHandlers = Depends(obtener_iam_handlers),
 ):
     """
     Elimina (desactiva) un usuario.
@@ -359,7 +359,7 @@ async def reactivar_usuario(
     id: int,
     usuario_autenticado: dict = Depends(requiere_permiso("usuarios.editar")),
     es_admin: bool = Depends(es_super_admin),
-    handlers: IamHandlers = Depends(obtener_iam_handlers),,
+    handlers: IamHandlers = Depends(obtener_iam_handlers),
 ):
     """
     Reactiva un usuario que fue desactivado.

@@ -92,7 +92,7 @@ async def obtener_rol(
     id: int,
     usuario_autenticado: dict = Depends(requiere_permiso("roles.leer")),
     es_admin: bool = Depends(es_super_admin),
-    handlers: IamHandlers = Depends(obtener_iam_handlers),,
+    handlers: IamHandlers = Depends(obtener_iam_handlers),
 ):
     """
     Obtiene los datos de un rol específico.
@@ -228,7 +228,7 @@ async def actualizar_rol(
     actualizar_dto: RolActualizarDTO,
     usuario_autenticado: dict = Depends(requiere_permiso("roles.editar")),
     es_admin: bool = Depends(es_super_admin),
-    handlers: IamHandlers = Depends(obtener_iam_handlers),,
+    handlers: IamHandlers = Depends(obtener_iam_handlers),
 ):
     """
     Actualiza los datos de un rol existente.
@@ -310,7 +310,7 @@ async def eliminar_rol(
     id: int,
     usuario_autenticado: dict = Depends(requiere_permiso("roles.eliminar")),
     es_admin: bool = Depends(es_super_admin),
-    handlers: IamHandlers = Depends(obtener_iam_handlers),,
+    handlers: IamHandlers = Depends(obtener_iam_handlers),
 ):
     """
     Elimina un rol.
