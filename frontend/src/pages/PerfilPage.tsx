@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { actualizarPerfilUsuario, actualizarUsuario, obtenerUsuario } from '@/api/usuarios';
-import { setStoredUser } from '@/api/auth';
+import { cambiarContrasena, setStoredUser } from '@/api/auth';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { FormLayout } from '@/components/layout/FormLayout';
 import { LabelInput } from '@/components/ui/inputs';
@@ -62,6 +62,9 @@ export function PerfilPage() {
   const [pais, setPais] = useState('');
   const [fotoUrl, setFotoUrl] = useState('');
   const [biografia, setBiografia] = useState('');
+  const [contrasenaActual, setContrasenaActual] = useState('');
+  const [contrasenaNueva, setContrasenaNueva] = useState('');
+  const [contrasenaConfirmacion, setContrasenaConfirmacion] = useState('');
 
   const loadPerfil = useCallback(async () => {
     if (!user?.id) return;
@@ -135,6 +138,20 @@ export function PerfilPage() {
       };
 
       await actualizarPerfilUsuario(user.id, perfilPayload);
+
+      if (contrasenaNueva.trim()) {
+        if (!contrasenaActual.trim()) {
+          throw new Error('Ingrese su contraseña actual para cambiarla');
+        }
+        if (contrasenaNueva !== contrasenaConfirmacion) {
+          throw new Error('La confirmación de contraseña no coincide');
+        }
+        await cambiarContrasena(contrasenaActual, contrasenaNueva);
+        setContrasenaActual('');
+        setContrasenaNueva('');
+        setContrasenaConfirmacion('');
+      }
+
       showNotification({ type: 'success', message: 'Perfil actualizado correctamente' });
       await loadPerfil();
     } catch (err) {
@@ -177,6 +194,31 @@ export function PerfilPage() {
                 Como super admin puedes ver tu empresa asignada. Los datos personales se guardan en el perfil.
               </Text>
             )}
+          </FormLayout.Section>
+
+          <FormLayout.Section title="Contraseña">
+            <LabelInput
+              id="contrasenaActual"
+              label="Contraseña actual"
+              type="password"
+              value={contrasenaActual}
+              onChange={setContrasenaActual}
+              helperText="Complete solo si desea cambiar su contraseña"
+            />
+            <LabelInput
+              id="contrasenaNueva"
+              label="Nueva contraseña"
+              type="password"
+              value={contrasenaNueva}
+              onChange={setContrasenaNueva}
+            />
+            <LabelInput
+              id="contrasenaConfirmacion"
+              label="Confirmar nueva contraseña"
+              type="password"
+              value={contrasenaConfirmacion}
+              onChange={setContrasenaConfirmacion}
+            />
           </FormLayout.Section>
 
           <FormLayout.Section title="Datos personales">

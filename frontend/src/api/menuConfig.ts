@@ -35,7 +35,6 @@ const ROUTE_PERMISSIONS: Record<string, string> = {
   [appPath('/bodegas')]: 'bodegas.leer',
   [appPath('/tipos-zona')]: 'tipos_zona.leer',
   [appPath('/zonas-bodega')]: 'zonas_bodega.leer',
-  [appPath('/inventario/dashboard')]: 'inventario.leer',
   [appPath('/inventario/stock')]: 'inventario.leer',
   [appPath('/inventario/movimientos')]: 'inventario.leer',
   [appPath('/inventario/recepcion')]: 'inventario.recepcionar',
@@ -108,19 +107,6 @@ export function buildWmsMenu(
       id: 2,
       title: 'Inventario operativo',
       children: [
-        {
-          title: 'Resumen',
-          icon: 'home',
-          children: [
-            {
-              id: 'inv-dashboard',
-              title: 'Dashboard',
-              url: appPath('/inventario/dashboard'),
-              permission: 'inventario.leer',
-              routeMetadata: { iconName: 'home', breadcrumbTitle: 'Dashboard inventario' },
-            },
-          ],
-        },
         {
           title: 'Consultas',
           icon: 'table',

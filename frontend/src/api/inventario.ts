@@ -2,7 +2,6 @@ import { apiRequest, getBaseUrl, getToken } from '@/api/client';
 import { buildListQuery, type PaginatedListParams, type SortDirection } from '@/api/listQuery';
 import type {
   BodegaConfigInventario,
-  InventarioDashboardResumen,
   InventarioOperacionPayload,
   PaginatedMovimientosInventario,
   PaginatedStockZona,
@@ -13,26 +12,6 @@ function withEmpresaQuery(path: string, empresaId?: number): string {
   if (empresaId == null) return path;
   const sep = path.includes('?') ? '&' : '?';
   return `${path}${sep}empresa_id=${empresaId}`;
-}
-
-export interface InventarioDashboardParams {
-  empresaId?: number;
-  bodegaId?: number;
-  dias?: number;
-}
-
-export async function obtenerDashboardInventario(params: InventarioDashboardParams = {}) {
-  const { empresaId, bodegaId, dias } = params;
-  let path = withEmpresaQuery('/api/v1/inventario/dashboard', empresaId);
-  const extra: string[] = [];
-  if (bodegaId != null) extra.push(`bodega_id=${bodegaId}`);
-  if (dias != null) extra.push(`dias=${dias}`);
-  if (extra.length) {
-    const sep = path.includes('?') ? '&' : '?';
-    path = `${path}${sep}${extra.join('&')}`;
-  }
-  const response = await apiRequest<InventarioDashboardResumen>(path);
-  return response.datos!;
 }
 
 export async function listarStockInventario(params: PaginatedListParams = {}) {

@@ -5,6 +5,18 @@ from dataclasses import dataclass
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.infrastructure.repositories.inventario_crud_repository import InventarioCRUDRepository
+from app.infrastructure.repositories.producto_crud_repository import ProductoCRUDRepository
+from app.infrastructure.repositories.producto_presentacion_crud_repository import (
+    ProductoPresentacionCRUDRepository,
+)
+from app.infrastructure.repositories.unidadMedida_crud_repository import UnidadMedidaCRUDRepository
+from app.modules.catalog.application.handlers.presentacion_handlers import PresentacionHandlers
+from app.modules.catalog.application.handlers.producto_extended_handlers import (
+    ConsultarProductoHandler,
+    GenerarPlantillaImportacionHandler,
+    ImportarProductosHandler,
+)
 from app.modules.catalog.application.handlers.producto_handlers import (
     ActualizarProductoHandler,
     CrearProductoHandler,
@@ -26,6 +38,9 @@ from app.modules.catalog.application.handlers.unidad_medida_handlers import (
     ListarUnidadesMedidaQueryHandler,
     ObtenerUnidadMedidaQueryHandler,
 )
+from app.modules.catalog.infrastructure.producto_consulta_service import ProductoConsultaService
+from app.modules.catalog.infrastructure.producto_importacion_service import ProductoImportacionService
+from app.modules.catalog.infrastructure.producto_presentacion_service import ProductoPresentacionService
 from app.modules.catalog.infrastructure.producto_repository import SqlAlchemyProductoRepository
 from app.modules.catalog.infrastructure.tipo_producto_repository import SqlAlchemyTipoProductoRepository
 from app.modules.catalog.infrastructure.unidad_medida_repository import SqlAlchemyUnidadMedidaRepository
@@ -48,12 +63,29 @@ class CatalogHandlers:
     crear_unidad_medida: CrearUnidadMedidaHandler
     actualizar_unidad_medida: ActualizarUnidadMedidaHandler
     eliminar_unidad_medida: EliminarUnidadMedidaHandler
+    presentaciones: PresentacionHandlers
+    generar_plantilla_importacion: GenerarPlantillaImportacionHandler
+    importar_productos: ImportarProductosHandler
+    consultar_producto: ConsultarProductoHandler
 
 
 def build_catalog_handlers(session: AsyncSession) -> CatalogHandlers:
     productos = SqlAlchemyProductoRepository(session)
     tipos = SqlAlchemyTipoProductoRepository(session)
     unidades = SqlAlchemyUnidadMedidaRepository(session)
+
+    presentacion_service = ProductoPresentacionService(
+        ProductoPresentacionCRUDRepository(session),
+        ProductoCRUDRepository(session),
+        UnidadMedidaCRUDRepository(session),
+    )
+    importacion_service = ProductoImportacionService(session)
+    consulta_service = ProductoConsultaService(
+        ProductoCRUDRepository(session),
+        ProductoPresentacionCRUDRepository(session),
+        InventarioCRUDRepository(session),
+    )
+
     return CatalogHandlers(
         listar_productos=ListarProductosQueryHandler(productos),
         obtener_producto=ObtenerProductoQueryHandler(productos),
@@ -70,4 +102,8 @@ def build_catalog_handlers(session: AsyncSession) -> CatalogHandlers:
         crear_unidad_medida=CrearUnidadMedidaHandler(unidades),
         actualizar_unidad_medida=ActualizarUnidadMedidaHandler(unidades),
         eliminar_unidad_medida=EliminarUnidadMedidaHandler(unidades),
+        presentaciones=PresentacionHandlers(presentacion_service),
+        generar_plantilla_importacion=GenerarPlantillaImportacionHandler(importacion_service),
+        importar_productos=ImportarProductosHandler(importacion_service),
+        consultar_producto=ConsultarProductoHandler(consulta_service),
     )

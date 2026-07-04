@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { Link, Navigate } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { LoginLayout } from '@/components/layout/LoginLayout';
 import { LabelInput } from '@/components/ui/inputs';
 import { PrimaryButton } from '@/components/ui/buttons';
@@ -57,12 +57,6 @@ export function LoginPage() {
           onChange={setContrasena}
           required
         />
-
-        <div className="text-right">
-          <Link to={PATHS.forgotPassword} className="text-sm text-blue-600 hover:underline">
-            ¿Olvidó su contraseña?
-          </Link>
-        </div>
 
         <PrimaryButton type="submit" colorVariant="success" isLoading={loading} fullWidth>
           Iniciar sesión

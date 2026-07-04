@@ -4,8 +4,6 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import Any, Protocol
 
-from app.modules.inventory.domain.events import StockMovimientoRegistrado
-
 
 class IInventarioRepository(Protocol):
     async def obtener_zona(self, zona_id: int, empresa_id: int | None = None) -> Any | None: ...
@@ -36,15 +34,9 @@ class IInventarioRepository(Protocol):
         self, empresa_id: int, **kwargs: Any
     ) -> tuple[list[Any], int]: ...
 
-    async def resumen_dashboard(self, empresa_id: int, **kwargs: Any) -> dict: ...
-
     async def commit(self) -> None: ...
 
     async def rollback(self) -> None: ...
-
-
-class IEventPublisher(Protocol):
-    async def publish(self, event: StockMovimientoRegistrado) -> None: ...
 
 
 class IUnitOfWork(Protocol):

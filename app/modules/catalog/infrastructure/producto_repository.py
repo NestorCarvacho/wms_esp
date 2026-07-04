@@ -6,23 +6,29 @@ from typing import Any
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.infrastructure.repositories.producto_crud_repository import ProductoCRUDRepository
+from app.modules.catalog.domain.entities import Producto
+from app.modules.catalog.infrastructure.orm_mappers import producto_desde_orm
 
 
 class SqlAlchemyProductoRepository:
     def __init__(self, session: AsyncSession):
         self._repo = ProductoCRUDRepository(session)
 
-    async def listar(self, **kwargs: Any) -> tuple[list[Any], int]:
-        return await self._repo.listar(**kwargs)
+    async def listar(self, **kwargs: Any) -> tuple[list[Producto], int]:
+        rows, total = await self._repo.listar(**kwargs)
+        return [producto_desde_orm(r) for r in rows], total
 
-    async def obtener_por_id(self, producto_id: int, empresa_id: int | None = None) -> Any | None:
-        return await self._repo.obtener_por_id(producto_id, empresa_id)
+    async def obtener_por_id(self, producto_id: int, empresa_id: int | None = None) -> Producto | None:
+        row = await self._repo.obtener_por_id(producto_id, empresa_id)
+        return producto_desde_orm(row) if row else None
 
-    async def obtener_por_sku(self, sku: str, empresa_id: int) -> Any | None:
-        return await self._repo.obtener_por_sku(sku, empresa_id)
+    async def obtener_por_sku(self, sku: str, empresa_id: int) -> Producto | None:
+        row = await self._repo.obtener_por_sku(sku, empresa_id)
+        return producto_desde_orm(row) if row else None
 
-    async def obtener_por_nombre(self, nombre: str, empresa_id: int) -> Any | None:
-        return await self._repo.obtener_por_nombre(nombre, empresa_id)
+    async def obtener_por_nombre(self, nombre: str, empresa_id: int) -> Producto | None:
+        row = await self._repo.obtener_por_nombre(nombre, empresa_id)
+        return producto_desde_orm(row) if row else None
 
     async def crear(
         self,
@@ -35,8 +41,8 @@ class SqlAlchemyProductoRepository:
         precio_costo: float | None = None,
         serializado: bool = False,
         stock_minimo: float | None = None,
-    ) -> Any:
-        return await self._repo.crear(
+    ) -> Producto:
+        row = await self._repo.crear(
             empresa_id,
             nombre,
             sku,
@@ -47,6 +53,7 @@ class SqlAlchemyProductoRepository:
             serializado=serializado,
             stock_minimo=stock_minimo,
         )
+        return producto_desde_orm(row)
 
     async def actualizar(
         self,
@@ -63,8 +70,8 @@ class SqlAlchemyProductoRepository:
         serializado: bool | None = None,
         stock_minimo: float | None = None,
         actualizar_stock_minimo: bool = False,
-    ) -> Any | None:
-        return await self._repo.actualizar(
+    ) -> Producto | None:
+        row = await self._repo.actualizar(
             producto_id,
             empresa_id,
             nombre,
@@ -78,6 +85,7 @@ class SqlAlchemyProductoRepository:
             stock_minimo=stock_minimo,
             actualizar_stock_minimo=actualizar_stock_minimo,
         )
+        return producto_desde_orm(row) if row else None
 
     async def eliminar(self, producto_id: int, empresa_id: int) -> bool:
         return await self._repo.eliminar(producto_id, empresa_id)

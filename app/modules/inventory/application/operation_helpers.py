@@ -5,8 +5,7 @@ from decimal import Decimal
 from typing import Any
 
 from app.modules.inventory.application.mappers import serializar_movimiento
-from app.modules.inventory.domain.events import StockMovimientoRegistrado
-from app.modules.inventory.domain.ports import IEventPublisher, IInventarioRepository
+from app.modules.inventory.domain.ports import IInventarioRepository
 from app.modules.inventory.domain.services.presentacion_converter import PresentacionConverter
 
 
@@ -53,60 +52,6 @@ async def resolver_zona_recepcion(
     if not zona or zona.bodega_id != bodega_id:
         raise ValueError("La zona de recepción configurada no es válida para esta bodega")
     return zona
-
-
-async def emitir_evento_stock(
-    publisher: IEventPublisher,
-    empresa_id: int,
-    tipo: str,
-    data: dict,
-) -> None:
-    await publisher.publish(
-        StockMovimientoRegistrado(
-            empresa_id=empresa_id,
-            movimiento_id=data.get("id"),
-            tipo=tipo,
-            payload={
-                "movimiento_id": data.get("id"),
-                "producto_nombre": data.get("producto_nombre"),
-                "producto_sku": data.get("producto_sku"),
-                "cantidad": data.get("cantidad"),
-                "tipo": tipo,
-                "creado_at_local": data.get("creado_at_local"),
-            },
-            creado_at_local=data.get("creado_at_local"),
-        )
-    )
-
-
-async def evaluar_stock_critico_tras_despacho(
-    notifications,
-    *,
-    empresa_id: int,
-    usuario_id: int,
-    producto: Any,
-    stock_zona: Decimal,
-    payload_base: dict,
-) -> None:
-    """Emite STOCK_CRITICO si el stock en zona queda en o bajo el umbral del producto."""
-    umbral = getattr(producto, "stock_minimo", None)
-    if umbral is None:
-        return
-    try:
-        umbral_f = float(umbral)
-    except (TypeError, ValueError):
-        return
-    if umbral_f < 0:
-        return
-    if float(stock_zona) > umbral_f:
-        return
-    payload = {
-        **payload_base,
-        "cantidad": float(stock_zona),
-        "stock_minimo": umbral_f,
-        "producto_id": getattr(producto, "id", None),
-    }
-    await notifications.notify_stock_critical(empresa_id, usuario_id, payload)
 
 
 def movimiento_dict(mov: Any) -> dict:

@@ -1,22 +1,20 @@
-"""Mapeo tipo producto ORM → DTO."""
+"""Mapeo tipo producto dominio → DTO."""
 from __future__ import annotations
 
-from typing import Any
-
-from app.domain.services.display_helpers import format_empresa_nombre
+from app.modules.catalog.domain.entities import TipoProducto
 
 
-def serializar_tipo_producto_lista(t: Any) -> dict:
+def serializar_tipo_producto_lista(t: TipoProducto) -> dict:
     return {
         "id": t.id,
         "nombre": t.nombre,
         "empresa_id": t.empresa_id,
-        "empresa_nombre": format_empresa_nombre(t.empresa),
+        "empresa_nombre": t.empresa_nombre,
         "activo": t.activo,
     }
 
 
-def serializar_tipo_producto_detalle(t: Any) -> dict:
+def serializar_tipo_producto_detalle(t: TipoProducto) -> dict:
     return {
         "id": t.id,
         "nombre": t.nombre,

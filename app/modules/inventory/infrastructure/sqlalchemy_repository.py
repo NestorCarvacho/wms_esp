@@ -57,9 +57,6 @@ class SqlAlchemyInventarioRepository:
     ) -> tuple[list[Any], int]:
         return await self._crud.listar_movimientos(empresa_id=empresa_id, **kwargs)
 
-    async def resumen_dashboard(self, empresa_id: int, **kwargs: Any) -> dict:
-        return await self._crud.resumen_dashboard(empresa_id=empresa_id, **kwargs)
-
     async def commit(self) -> None:
         await self._crud.commit()
 

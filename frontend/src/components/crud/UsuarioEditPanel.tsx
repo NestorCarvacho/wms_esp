@@ -23,6 +23,7 @@ export function UsuarioEditPanel({ usuario, onSaved }: UsuarioEditPanelProps) {
   const [cargos, setCargos] = useState<Cargo[]>([]);
   const [roles, setRoles] = useState<Rol[]>([]);
   const [rolIds, setRolIds] = useState<number[]>([]);
+  const [contrasena, setContrasena] = useState('');
   const [loadingCargos, setLoadingCargos] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
@@ -73,6 +74,7 @@ export function UsuarioEditPanel({ usuario, onSaved }: UsuarioEditPanelProps) {
         email: email.trim(),
         cargo_id: cargoId ? Number(cargoId) : null,
         activo: preserveActivoBoolean(usuario.activo),
+        ...(contrasena.trim() ? { contrasena: contrasena } : {}),
       });
       await sincronizarRolesUsuario(usuario.id, rolIds);
       showNotification({
@@ -94,6 +96,14 @@ export function UsuarioEditPanel({ usuario, onSaved }: UsuarioEditPanelProps) {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <LabelInput id="edit-email" label="Email" type="email" value={email} onChange={setEmail} required />
+      <LabelInput
+        id="edit-contrasena"
+        label="Nueva contraseña (opcional)"
+        type="password"
+        value={contrasena}
+        onChange={setContrasena}
+        placeholder="Dejar en blanco para no cambiar"
+      />
       <ComboBox
         id="edit-cargo"
         label="Cargo (organizacional)"

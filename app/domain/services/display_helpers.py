@@ -1,11 +1,4 @@
-"""Helpers para mostrar nombres legibles en respuestas API."""
+"""Re-export — usar app.shared.formatting."""
+from app.shared.formatting import format_empresa_nombre
 
-
-def format_empresa_nombre(empresa) -> str | None:
-    if empresa is None:
-        return None
-    codigo = getattr(empresa, "codigo", None)
-    razon_social = getattr(empresa, "razon_social", None)
-    if codigo and razon_social:
-        return f"{codigo} — {razon_social}"
-    return razon_social or codigo
+__all__ = ["format_empresa_nombre"]

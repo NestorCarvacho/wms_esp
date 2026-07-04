@@ -126,23 +126,6 @@ class Usuario(Base):
         return f"<Usuario(id={self.id}, email='{self.email}', empresa_id={self.empresa_id})>"
 
 
-class PasswordResetToken(Base):
-    """Token de un solo uso para recuperación de contraseña."""
-    __tablename__ = "password_reset_token"
-
-    id = Column(BigInteger, primary_key=True, index=True)
-    usuario_id = Column(BigInteger, ForeignKey("usuario.id", ondelete="CASCADE"), nullable=False, index=True)
-    token_hash = Column(String(64), nullable=False, index=True)
-    expira_at = Column(DateTime, nullable=False)
-    usado_at = Column(DateTime, nullable=True)
-    creado_at = Column(DateTime, default=datetime.utcnow)
-
-    usuario = relationship("Usuario")
-
-    def __repr__(self):
-        return f"<PasswordResetToken(usuario_id={self.usuario_id}, expira_at={self.expira_at})>"
-
-
 class PerfilUsuario(Base):
     """Tabla de perfil de usuario con datos personales."""
     __tablename__ = "perfil_usuario"
@@ -386,25 +369,6 @@ class StockZona(Base):
 
     zona_bodega = relationship("ZonaBodega")
     producto = relationship("Producto")
-
-
-class Notificacion(Base):
-    """Bandeja de notificaciones in-app por usuario."""
-    __tablename__ = "notificacion"
-
-    id = Column(BigInteger, primary_key=True, index=True)
-    empresa_id = Column(BigInteger, ForeignKey("empresa.id"), nullable=False, index=True)
-    usuario_id = Column(BigInteger, ForeignKey("usuario.id"), nullable=False, index=True)
-    tipo = Column(String(50), nullable=False)
-    titulo = Column(String(255), nullable=False)
-    mensaje = Column(String(2000), nullable=True)
-    payload_json = Column(JSON, nullable=True)
-    leida = Column(Boolean, default=False, nullable=False)
-    creado_at = Column(DateTime, default=datetime.utcnow)
-    leida_at = Column(DateTime, nullable=True)
-
-    empresa = relationship("Empresa")
-    usuario = relationship("Usuario")
 
 
 class MovimientoInventario(Base):

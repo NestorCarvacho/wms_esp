@@ -6,9 +6,10 @@ Multi-tenant con soporte para super admin.
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.domain.services.unidadMedidad_service import UnidadMedidaService
+from app.bootstrap.catalog_container import CatalogHandlers
 from app.infrastructure.database import get_db_session
-from app.modules.catalog.presentation.http.dependencies import obtener_unidad_medida_service
+from app.modules.catalog.application.commands import ActualizarUnidadMedidaCommand, CrearUnidadMedidaCommand
+from app.modules.catalog.presentation.http.dependencies import obtener_catalog_handlers
 from app.api.v1.dependencies import obtener_usuario_autenticado, requiere_permiso, es_super_admin
 from app.api.v1.empresa_contexto import ContextoEmpresa, kwargs_listado, obtener_contexto_empresa, resolver_empresa_creacion, contexto_requiere_permiso
 from app.api.v1.listado_query import orden_listado
@@ -37,7 +38,7 @@ async def listar_Productos(
     buscar: str | None = None,
     orden_params: dict = Depends(orden_listado),
     ctx: ContextoEmpresa = Depends(contexto_requiere_permiso("unidades_medida.leer")),
-    service: UnidadMedidaService = Depends(obtener_unidad_medida_service)
+    handlers: CatalogHandlers = Depends(obtener_catalog_handlers),
 ):
     """
     Obtiene la lista de unidades de medida.
@@ -57,7 +58,7 @@ async def listar_Productos(
     - Requiere autenticación JWT
     """
     try:
-        resultado = await service.listar_unidades_medida(
+        resultado = await handlers.listar_unidades_medida.handle(
             empresa_id=ctx.empresa_usuario_id,
             pagina=pagina,
             por_pagina=por_pagina,
@@ -89,7 +90,7 @@ async def obtener_UnidadMedida(
     id: int,
     usuario_autenticado: dict = Depends(requiere_permiso("unidades_medida.leer")),
     es_admin: bool = Depends(es_super_admin),
-    service: UnidadMedidaService = Depends(obtener_unidad_medida_service)
+    handlers: CatalogHandlers = Depends(obtener_catalog_handlers),
 ):
     """
     Obtiene los datos de una unidad de medida específica.
@@ -112,7 +113,7 @@ async def obtener_UnidadMedida(
         
         # Si es super admin, obtener sin filtro de empresa
         unidad_medida_empresa_id = None if es_admin else empresa_id
-        unidad_medida = await service.obtener_unidad_medida(id, unidad_medida_empresa_id)
+        unidad_medida = await handlers.obtener_unidad_medida.handle(id, unidad_medida_empresa_id)
         
         # Validar permisos si no es super admin
         if not es_admin and unidad_medida["empresa_id"] != empresa_id:
@@ -151,7 +152,7 @@ async def crear_unidad_medida(
     unidad_medida_dto: UnidadMedidaCrearDTO,
     usuario_autenticado: dict = Depends(requiere_permiso("unidades_medida.crear")),
     session: AsyncSession = Depends(get_db_session),
-    service: UnidadMedidaService = Depends(obtener_unidad_medida_service),
+    handlers: CatalogHandlers = Depends(obtener_catalog_handlers),
 ):
     """
     Crea un nueva unidad de medida en la empresa.
@@ -182,11 +183,13 @@ async def crear_unidad_medida(
             usuario_autenticado, unidad_medida_dto.empresa_id, session
         )
         
-        nueva_unidad_medida = await service.crear_unidad_medida(
-            empresa_id=empresa_id,
-            nombre=unidad_medida_dto.nombre,
-            codigo=unidad_medida_dto.codigo,
-            activo=unidad_medida_dto.activo
+        nueva_unidad_medida = await handlers.crear_unidad_medida.handle(
+            CrearUnidadMedidaCommand(
+                empresa_id=empresa_id,
+                nombre=unidad_medida_dto.nombre,
+                codigo=unidad_medida_dto.codigo,
+                activo=unidad_medida_dto.activo,
+            )
         )
         
         return RespuestaAPIDTO(
@@ -224,7 +227,7 @@ async def actualizar_unidad_medida(
     actualizar_dto: UnidadMedidaActualizarDTO,
     usuario_autenticado: dict = Depends(requiere_permiso("unidades_medida.editar")),
     es_admin: bool = Depends(es_super_admin),
-    service: UnidadMedidaService = Depends(obtener_unidad_medida_service),
+    handlers: CatalogHandlers = Depends(obtener_catalog_handlers),
 ):
     """
     Actualiza los datos de una unidad de medida existente.
@@ -232,12 +235,14 @@ async def actualizar_unidad_medida(
     try:
         empresa_id = usuario_autenticado.get("empresa_id")
 
-        unidad_medida_actualizada = await service.actualizar_unidad_medida(
-            unidad_medida_id=id,
-            empresa_id=empresa_id,
-            nombre=actualizar_dto.nombre,
-            codigo=actualizar_dto.codigo,
-            activo=actualizar_dto.activo
+        unidad_medida_actualizada = await handlers.actualizar_unidad_medida.handle(
+            ActualizarUnidadMedidaCommand(
+                unidad_medida_id=id,
+                empresa_id=empresa_id,
+                nombre=actualizar_dto.nombre,
+                codigo=actualizar_dto.codigo,
+                activo=actualizar_dto.activo,
+            )
         )
         
         return RespuestaAPIDTO(
@@ -279,7 +284,7 @@ async def eliminar_unidad_medida(
     id: int,
     usuario_autenticado: dict = Depends(requiere_permiso("unidades_medida.eliminar")),
     es_admin: bool = Depends(es_super_admin),
-    service: UnidadMedidaService = Depends(obtener_unidad_medida_service),
+    handlers: CatalogHandlers = Depends(obtener_catalog_handlers),
 ):
     """
     Elimina una unidad de medida.
@@ -287,7 +292,7 @@ async def eliminar_unidad_medida(
     try:
         empresa_id = usuario_autenticado.get("empresa_id")
         
-        resultado = await service.eliminar_unidad_medida(id, empresa_id)
+        resultado = await handlers.eliminar_unidad_medida.handle(id, empresa_id)
         
         return RespuestaAPIDTO(
             exito=True,

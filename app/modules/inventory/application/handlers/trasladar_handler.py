@@ -4,10 +4,9 @@ from __future__ import annotations
 from app.modules.inventory.application.commands import TrasladarCommand
 from app.modules.inventory.application.operation_helpers import (
     cantidad_unidades_base,
-    emitir_evento_stock,
     movimiento_dict,
 )
-from app.modules.inventory.domain.ports import IEventPublisher, IUnitOfWork
+from app.modules.inventory.domain.ports import IUnitOfWork
 from app.modules.inventory.domain.services.presentacion_converter import PresentacionConverter
 
 
@@ -15,11 +14,9 @@ class TrasladarHandler:
     def __init__(
         self,
         uow: IUnitOfWork,
-        event_publisher: IEventPublisher,
         conversion: PresentacionConverter | None = None,
     ):
         self.uow = uow
-        self.events = event_publisher
         self.conversion = conversion or PresentacionConverter()
 
     async def handle(self, cmd: TrasladarCommand) -> dict:
@@ -71,7 +68,6 @@ class TrasladarHandler:
             data = movimiento_dict(mov)
             data["stock_origen"] = float(stock_origen)
             data["stock_destino"] = float(stock_destino)
-            await emitir_evento_stock(self.events, cmd.empresa_id, "TRASLADO", data)
             return data
         except Exception:
             await self.uow.rollback()

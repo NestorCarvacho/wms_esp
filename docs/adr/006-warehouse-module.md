@@ -30,12 +30,11 @@ Endpoints `/api/v1/bodegas`, `/tipos-zona`, `/zonas-bodega` usan DI del módulo.
 
 ## Consecuencias
 
-- Fase 1 del monolito modular **completa** (inventory, iam, tenant, catalog, notifications, warehouse)
+- Fase 1 del monolito modular **completa** (inventory, iam, tenant, catalog, warehouse)
 - `bodega_config` permanece en módulo inventory (config operativa de recepción)
 - Campos geográficos de bodega en DTO aún no persistidos — deuda legacy existente
 
 ## Próximos pasos (Fase 2)
 
-- Extraer microservicios (Strangler Fig): notifications → inventory → catalog/warehouse
+- Extracción a microservicios (Strangler Fig) — **diferida** (plan Free / portafolio)
 - Eventos de dominio `BodegaCreada` / `ZonaBodegaActualizada`
-- Frontend FSD para páginas de bodegas

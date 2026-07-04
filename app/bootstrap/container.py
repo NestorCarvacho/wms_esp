@@ -23,15 +23,13 @@ from app.modules.iam.application.handlers.catalog_handlers import (
     ObtenerRolQueryHandler,
 )
 from app.modules.iam.application.handlers.cambiar_contrasena_handler import CambiarContrasenaHandler
-from app.modules.iam.application.handlers.login_handler import LoginHandler
-from app.modules.iam.application.handlers.restablecer_contrasena_handler import (
-    RestablecerContrasenaHandler,
+from app.modules.iam.application.handlers.perfil_handlers import (
+    ActualizarPerfilHandler,
+    ObtenerPerfilQueryHandler,
 )
+from app.modules.iam.application.handlers.login_handler import LoginHandler
 from app.modules.iam.application.handlers.resolver_permisos_handler import (
     ResolverPermisosUsuarioQueryHandler,
-)
-from app.modules.iam.application.handlers.solicitar_recuperacion_handler import (
-    SolicitarRecuperacionContrasenaHandler,
 )
 from app.modules.iam.application.handlers.rbac_handlers import (
     ListarPermisosRolQueryHandler,
@@ -52,7 +50,6 @@ from app.modules.iam.application.handlers.usuario_handlers import (
 from app.modules.iam.infrastructure.security_adapters import (
     BcryptPasswordHasher,
     JwtTokenIssuer,
-    ResendEmailNotifier,
 )
 from app.modules.iam.infrastructure.crud_repositories import (
     SqlAlchemyCargoRepository,
@@ -66,19 +63,18 @@ from app.modules.iam.infrastructure.crud_repositories import (
     SqlAlchemyUsuarioCrudRepository,
     SqlAlchemyUsuarioRolRepository,
 )
+from app.modules.iam.infrastructure.perfil_repository import SqlAlchemyPerfilUsuarioRepository
 from app.modules.iam.infrastructure.sqlalchemy_repositories import (
     SqlAlchemyAutorizacionRepository,
     SqlAlchemyUsuarioAuthRepository,
 )
 from app.modules.iam.application.handlers.validar_token_handler import ValidarTokenQueryHandler
-from app.modules.iam.infrastructure.unit_of_work import SqlAlchemyAuthUnitOfWork
 from app.modules.inventory.application.handlers.config_handlers import (
     ActualizarConfigBodegaHandler,
     ObtenerConfigBodegaHandler,
 )
 from app.modules.inventory.application.handlers.despachar_handler import DespacharHandler
 from app.modules.inventory.application.handlers.query_handlers import (
-    DashboardHandler,
     ListarMovimientosHandler,
     ListarStockHandler,
 )
@@ -87,15 +83,11 @@ from app.modules.inventory.application.handlers.trasladar_handler import Traslad
 from app.modules.inventory.domain.services.presentacion_converter import PresentacionConverter
 from app.modules.inventory.infrastructure.sqlalchemy_repository import SqlAlchemyInventarioRepository
 from app.modules.inventory.infrastructure.unit_of_work import SqlAlchemyInventoryUnitOfWork
-from app.modules.inventory.infrastructure.ws_event_publisher import WebSocketEventPublisher
-from app.bootstrap.notification_container import build_notification_handlers
 
 
 @dataclass
 class IamHandlers:
     login: LoginHandler
-    solicitar_recuperacion: SolicitarRecuperacionContrasenaHandler
-    restablecer_contrasena: RestablecerContrasenaHandler
     cambiar_contrasena: CambiarContrasenaHandler
     validar_token: ValidarTokenQueryHandler
     resolver_permisos: ResolverPermisosUsuarioQueryHandler
@@ -126,10 +118,11 @@ class IamHandlers:
     actualizar_cargo: ActualizarCargoHandler
     eliminar_cargo: EliminarCargoHandler
     provisionar_rbac: ProvisionarRbacEmpresaHandler
+    obtener_perfil: ObtenerPerfilQueryHandler
+    actualizar_perfil: ActualizarPerfilHandler
 
 
 def build_iam_handlers(session: AsyncSession) -> IamHandlers:
-    uow = SqlAlchemyAuthUnitOfWork(session)
     usuarios_auth = SqlAlchemyUsuarioAuthRepository(session)
     usuarios_crud = SqlAlchemyUsuarioCrudRepository(session)
     usuario_rol = SqlAlchemyUsuarioRolRepository(session)
@@ -144,14 +137,10 @@ def build_iam_handlers(session: AsyncSession) -> IamHandlers:
     autorizacion = SqlAlchemyAutorizacionRepository(session)
     token_issuer = JwtTokenIssuer()
     password_hasher = BcryptPasswordHasher()
-    email_notifier = ResendEmailNotifier()
+    perfiles = SqlAlchemyPerfilUsuarioRepository(session)
 
     return IamHandlers(
         login=LoginHandler(usuarios_auth, autorizacion, token_issuer, password_hasher),
-        solicitar_recuperacion=SolicitarRecuperacionContrasenaHandler(uow, email_notifier),
-        restablecer_contrasena=RestablecerContrasenaHandler(
-            usuarios_auth, uow.reset, password_hasher
-        ),
         cambiar_contrasena=CambiarContrasenaHandler(usuarios_auth, password_hasher),
         validar_token=ValidarTokenQueryHandler(usuarios_auth),
         resolver_permisos=ResolverPermisosUsuarioQueryHandler(autorizacion),
@@ -184,6 +173,8 @@ def build_iam_handlers(session: AsyncSession) -> IamHandlers:
         provisionar_rbac=ProvisionarRbacEmpresaHandler(
             bootstrap, empresas, tenant, password_hasher
         ),
+        obtener_perfil=ObtenerPerfilQueryHandler(usuarios_crud, perfiles),
+        actualizar_perfil=ActualizarPerfilHandler(usuarios_crud, perfiles),
     )
 
 
@@ -194,7 +185,6 @@ class InventoryHandlers:
     despachar: DespacharHandler
     listar_stock: ListarStockHandler
     listar_movimientos: ListarMovimientosHandler
-    dashboard: DashboardHandler
     obtener_config_bodega: ObtenerConfigBodegaHandler
     actualizar_config_bodega: ActualizarConfigBodegaHandler
 
@@ -203,17 +193,14 @@ def build_inventory_handlers(session: AsyncSession) -> InventoryHandlers:
     """Factory por request (scoped a la sesión DB)."""
     uow = SqlAlchemyInventoryUnitOfWork(session)
     repo = SqlAlchemyInventarioRepository(session)
-    notifications = build_notification_handlers(session)
-    events = WebSocketEventPublisher(notifications.dispatcher)
     conversion = PresentacionConverter()
 
     return InventoryHandlers(
-        recepcionar=RecepcionarHandler(uow, events, conversion),
-        trasladar=TrasladarHandler(uow, events, conversion),
-        despachar=DespacharHandler(uow, events, notifications.dispatcher, conversion),
+        recepcionar=RecepcionarHandler(uow, conversion),
+        trasladar=TrasladarHandler(uow, conversion),
+        despachar=DespacharHandler(uow, conversion),
         listar_stock=ListarStockHandler(repo),
         listar_movimientos=ListarMovimientosHandler(repo),
-        dashboard=DashboardHandler(repo),
         obtener_config_bodega=ObtenerConfigBodegaHandler(repo),
         actualizar_config_bodega=ActualizarConfigBodegaHandler(uow),
     )

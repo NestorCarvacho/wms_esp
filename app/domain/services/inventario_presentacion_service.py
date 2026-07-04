@@ -1,6 +1,2 @@
-"""Re-export de compatibilidad — lógica movida al módulo hexagonal."""
-from app.modules.inventory.domain.services.presentacion_converter import PresentacionConverter
-
-InventarioPresentacionService = PresentacionConverter
-
-__all__ = ["InventarioPresentacionService", "PresentacionConverter"]
+"""Re-export — lógica en app.modules.catalog.domain.services."""
+from app.modules.catalog.domain.services.presentacion_stock_converter import InventarioPresentacionService  # noqa: F401

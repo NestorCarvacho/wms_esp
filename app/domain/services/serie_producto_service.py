@@ -1,13 +1,9 @@
 """Servicio de inventario serializado (serie_producto)."""
 from decimal import Decimal
-from typing import Any, TYPE_CHECKING
+from typing import Any
 
 from app.infrastructure.repositories.inventario_crud_repository import InventarioCRUDRepository
 from app.infrastructure.repositories.serie_producto_crud_repository import SerieProductoCRUDRepository
-from app.modules.inventory.application.operation_helpers import evaluar_stock_critico_tras_despacho
-
-if TYPE_CHECKING:
-    from app.modules.notifications.application.dispatcher import NotificationDispatcher
 
 
 class SerieProductoService:
@@ -15,11 +11,9 @@ class SerieProductoService:
         self,
         serie_repo: SerieProductoCRUDRepository,
         inv_repo: InventarioCRUDRepository,
-        notifications: "NotificationDispatcher | None" = None,
     ):
         self.serie_repo = serie_repo
         self.inv_repo = inv_repo
-        self.notifications = notifications
 
     async def _validar_producto_serializado(self, producto_id: int, empresa_id: int):
         producto = await self.inv_repo.obtener_producto(producto_id, empresa_id)
@@ -175,7 +169,7 @@ class SerieProductoService:
 
         try:
             await self.serie_repo.despachar(serie.id)
-            stock_origen = await self.inv_repo.ajustar_stock(
+            await self.inv_repo.ajustar_stock(
                 zona_origen_id, serie.producto_id, Decimal("-1")
             )
             mov = await self.inv_repo.registrar_movimiento({
@@ -194,23 +188,6 @@ class SerieProductoService:
                 "observaciones": observaciones,
             })
             await self.inv_repo.commit()
-
-            producto = await self.inv_repo.obtener_producto(serie.producto_id, empresa_id)
-            if self.notifications and producto:
-                await evaluar_stock_critico_tras_despacho(
-                    self.notifications,
-                    empresa_id=empresa_id,
-                    usuario_id=usuario_id,
-                    producto=producto,
-                    stock_zona=stock_origen,
-                    payload_base={
-                        "producto_nombre": producto.nombre,
-                        "producto_sku": producto.sku,
-                        "zona_bodega_id": zona_origen_id,
-                        "movimiento_id": mov.id,
-                        "numero_serie": numero_serie,
-                    },
-                )
 
             return {
                 "serie_id": serie.id,

@@ -2,14 +2,16 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.domain.services.tipo_producto_service import TipoProductoService
+from app.bootstrap.catalog_container import CatalogHandlers
 from app.infrastructure.database import get_db_session
-from app.modules.catalog.presentation.http.dependencies import obtener_tipo_producto_service
+from app.modules.catalog.application.commands import ActualizarTipoProductoCommand, CrearTipoProductoCommand
+from app.modules.catalog.presentation.http.dependencies import obtener_catalog_handlers
 from app.api.v1.dependencies import obtener_usuario_autenticado, requiere_permiso, es_super_admin
 from app.api.v1.empresa_contexto import (
     ContextoEmpresa,
     kwargs_listado,
-    obtener_contexto_empresa, contexto_requiere_permiso,
+    obtener_contexto_empresa,
+    contexto_requiere_permiso,
     resolver_empresa_creacion,
 )
 from app.api.v1.listado_query import orden_listado
@@ -25,10 +27,10 @@ async def listar_tipos_producto(
     buscar: str | None = None,
     orden_params: dict = Depends(orden_listado),
     ctx: ContextoEmpresa = Depends(obtener_contexto_empresa),
-    service: TipoProductoService = Depends(obtener_tipo_producto_service)
+    handlers: CatalogHandlers = Depends(obtener_catalog_handlers),
 ):
     try:
-        resultado = await service.listar_tipos_producto(
+        resultado = await handlers.listar_tipos_producto.handle(
             empresa_id=ctx.empresa_usuario_id,
             pagina=pagina,
             por_pagina=por_pagina,
@@ -50,11 +52,11 @@ async def obtener_tipo_producto(
     id: int,
     usuario_autenticado: dict = Depends(requiere_permiso("tipos_producto.leer")),
     es_admin: bool = Depends(es_super_admin),
-    service: TipoProductoService = Depends(obtener_tipo_producto_service),
+    handlers: CatalogHandlers = Depends(obtener_catalog_handlers),
 ):
     try:
         empresa_id = None if es_admin else usuario_autenticado.get("empresa_id")
-        datos = await service.obtener_tipo_producto(id, empresa_id)
+        datos = await handlers.obtener_tipo_producto.handle(id, empresa_id)
         if not es_admin and datos["empresa_id"] != usuario_autenticado.get("empresa_id"):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado")
         return RespuestaAPIDTO(exito=True, datos=datos, mensaje="Tipo de producto recuperado").dict()
@@ -71,16 +73,18 @@ async def crear_tipo_producto(
     dto: TipoProductoCrearDTO,
     usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
     session: AsyncSession = Depends(get_db_session),
-    service: TipoProductoService = Depends(obtener_tipo_producto_service)
+    handlers: CatalogHandlers = Depends(obtener_catalog_handlers),
 ):
     try:
         empresa_destino = await resolver_empresa_creacion(
             usuario_autenticado, dto.empresa_id, session
         )
-        datos = await service.crear_tipo_producto(
-            empresa_id=empresa_destino,
-            nombre=dto.nombre,
-            activo=True,
+        datos = await handlers.crear_tipo_producto.handle(
+            CrearTipoProductoCommand(
+                empresa_id=empresa_destino,
+                nombre=dto.nombre,
+                activo=True,
+            )
         )
         return RespuestaAPIDTO(exito=True, datos=datos, mensaje="Tipo de producto creado").dict()
     except ValueError as e:
@@ -96,14 +100,16 @@ async def actualizar_tipo_producto(
     id: int,
     dto: TipoProductoActualizarDTO,
     usuario_autenticado: dict = Depends(requiere_permiso("tipos_producto.editar")),
-    service: TipoProductoService = Depends(obtener_tipo_producto_service),
+    handlers: CatalogHandlers = Depends(obtener_catalog_handlers),
 ):
     try:
-        datos = await service.actualizar_tipo_producto(
-            tipo_producto_id=id,
-            empresa_id=usuario_autenticado.get("empresa_id"),
-            nombre=dto.nombre,
-            activo=bool(dto.activo) if dto.activo is not None else None,
+        datos = await handlers.actualizar_tipo_producto.handle(
+            ActualizarTipoProductoCommand(
+                tipo_producto_id=id,
+                empresa_id=usuario_autenticado.get("empresa_id"),
+                nombre=dto.nombre,
+                activo=bool(dto.activo) if dto.activo is not None else None,
+            )
         )
         return RespuestaAPIDTO(exito=True, datos=datos, mensaje="Tipo de producto actualizado").dict()
     except ValueError as e:
@@ -118,10 +124,10 @@ async def actualizar_tipo_producto(
 async def eliminar_tipo_producto(
     id: int,
     usuario_autenticado: dict = Depends(requiere_permiso("tipos_producto.eliminar")),
-    service: TipoProductoService = Depends(obtener_tipo_producto_service),
+    handlers: CatalogHandlers = Depends(obtener_catalog_handlers),
 ):
     try:
-        resultado = await service.eliminar_tipo_producto(id, usuario_autenticado.get("empresa_id"))
+        resultado = await handlers.eliminar_tipo_producto.handle(id, usuario_autenticado.get("empresa_id"))
         return RespuestaAPIDTO(exito=True, datos=resultado, mensaje="Tipo de producto eliminado").dict()
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))

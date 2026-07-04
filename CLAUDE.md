@@ -208,9 +208,8 @@ Authorization: Bearer <token> en endpoints protegidos
 ```
 
 - Bloqueo por intentos fallidos (`LOGIN_MAX_ATTEMPTS`, `LOGIN_LOCKOUT_MINUTES`)
-- Reset contraseña vía `password_reset_token` + Resend (o `EMAIL_DEV_LOG_ONLY=True` en local)
+- Cambio de contraseña: perfil propio (`POST /auth/cambiar-contrasena`) o admin/gestor vía CRUD usuarios
 - Login devuelve `preferencias_locale` (empresa + overrides de perfil)
-- WebSocket inventario: `WS /api/v1/ws/inventario?token=...&locale=...&tz=...`
 
 Dependencias comunes:
 

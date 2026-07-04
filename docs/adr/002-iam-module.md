@@ -6,10 +6,10 @@ Aceptado — Fase 1a (2026-06)
 
 ## Contexto
 
-Tras el piloto `inventory` (ADR 001), el siguiente bounded context crítico es **IAM**: login, JWT, permisos RBAC y recuperación de contraseña. Hoy:
+Tras el piloto `inventory` (ADR 001), el siguiente bounded context crítico es **IAM**: login, JWT, permisos RBAC y cambio de contraseña. Hoy:
 
 - `AutorizacionService` importaba SQLAlchemy directamente en `domain`
-- `AuthService` mezclaba reglas de bloqueo, email, JWT y persistencia
+- `AuthService` mezclaba reglas de bloqueo, JWT y persistencia
 
 ## Decisión
 
@@ -19,12 +19,12 @@ Crear `app/modules/iam/` con vertical slice **autenticación + resolución de pe
 |---------|-----------------|
 | `LoginHandler` | Credenciales, bloqueo, emisión JWT |
 | `ResolverPermisosUsuarioQueryHandler` | Cadena usuario_rol → permiso |
-| `SolicitarRecuperacionContrasenaHandler` | Token reset + email |
-| `RestablecerContrasenaHandler` | Cambio con token |
-| `CambiarContrasenaHandler` | Cambio autenticado |
+| `CambiarContrasenaHandler` | Cambio autenticado (perfil propio) |
 | `ValidarTokenQueryHandler` | Validación payload JWT |
 
-**Puertos:** `IUserAuthRepository`, `IAutorizacionRepository`, `ITokenIssuer`, `IPasswordHasher`, `IEmailNotifier`, `IPasswordResetRepository`.
+**Contraseñas:** el usuario la cambia en su perfil (`POST /auth/cambiar-contrasena`); un admin o gestor con `usuarios.editar` puede asignar una nueva al editar el usuario.
+
+**Puertos:** `IUserAuthRepository`, `IAutorizacionRepository`, `ITokenIssuer`, `IPasswordHasher`.
 
 **Fachadas legacy:** `AuthService`, `AutorizacionService` delegan a handlers.
 
@@ -53,10 +53,9 @@ Crear `app/modules/iam/` con vertical slice **autenticación + resolución de pe
 
 - CRUD empresa en módulo tenant
 - Módulo `catalog` (productos)
-- `notification-service` (WebSocket/email)
 
 ## Historial de fases IAM
 
 **1b:** Handlers CRUD usuario, sync RBAC, `/auth/registrar` vía `CrearUsuarioHandler`.
 
-**1a:** Login, permisos, recuperación contraseña; fachadas `AuthService` / `AutorizacionService`.
+**1a:** Login, permisos, cambio de contraseña; fachadas `AuthService` / `AutorizacionService`.

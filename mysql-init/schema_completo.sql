@@ -8,14 +8,12 @@
 -- Uso:
 --   mysql -u root -p <password> wms_esp < schema_completo.sql
 --
--- Tablas incluidas (24):
+-- Tablas incluidas:
 --   empresa, cargo, rol, permiso, rol_permiso, permisos_cargo,
---   estado_inventario, estado_orden, unidad_medida, tipo_zona, tipo_producto,
---   usuario, perfil_usuario, password_reset_token, usuario_rol,
+--   unidad_medida, tipo_zona, tipo_producto, usuario, perfil_usuario, usuario_rol,
 --   bodega, zona_bodega, bodega_config, empresa_administrada,
---   producto, producto_presentacion,
---   inventario (legacy), movimiento_stock (legacy),
---   stock_zona, serie_producto, movimiento_inventario
+--   producto, producto_presentacion, stock_zona, serie_producto, movimiento_inventario,
+--   moneda, tipo_cambio_historico, region, ciudad, comuna
 --
 -- Datos semilla: permisos, roles operativos (empresa_id = 1).
 -- =============================================================================
@@ -28,6 +26,9 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- =============================================================================
 
 DROP TABLE IF EXISTS movimiento_inventario;
+DROP TABLE IF EXISTS tipo_cambio_historico;
+DROP TABLE IF EXISTS moneda;
+DROP TABLE IF EXISTS notificacion;
 DROP TABLE IF EXISTS comuna;
 DROP TABLE IF EXISTS ciudad;
 DROP TABLE IF EXISTS region;
@@ -117,8 +118,14 @@ CREATE TABLE empresa (
   region_id          INT          DEFAULT NULL,
   ciudad_id          INT          DEFAULT NULL,
   comuna_id          INT          DEFAULT NULL,
+  locale             VARCHAR(10)  NOT NULL DEFAULT 'es-CL',
+  timezone           VARCHAR(64)  NOT NULL DEFAULT 'America/Santiago',
+  moneda_codigo      CHAR(3)      NOT NULL DEFAULT 'CLP',
   PRIMARY KEY (id),
-  UNIQUE KEY uk_empresa_codigo (codigo)
+  UNIQUE KEY uk_empresa_codigo (codigo),
+  CONSTRAINT fk_empresa_region FOREIGN KEY (region_id) REFERENCES region (id),
+  CONSTRAINT fk_empresa_ciudad FOREIGN KEY (ciudad_id) REFERENCES ciudad (id),
+  CONSTRAINT fk_empresa_comuna FOREIGN KEY (comuna_id) REFERENCES comuna (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ----------------------------------------------------------------------------
@@ -309,6 +316,8 @@ CREATE TABLE perfil_usuario (
   ciudad_id        INT          DEFAULT NULL,
   comuna_id        INT          DEFAULT NULL,
   pais             VARCHAR(100) DEFAULT NULL,
+  locale_override   VARCHAR(10)  DEFAULT NULL,
+  timezone_override VARCHAR(64)  DEFAULT NULL,
   foto_url         VARCHAR(500) DEFAULT NULL,
   biografia        TEXT,
   PRIMARY KEY (usuario_id),
@@ -320,22 +329,6 @@ CREATE TABLE perfil_usuario (
   CONSTRAINT fk_perfil_region      FOREIGN KEY (region_id)  REFERENCES region     (id),
   CONSTRAINT fk_perfil_ciudad      FOREIGN KEY (ciudad_id)  REFERENCES ciudad     (id),
   CONSTRAINT fk_perfil_comuna      FOREIGN KEY (comuna_id)  REFERENCES comuna     (id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- ----------------------------------------------------------------------------
--- password_reset_token
--- ----------------------------------------------------------------------------
-CREATE TABLE password_reset_token (
-  id         BIGINT      NOT NULL AUTO_INCREMENT,
-  usuario_id BIGINT      NOT NULL,
-  token_hash VARCHAR(64) NOT NULL,
-  expira_at  DATETIME    NOT NULL,
-  usado_at   DATETIME    DEFAULT NULL,
-  creado_at  DATETIME    DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (id),
-  KEY idx_password_reset_token_hash (token_hash),
-  KEY idx_password_reset_usuario    (usuario_id),
-  CONSTRAINT fk_password_reset_usuario FOREIGN KEY (usuario_id) REFERENCES usuario (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ----------------------------------------------------------------------------
@@ -433,6 +426,7 @@ CREATE TABLE producto (
   activo           TINYINT(1)   DEFAULT 1,
   serializado      TINYINT(1)   NOT NULL DEFAULT 0,
   PRIMARY KEY (id),
+  UNIQUE KEY uk_producto_sku_empresa (sku, empresa_id),
   KEY empresa_id       (empresa_id),
   KEY unidad_medida_id (unidad_medida_id),
   KEY fk_producto_tipo_producto (tipo_producto_id),
@@ -466,54 +460,6 @@ CREATE TABLE producto_presentacion (
   KEY idx_presentacion_barcode (codigo_barras),
   CONSTRAINT producto_presentacion_ibfk_1 FOREIGN KEY (producto_id)      REFERENCES producto      (id),
   CONSTRAINT producto_presentacion_ibfk_2 FOREIGN KEY (unidad_medida_id) REFERENCES unidad_medida (id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- ----------------------------------------------------------------------------
--- inventario  (tabla legacy — no usada por el módulo operativo actual)
--- ----------------------------------------------------------------------------
-CREATE TABLE inventario (
-  id                   BIGINT    NOT NULL AUTO_INCREMENT,
-  bodega_id            BIGINT    NOT NULL,
-  producto_id          BIGINT    NOT NULL,
-  estado_id            BIGINT    NOT NULL,
-  cantidad             INT       NOT NULL DEFAULT 0,
-  cantidad_reservada   INT       DEFAULT 0,
-  ultimo_movimiento_por BIGINT   DEFAULT NULL,
-  activo               TINYINT(1) DEFAULT 1,
-  actualizado_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (id),
-  UNIQUE KEY uk_inventario_fina (bodega_id, producto_id, estado_id),
-  KEY producto_id          (producto_id),
-  KEY estado_id            (estado_id),
-  KEY ultimo_movimiento_por (ultimo_movimiento_por),
-  CONSTRAINT inventario_ibfk_1 FOREIGN KEY (bodega_id)             REFERENCES bodega            (id),
-  CONSTRAINT inventario_ibfk_2 FOREIGN KEY (producto_id)           REFERENCES producto          (id),
-  CONSTRAINT inventario_ibfk_3 FOREIGN KEY (estado_id)             REFERENCES estado_inventario (id),
-  CONSTRAINT inventario_ibfk_4 FOREIGN KEY (ultimo_movimiento_por) REFERENCES usuario           (id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- ----------------------------------------------------------------------------
--- movimiento_stock  (tabla legacy — no usada por el módulo operativo actual)
--- ----------------------------------------------------------------------------
-CREATE TABLE movimiento_stock (
-  id                    BIGINT    NOT NULL AUTO_INCREMENT,
-  empresa_id            BIGINT    NOT NULL,
-  usuario_id            BIGINT    DEFAULT NULL,
-  producto_id           BIGINT    NOT NULL,
-  cantidad              INT       NOT NULL,
-  bodega_origen_id      BIGINT    DEFAULT NULL,
-  bodega_destino_id     BIGINT    DEFAULT NULL,
-  estado_inv_anterior_id BIGINT   DEFAULT NULL,
-  estado_inv_nuevo_id   BIGINT    DEFAULT NULL,
-  activo                TINYINT(1) DEFAULT 1,
-  fecha                 TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (id),
-  KEY empresa_id  (empresa_id),
-  KEY usuario_id  (usuario_id),
-  KEY producto_id (producto_id),
-  CONSTRAINT movimiento_stock_ibfk_1 FOREIGN KEY (empresa_id)  REFERENCES empresa  (id),
-  CONSTRAINT movimiento_stock_ibfk_2 FOREIGN KEY (usuario_id)  REFERENCES usuario  (id),
-  CONSTRAINT movimiento_stock_ibfk_3 FOREIGN KEY (producto_id) REFERENCES producto (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ----------------------------------------------------------------------------
@@ -593,25 +539,38 @@ CREATE TABLE movimiento_inventario (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ----------------------------------------------------------------------------
--- notificacion  — bandeja in-app por usuario
+-- moneda / tipo_cambio_historico
 -- ----------------------------------------------------------------------------
-CREATE TABLE notificacion (
-  id           BIGINT       NOT NULL AUTO_INCREMENT,
-  empresa_id   BIGINT       NOT NULL,
-  usuario_id   BIGINT       NOT NULL,
-  tipo         VARCHAR(50)  NOT NULL,
-  titulo       VARCHAR(255) NOT NULL,
-  mensaje      TEXT,
-  payload_json JSON         DEFAULT NULL,
-  leida        TINYINT(1)   NOT NULL DEFAULT 0,
-  creado_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  leida_at     DATETIME     DEFAULT NULL,
-  PRIMARY KEY (id),
-  KEY idx_notif_usuario_leida (usuario_id, leida, creado_at),
-  KEY idx_notif_empresa (empresa_id),
-  CONSTRAINT fk_notificacion_empresa FOREIGN KEY (empresa_id) REFERENCES empresa (id),
-  CONSTRAINT fk_notificacion_usuario FOREIGN KEY (usuario_id) REFERENCES usuario (id)
+CREATE TABLE moneda (
+  codigo    CHAR(3)      NOT NULL,
+  nombre    VARCHAR(100) NOT NULL,
+  simbolo   VARCHAR(10)  DEFAULT NULL,
+  decimales TINYINT      NOT NULL DEFAULT 2,
+  activo    TINYINT(1)   NOT NULL DEFAULT 1,
+  PRIMARY KEY (codigo)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE tipo_cambio_historico (
+  id             BIGINT        NOT NULL AUTO_INCREMENT,
+  empresa_id     BIGINT        NOT NULL,
+  moneda_origen  CHAR(3)       NOT NULL,
+  moneda_destino CHAR(3)       NOT NULL,
+  tasa           DECIMAL(18,8) NOT NULL,
+  vigente_desde  DATETIME      NOT NULL,
+  vigente_hasta  DATETIME      DEFAULT NULL,
+  documento_tipo VARCHAR(50)   DEFAULT NULL,
+  documento_id   BIGINT        DEFAULT NULL,
+  creado_at      DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_tc_empresa_vigencia (empresa_id, moneda_origen, moneda_destino, vigente_desde),
+  CONSTRAINT fk_tc_empresa FOREIGN KEY (empresa_id) REFERENCES empresa (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+INSERT INTO moneda (codigo, nombre, simbolo, decimales) VALUES
+  ('CLP', 'Peso chileno',        '$', 0),
+  ('MXN', 'Peso mexicano',       '$', 2),
+  ('USD', 'Dólar estadounidense','$', 2),
+  ('EUR', 'Euro',                '€', 2);
 
 SET FOREIGN_KEY_CHECKS = 1;
 
@@ -677,7 +636,6 @@ INSERT INTO permiso (empresa_id, codigo, descripcion, activo) VALUES
 (1, 'producto_presentacion.crear',      'Crear presentaciones de producto', 1),
 (1, 'producto_presentacion.editar',     'Editar presentaciones de producto', 1),
 (1, 'producto_presentacion.eliminar',   'Eliminar presentaciones de producto', 1),
-(1, 'notificaciones.leer',              'Ver bandeja de notificaciones', 1),
 (1, 'inventario.leer',                  'Ver stock y movimientos de inventario', 1),
 (1, 'inventario.recepcionar',           'Registrar recepciones de mercancía', 1),
 (1, 'inventario.trasladar',             'Trasladar stock entre ubicaciones', 1),

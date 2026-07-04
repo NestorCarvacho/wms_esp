@@ -18,7 +18,7 @@ Configuración as-code para el monolito modular hexagonal (Fase 1).
 - **Frontend:** https://wms-frontend-production-296e.up.railway.app
 - **Health:** https://wmsesp-production.up.railway.app/health
 
-Notificaciones (inbox + WebSocket) van en el **mismo API** — no hay servicio separado.
+Monolito hexagonal en Railway Free — ver ADR 001–006 (módulos in-process).
 
 ## Variables configuradas
 
@@ -66,6 +66,6 @@ railway up ./frontend --path-as-root --detach
 
 ## Arquitectura objetivo (implementada)
 
-Monolito hexagonal en Railway Free — ver ADR 001–006 y ADR 005 (módulo notifications in-process).
+Monolito hexagonal en Railway Free — ver ADR 001–004 y ADR 006.
 
 Extracción a microservicios (Fase 2/3) **diferida** por coste/límites del plan Free.

@@ -7,10 +7,8 @@ export {
   listarMovimientosInventario,
   listarStockInventario,
   obtenerConfigInventarioBodega,
-  obtenerDashboardInventario,
   recepcionarInventario,
   trasladarInventario,
-  type InventarioDashboardParams,
   type InventarioExportFormat,
   type InventarioExportParams,
 } from '@/api/inventario';

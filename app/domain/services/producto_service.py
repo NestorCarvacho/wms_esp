@@ -1,4 +1,4 @@
-"""Servicio CRUD de Productos — fachada módulo catalog."""
+"""Servicio CRUD de Productos — fachada módulo catalog (legacy)."""
 from __future__ import annotations
 
 from typing import Any

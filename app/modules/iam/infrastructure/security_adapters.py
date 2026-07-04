@@ -1,10 +1,9 @@
-"""Adaptadores de infraestructura transversal (JWT, bcrypt, email)."""
+"""Adaptadores de infraestructura transversal (JWT, bcrypt)."""
 from __future__ import annotations
 
 from typing import Any
 
 from app.core.security import create_access_token, hash_password, verify_password
-from app.infrastructure.email.resend_service import send_password_reset_email
 
 
 class JwtTokenIssuer:
@@ -18,8 +17,3 @@ class BcryptPasswordHasher:
 
     def hashear(self, contrasena: str) -> str:
         return hash_password(contrasena)
-
-
-class ResendEmailNotifier:
-    async def enviar_recuperacion_contrasena(self, email: str, token: str) -> None:
-        await send_password_reset_email(email, token)

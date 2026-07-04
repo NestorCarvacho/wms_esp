@@ -43,9 +43,8 @@ MIGRATION_FILES = [
     "17_presentacion_codigo_barras.sql",
     "18_serie_producto.sql",
     "19_locale_currency.sql",
-    "20_notificacion.sql",
     "21_producto_stock_minimo.sql",
-    "22_prod_notificaciones_stock.sql",
+    "23_schema_cleanup.sql",
 ]
 
 # Errores MySQL benignos al re-ejecutar scripts idempotentes.
@@ -280,7 +279,6 @@ def run_diagnostics(cursor) -> None:
         ("Tabla bodega_config", "SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='bodega_config'"),
         ("Permisos inventario.* activos", "SELECT COUNT(*) FROM permiso WHERE activo=1 AND codigo LIKE 'inventario.%'"),
         ("Columna usuario.intentos_fallidos", "SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='usuario' AND COLUMN_NAME='intentos_fallidos'"),
-        ("Tabla password_reset_token", "SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='password_reset_token'"),
         ("Columna producto_presentacion.codigo_barras", "SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='producto_presentacion' AND COLUMN_NAME='codigo_barras'"),
         ("Columna producto.serializado", "SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='producto' AND COLUMN_NAME='serializado'"),
         ("Tabla serie_producto", "SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='serie_producto'"),
@@ -288,9 +286,7 @@ def run_diagnostics(cursor) -> None:
         ("Columna empresa.locale", "SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='empresa' AND COLUMN_NAME='locale'"),
         ("Columna empresa.timezone", "SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='empresa' AND COLUMN_NAME='timezone'"),
         ("Columna empresa.moneda_codigo", "SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='empresa' AND COLUMN_NAME='moneda_codigo'"),
-        ("Tabla notificacion", "SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='notificacion'"),
         ("Columna producto.stock_minimo", "SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='producto' AND COLUMN_NAME='stock_minimo'"),
-        ("Permiso notificaciones.leer", "SELECT COUNT(*) FROM permiso WHERE activo=1 AND codigo='notificaciones.leer'"),
         ("Tabla moneda", "SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='moneda'"),
         ("Tabla tipo_cambio_historico", "SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='tipo_cambio_historico'"),
         ("Permisos empresa 1", "SELECT COUNT(*) FROM permiso WHERE empresa_id=1 AND activo=1"),

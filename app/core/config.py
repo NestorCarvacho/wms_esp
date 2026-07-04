@@ -41,20 +41,6 @@ DEBUG = os.getenv("DEBUG", "True").lower() == "true"
 # Empresa Maestra (SaaS-CORE)
 EMPRESA_MAESTRA_ID = 1
 
-# Email (Resend) — https://resend.com/
-RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
-# Sandbox Resend (sin dominio propio): onboarding@resend.dev
-EMAIL_FROM = os.getenv("EMAIL_FROM", "onboarding@resend.dev")
-FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173").rstrip("/")
-# True = no envía correo; imprime el enlace en la consola del backend (ideal en local)
-_email_dev_log = os.getenv("EMAIL_DEV_LOG_ONLY")
-EMAIL_DEV_LOG_ONLY = DEBUG if _email_dev_log is None else _email_dev_log.lower() == "true"
-
 # Políticas de autenticación
 LOGIN_MAX_ATTEMPTS = int(os.getenv("LOGIN_MAX_ATTEMPTS", "3"))
 LOGIN_LOCKOUT_MINUTES = int(os.getenv("LOGIN_LOCKOUT_MINUTES", "15"))
-PASSWORD_RESET_EXPIRE_MINUTES = int(os.getenv("PASSWORD_RESET_EXPIRE_MINUTES", "10"))
-# Anti-abuso: no reenviar al mismo usuario antes de X min; límite por IP
-PASSWORD_RESET_COOLDOWN_MINUTES = int(os.getenv("PASSWORD_RESET_COOLDOWN_MINUTES", "5"))
-PASSWORD_RESET_IP_LIMIT = int(os.getenv("PASSWORD_RESET_IP_LIMIT", "5"))
-PASSWORD_RESET_IP_WINDOW_MINUTES = int(os.getenv("PASSWORD_RESET_IP_WINDOW_MINUTES", "15"))

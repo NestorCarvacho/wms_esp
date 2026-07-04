@@ -37,8 +37,9 @@ async def test_login_credenciales_invalidas():
     hasher = MagicMock()
     hasher.verificar.return_value = False
     handler = LoginHandler(repo, AsyncMock(), MagicMock(), hasher)
-    with pytest.raises(ValueError, match="incorrectos"):
-        await handler.handle(LoginCommand(email="test@wms.com", contrasena="wrong"))
+    result = await handler.handle(LoginCommand(email="test@wms.com", contrasena="wrong"))
+    assert not result.ok
+    assert "incorrectos" in (result.error or "")
     repo.actualizar.assert_awaited_once()
 
 
@@ -57,8 +58,9 @@ async def test_login_exitoso():
 
     handler = LoginHandler(repo, auth_repo, token_issuer, hasher)
     result = await handler.handle(LoginCommand(email="test@wms.com", contrasena="ok"))
-    assert result["acceso_token"] == "jwt-token"
-    assert result["usuario"]["permisos"] == ["inventario.leer"]
+    assert result.ok
+    assert result.value["acceso_token"] == "jwt-token"
+    assert result.value["usuario"]["permisos"] == ["inventario.leer"]
 
 
 def test_validar_estado_cuenta_bloqueada():

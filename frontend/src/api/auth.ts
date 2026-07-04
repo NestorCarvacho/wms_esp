@@ -53,28 +53,6 @@ export async function healthCheck(): Promise<HealthStatus> {
   return response.json() as Promise<HealthStatus>;
 }
 
-export async function solicitarRecuperacionContrasena(email: string): Promise<void> {
-  await apiRequest(
-    '/api/v1/auth/olvido-contrasena',
-    {
-      method: 'POST',
-      body: JSON.stringify({ email }),
-    },
-    false,
-  );
-}
-
-export async function restablecerContrasena(token: string, contrasena: string): Promise<void> {
-  await apiRequest(
-    '/api/v1/auth/restablecer-contrasena',
-    {
-      method: 'POST',
-      body: JSON.stringify({ token, contrasena }),
-    },
-    false,
-  );
-}
-
 export async function cambiarContrasena(
   contrasenaActual: string,
   contrasenaNueva: string,

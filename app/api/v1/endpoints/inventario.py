@@ -23,25 +23,6 @@ from app.schemas.inventario import (
 router = APIRouter(prefix="/api/v1/inventario", tags=["Inventario"])
 
 
-@router.get("/dashboard", response_model=RespuestaAPIDTO, status_code=status.HTTP_200_OK)
-async def dashboard_inventario(
-    bodega_id: int | None = None,
-    dias: int = Query(30, ge=7, le=90),
-    ctx: ContextoEmpresa = Depends(contexto_requiere_permiso("inventario.leer")),
-    service: InventarioOperacionService = Depends(obtener_inventario_service),
-):
-    try:
-        datos = await service.resumen_dashboard(
-            empresa_id=ctx.empresa_usuario_id,
-            bodega_id=bodega_id,
-            dias=dias,
-            **kwargs_listado(ctx),
-        )
-        return RespuestaAPIDTO(exito=True, datos=datos, mensaje="Resumen de inventario operativo").dict()
-    except Exception as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
-
-
 @router.get("/stock", response_model=RespuestaAPIDTO, status_code=status.HTTP_200_OK)
 async def listar_stock(
     pagina: int = 1,

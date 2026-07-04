@@ -8,13 +8,9 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from io import BytesIO
 from app.infrastructure.database import get_db_session
-from app.domain.services.producto_service import ProductoService
-from app.domain.services.producto_importacion_service import ProductoImportacionService
-from app.domain.services.producto_consulta_service import ProductoConsultaService
-from app.modules.catalog.presentation.http.dependencies import obtener_producto_service
-from app.infrastructure.repositories.inventario_crud_repository import InventarioCRUDRepository
-from app.infrastructure.repositories.producto_crud_repository import ProductoCRUDRepository
-from app.infrastructure.repositories.producto_presentacion_crud_repository import ProductoPresentacionCRUDRepository
+from app.modules.catalog.application.commands import ActualizarProductoCommand, CrearProductoCommand
+from app.modules.catalog.presentation.http.dependencies import obtener_catalog_handlers
+from app.bootstrap.catalog_container import CatalogHandlers
 from app.api.v1.dependencies import obtener_usuario_autenticado, requiere_permiso, es_super_admin
 from app.api.v1.empresa_contexto import ContextoEmpresa, kwargs_listado, obtener_contexto_empresa, resolver_empresa_creacion, contexto_requiere_permiso
 from app.api.v1.listado_query import orden_listado
@@ -28,18 +24,6 @@ from app.schemas.producto import (
 
 
 router = APIRouter(prefix="/api/v1/productos", tags=["Productos"])
-
-
-async def obtener_importacion_service(session: AsyncSession = Depends(get_db_session)) -> ProductoImportacionService:
-    return ProductoImportacionService(session)
-
-
-async def obtener_consulta_service(session: AsyncSession = Depends(get_db_session)) -> ProductoConsultaService:
-    return ProductoConsultaService(
-        ProductoCRUDRepository(session),
-        ProductoPresentacionCRUDRepository(session),
-        InventarioCRUDRepository(session),
-    )
 
 
 # ============ GET: LISTAR BODEGAS (CON PAGINACIÓN) ============
@@ -57,7 +41,7 @@ async def listar_Productos(
     tipo_producto_id: int | None = Query(None, description="Filtrar por tipo de producto"),
     orden_params: dict = Depends(orden_listado),
     ctx: ContextoEmpresa = Depends(contexto_requiere_permiso("productos.leer")),
-    service: ProductoService = Depends(obtener_producto_service)
+    handlers: CatalogHandlers = Depends(obtener_catalog_handlers),
 ):
     """
     Obtiene la lista de productos.
@@ -77,7 +61,7 @@ async def listar_Productos(
     - Requiere autenticación JWT
     """
     try:
-        resultado = await service.listar_productos(
+        resultado = await handlers.listar_productos.handle(
             empresa_id=ctx.empresa_usuario_id,
             pagina=pagina,
             por_pagina=por_pagina,
@@ -108,7 +92,7 @@ async def listar_Productos(
 )
 async def descargar_plantilla_importacion(
     usuario_autenticado: dict = Depends(requiere_permiso("productos.importar")),
-    service: ProductoImportacionService = Depends(obtener_importacion_service)
+    handlers: CatalogHandlers = Depends(obtener_catalog_handlers),
 ):
     """
     Genera un Excel con:
@@ -118,7 +102,7 @@ async def descargar_plantilla_importacion(
     """
     try:
         empresa_id = usuario_autenticado.get("empresa_id")
-        contenido = await service.generar_plantilla(empresa_id)
+        contenido = await handlers.generar_plantilla_importacion.handle(empresa_id)
         return StreamingResponse(
             BytesIO(contenido),
             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -142,7 +126,7 @@ async def descargar_plantilla_importacion(
 async def importar_productos(
     archivo: UploadFile = File(...),
     usuario_autenticado: dict = Depends(requiere_permiso("productos.importar")),
-    service: ProductoImportacionService = Depends(obtener_importacion_service),
+    handlers: CatalogHandlers = Depends(obtener_catalog_handlers),
 ):
     """
     Importa productos de la hoja **Productos**.
@@ -161,7 +145,7 @@ async def importar_productos(
                 detail="El archivo está vacío",
             )
         empresa_id = usuario_autenticado.get("empresa_id")
-        resultado = await service.importar_desde_excel(contenido, empresa_id)
+        resultado = await handlers.importar_productos.handle(contenido, empresa_id)
         mensaje = f"Importación completada: {resultado['creados']} producto(s) creados"
         if resultado.get("presentaciones_creadas"):
             mensaje += f", {resultado['presentaciones_creadas']} presentación(es) con código de barras"
@@ -193,7 +177,7 @@ async def importar_productos(
 async def consultar_producto_por_codigo(
     codigo: str,
     ctx: ContextoEmpresa = Depends(contexto_requiere_permiso("productos.leer")),
-    service: ProductoConsultaService = Depends(obtener_consulta_service),
+    handlers: CatalogHandlers = Depends(obtener_catalog_handlers),
 ):
     """
     Busca un producto por SKU o código de barras (presentación) y retorna
@@ -205,7 +189,7 @@ async def consultar_producto_por_codigo(
             if ctx.empresa_id_filtro is not None
             else ctx.empresas_administradas_ids
         )
-        datos = await service.consultar_por_codigo(codigo, empresas_ids)
+        datos = await handlers.consultar_producto.handle(codigo, empresas_ids)
         return RespuestaAPIDTO(
             exito=True,
             datos=datos,
@@ -231,7 +215,7 @@ async def obtener_producto(
     id: int,
     usuario_autenticado: dict = Depends(requiere_permiso("productos.leer")),
     es_admin: bool = Depends(es_super_admin),
-    service: ProductoService = Depends(obtener_producto_service),
+    handlers: CatalogHandlers = Depends(obtener_catalog_handlers),
 ):
     """
     Obtiene los datos de una producto específica.
@@ -254,7 +238,7 @@ async def obtener_producto(
         
         # Si es super admin, obtener sin filtro de empresa
         producto_empresa_id = None if es_admin else empresa_id
-        producto = await service.obtener_producto(id, producto_empresa_id)
+        producto = await handlers.obtener_producto.handle(id, producto_empresa_id)
         
         # Validar permisos si no es super admin
         if not es_admin and producto["empresa_id"] != empresa_id:
@@ -293,7 +277,7 @@ async def crear_producto(
     producto_dto: ProductoCrearDTO,
     usuario_autenticado: dict = Depends(requiere_permiso("productos.crear")),
     session: AsyncSession = Depends(get_db_session),
-    service: ProductoService = Depends(obtener_producto_service),
+    handlers: CatalogHandlers = Depends(obtener_catalog_handlers),
 ):
     """
     Crea un nueva producto en la empresa.
@@ -324,16 +308,18 @@ async def crear_producto(
             usuario_autenticado, producto_dto.empresa_id, session
         )
         
-        nueva_producto = await service.crear_producto(
-            empresa_id=empresa_id,
-            nombre=producto_dto.nombre,
-            sku=producto_dto.sku,
-            activo=producto_dto.activo,
-            unidad_medida_id=producto_dto.unidad_medida_id,
-            tipo_producto_id=producto_dto.tipo_producto_id,
-            precio_costo=producto_dto.precio_costo,
-            serializado=producto_dto.serializado or False,
-            stock_minimo=producto_dto.stock_minimo,
+        nueva_producto = await handlers.crear_producto.handle(
+            CrearProductoCommand(
+                empresa_id=empresa_id,
+                nombre=producto_dto.nombre,
+                sku=producto_dto.sku,
+                activo=producto_dto.activo,
+                unidad_medida_id=producto_dto.unidad_medida_id,
+                tipo_producto_id=producto_dto.tipo_producto_id,
+                precio_costo=producto_dto.precio_costo,
+                serializado=producto_dto.serializado or False,
+                stock_minimo=producto_dto.stock_minimo,
+            )
         )
         
         return RespuestaAPIDTO(
@@ -371,7 +357,7 @@ async def actualizar_producto(
     actualizar_dto: ProductoActualizarDTO,
     usuario_autenticado: dict = Depends(requiere_permiso("productos.editar")),
     es_admin: bool = Depends(es_super_admin),
-    service: ProductoService = Depends(obtener_producto_service),
+    handlers: CatalogHandlers = Depends(obtener_catalog_handlers),
 ):
     """
     Actualiza los datos de una producto existente.
@@ -404,7 +390,7 @@ async def actualizar_producto(
         empresa_id = usuario_autenticado.get("empresa_id")
 
         producto_empresa_id = None if es_admin else empresa_id
-        producto_ref = await service.obtener_producto(id, producto_empresa_id)
+        producto_ref = await handlers.obtener_producto.handle(id, producto_empresa_id)
         if not es_admin and producto_ref["empresa_id"] != empresa_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -418,19 +404,21 @@ async def actualizar_producto(
         actualizar_tipo_producto = "tipo_producto_id" in campos_enviados
         actualizar_stock_minimo = "stock_minimo" in campos_enviados
 
-        producto_actualizada = await service.actualizar_producto(
-            producto_id=id,
-            empresa_id=empresa_id_operacion,
-            nombre=actualizar_dto.nombre,
-            sku=actualizar_dto.sku,
-            activo=bool(actualizar_dto.activo) if actualizar_dto.activo is not None else None,
-            unidad_medida_id=actualizar_dto.unidad_medida_id,
-            tipo_producto_id=actualizar_dto.tipo_producto_id,
-            actualizar_tipo_producto=actualizar_tipo_producto,
-            precio_costo=actualizar_dto.precio_costo,
-            serializado=actualizar_dto.serializado,
-            stock_minimo=actualizar_dto.stock_minimo,
-            actualizar_stock_minimo=actualizar_stock_minimo,
+        producto_actualizada = await handlers.actualizar_producto.handle(
+            ActualizarProductoCommand(
+                producto_id=id,
+                empresa_id=empresa_id_operacion,
+                nombre=actualizar_dto.nombre,
+                sku=actualizar_dto.sku,
+                activo=bool(actualizar_dto.activo) if actualizar_dto.activo is not None else None,
+                unidad_medida_id=actualizar_dto.unidad_medida_id,
+                tipo_producto_id=actualizar_dto.tipo_producto_id,
+                actualizar_tipo_producto=actualizar_tipo_producto,
+                precio_costo=actualizar_dto.precio_costo,
+                serializado=actualizar_dto.serializado,
+                stock_minimo=actualizar_dto.stock_minimo,
+                actualizar_stock_minimo=actualizar_stock_minimo,
+            )
         )
         
         return RespuestaAPIDTO(
@@ -472,7 +460,7 @@ async def eliminar_producto(
     id: int,
     usuario_autenticado: dict = Depends(requiere_permiso("productos.eliminar")),
     es_admin: bool = Depends(es_super_admin),
-    service: ProductoService = Depends(obtener_producto_service),
+    handlers: CatalogHandlers = Depends(obtener_catalog_handlers),
 ):
     """
     Elimina una producto.
@@ -498,14 +486,14 @@ async def eliminar_producto(
     try:
         empresa_id = usuario_autenticado.get("empresa_id")
         producto_empresa_id = None if es_admin else empresa_id
-        producto_ref = await service.obtener_producto(id, producto_empresa_id)
+        producto_ref = await handlers.obtener_producto.handle(id, producto_empresa_id)
         if not es_admin and producto_ref["empresa_id"] != empresa_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="No tiene permiso para eliminar productos de otras empresas",
             )
 
-        resultado = await service.eliminar_producto(id, producto_ref["empresa_id"])
+        resultado = await handlers.eliminar_producto.handle(id, producto_ref["empresa_id"])
         
         return RespuestaAPIDTO(
             exito=True,

@@ -9,12 +9,10 @@ import { IconScout } from '@/components/ui/images/IconScout';
 
 
 interface LoginFormProps {
-  onForgotPassword: () => void;
   onNeedHelp: () => void;
 }
 
 export const LoginForm: React.FC<LoginFormProps> = ({
-  onForgotPassword,
   onNeedHelp,
 }) => {
   const {
@@ -57,14 +55,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
         </PrimaryButton>
       </div>
 
-      <div className="flex justify-between items-center text-sm pt-4 mt-6">
-        <Text
-          variant="body-medium"
-          onClick={onForgotPassword}
-          className={cn('cursor-pointer transition-colors hover:opacity-80', colorClass.brandLight)}
-        >
-          Olvidé mi contraseña
-        </Text>
+      <div className="flex justify-end items-center text-sm pt-4 mt-6">
         <Text
           variant="subheader-medium"
           onClick={onNeedHelp}

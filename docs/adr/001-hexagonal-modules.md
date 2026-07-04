@@ -29,8 +29,6 @@ presentation/    → dependencias FastAPI
 
 **Compatibilidad:** `InventarioOperacionService` permanece como fachada delegando a handlers; endpoints y reportes no rompen contrato.
 
-**Eventos de dominio:** `StockMovimientoRegistrado` desacoplado del bus WebSocket via `IEventPublisher`.
-
 ## Consecuencias
 
 ### Positivas
@@ -47,6 +45,6 @@ presentation/    → dependencias FastAPI
 
 ## Próximos pasos
 
-1. ~~Fase 1: módulos `iam`, `catalog`, `warehouse`, `tenant`, `notifications`~~ — **completada** (ver ADR 002–006, 005)
-2. ~~Fase 2: extraer `notification-service`~~ — **descartada** (monolito único; ver ADR 007)
-3. Fase 3: `inventory-service` — **diferida** (inventario permanece en monolito)
+1. ~~Fase 1: módulos `iam`, `catalog`, `warehouse`, `tenant`~~ — **completada** (ver ADR 002–004, 006)
+2. ~~Notificaciones y recuperación por email~~ — **no aplican** (alcance portafolio simplificado)
+3. Fase 3: `inventory-service` — **diferida**

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, Navigate } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { listarBodegas } from '@/api/bodegas';
 import {
   actualizarConfigInventarioBodega,
@@ -10,7 +10,6 @@ import {
   obtenerConfigInventarioBodega,
   type InventarioExportFormat,
 } from '@/api/inventario';
-import { InventarioDashboardCharts } from '@/components/inventario/InventarioDashboardCharts';
 import { InventarioOperacionEscaneo } from '@/components/inventario/InventarioOperacionEscaneo';
 import { RecepcionSerializadaPanel } from '@/components/inventario/RecepcionSerializadaPanel';
 import { InventarioOperativoNav } from '@/components/inventario/InventarioOperativoNav';
@@ -20,8 +19,6 @@ import { PageLayout } from '@/components/layout/PageLayout';
 import { PrimaryButton, ExportDropdown } from '@/components/ui/buttons';
 import { Card } from '@/components/ui/cards';
 import { Table } from '@/components/ui/tables';
-import { Text } from '@/components/ui/text/Text';
-import { colorClass } from '@/assets/styles/colors';
 import { CrudEmpresaFilterCard } from '@/components/crud/CrudEmpresaFilterCard';
 import { useCrudEmpresaFilterCard } from '@/crud/useCrudEmpresaFilterCard';
 import { usePaginatedCrudTable } from '@/crud/usePaginatedCrudTable';
@@ -34,13 +31,9 @@ import type {
   ZonaBodega,
 } from '@/types/api';
 import {
-  INVENTARIO_NAV_ITEMS,
-  INVENTARIO_ROUTE_PATHS,
   INVENTARIO_VISTA_META,
   type InventarioVista,
 } from '@/pages/inventario/inventarioViews';
-import { usePermissions } from '@/hooks/usePermissions';
-import { useInventarioDashboard } from '@/features/inventario/hooks/useInventarioDashboard';
 import { appPath } from '@/routes/paths';
 
 const OP_VISTAS: InventarioVista[] = ['recepcion', 'traslado', 'despacho'];
@@ -61,21 +54,8 @@ interface InventarioPageProps {
 export function InventarioPage({ vista }: InventarioPageProps) {
   const meta = INVENTARIO_VISTA_META[vista];
   const { notifyApiError, notifySuccess } = useCrudUi();
-  const { tienePermiso } = usePermissions();
   const listFilter = useCrudEmpresaFilterCard();
   const empresaIdParam = listFilter.empresaIdParam;
-  const [chartBodegaId, setChartBodegaId] = useState('');
-  const [dashboardBodegas, setDashboardBodegas] = useState<Bodega[]>([]);
-
-  const dashboardQuery = useInventarioDashboard(
-    {
-      empresaId: empresaIdParam,
-      bodegaId: chartBodegaId ? Number(chartBodegaId) : undefined,
-    },
-    vista === 'dashboard',
-  );
-  const dashboard = dashboardQuery.data ?? null;
-  const dashboardLoading = dashboardQuery.isLoading;
 
   const stockTable = usePaginatedCrudTable<StockZonaItem>({
     empresaFilterId: empresaIdParam,
@@ -138,36 +118,6 @@ export function InventarioPage({ vista }: InventarioPageProps) {
   const [bodegas, setBodegas] = useState<Bodega[]>([]);
   const [zonas, setZonas] = useState<ZonaBodega[]>([]);
   const [productos, setProductos] = useState<Producto[]>([]);
-
-  useEffect(() => {
-    if (vista !== 'dashboard') return;
-    setChartBodegaId('');
-  }, [vista, empresaIdParam]);
-
-  useEffect(() => {
-    if (vista !== 'dashboard') return;
-    let cancelled = false;
-    listarBodegas({
-      pagina: 1,
-      porPagina: 500,
-      ...(empresaIdParam != null ? { empresaId: empresaIdParam } : {}),
-    })
-      .then((res) => {
-        if (!cancelled) setDashboardBodegas(res.bodegas);
-      })
-      .catch(() => {
-        if (!cancelled) setDashboardBodegas([]);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [vista, empresaIdParam]);
-
-  useEffect(() => {
-    if (dashboardQuery.isError) {
-      notifyApiError(dashboardQuery.error, 'Error al cargar el dashboard');
-    }
-  }, [dashboardQuery.isError, dashboardQuery.error, notifyApiError]);
 
   useEffect(() => {
     if (!needsMaestros(vista)) return;
@@ -345,91 +295,10 @@ export function InventarioPage({ vista }: InventarioPageProps) {
         { text: meta.section },
         { text: meta.title },
       ]}
-      icon={vista === 'dashboard' ? 'home' : 'table'}
+      icon="table"
     >
       <CrudEmpresaFilterCard filter={listFilter} className="mb-4" />
       <InventarioOperativoNav active={vista} />
-
-      {vista === 'dashboard' && (
-        <>
-          {dashboardLoading ? (
-            <Text variant="body-regular" className={colorClass.muted}>
-              Cargando indicadores…
-            </Text>
-          ) : dashboard ? (
-            <div className="space-y-6">
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-                {[
-                  { label: 'Líneas de stock', value: dashboard.lineas_stock },
-                  { label: 'Productos con stock', value: dashboard.productos_con_stock },
-                  { label: 'Ubicaciones', value: dashboard.ubicaciones_con_stock },
-                  { label: 'Movimientos hoy', value: dashboard.movimientos_hoy },
-                  { label: 'Mov. últimos 7 días', value: dashboard.movimientos_semana },
-                ].map((kpi) => (
-                  <Card key={kpi.label} elevation={1} padding="16px">
-                    <Text variant="header-6" className={colorClass.brand}>
-                      {kpi.value}
-                    </Text>
-                    <Text variant="small-regular" className={colorClass.muted}>
-                      {kpi.label}
-                    </Text>
-                  </Card>
-                ))}
-              </div>
-
-              {dashboard.histograma_movimientos && dashboard.stock_distribucion && (
-                <InventarioDashboardCharts
-                  histograma={dashboard.histograma_movimientos}
-                  stockDistribucion={dashboard.stock_distribucion}
-                  bodegas={dashboardBodegas}
-                  chartBodegaId={chartBodegaId}
-                  onChartBodegaChange={setChartBodegaId}
-                  selectClass={selectClass}
-                />
-              )}
-
-              <Card elevation={1} padding="20px">
-                <Text variant="body-medium" className={colorClass.brandLight}>
-                  Accesos rápidos
-                </Text>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {INVENTARIO_NAV_ITEMS.filter(
-                    (item) => item.vista !== 'dashboard' && tienePermiso(item.permission),
-                  ).map((item) => (
-                    <Link key={item.vista} to={item.path}>
-                      <PrimaryButton type="button" variant="outline">
-                        {item.label}
-                      </PrimaryButton>
-                    </Link>
-                  ))}
-                </div>
-              </Card>
-
-              <Card elevation={1} padding="20px">
-                <div className="mb-3 flex items-center justify-between gap-2">
-                  <Text variant="body-medium" className={colorClass.brandLight}>
-                    Últimos movimientos
-                  </Text>
-                  {tienePermiso('inventario.leer') && (
-                    <Link to={INVENTARIO_ROUTE_PATHS.movimientos}>
-                      <PrimaryButton type="button" variant="outline">
-                        Ver historial
-                      </PrimaryButton>
-                    </Link>
-                  )}
-                </div>
-                <Table
-                  columns={movColumns}
-                  data={dashboard.ultimos_movimientos}
-                  totalRows={dashboard.ultimos_movimientos.length}
-                  searchable={false}
-                  emptyMessage="Sin movimientos recientes"
-                />
-              </Card>
-            </div>
-          ) : null}
-        </>
-      )}
 
       {vista === 'stock' && (
         <>
@@ -579,7 +448,6 @@ export function InventarioPage({ vista }: InventarioPageProps) {
   );
 }
 
-/** Redirige /inventario al primer destino con permiso (stock por defecto). */
 export function InventarioIndexRedirect() {
-  return <Navigate to={appPath('/inventario/dashboard')} replace />;
+  return <Navigate to={appPath('/inventario/stock')} replace />;
 }

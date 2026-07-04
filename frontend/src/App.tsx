@@ -17,11 +17,7 @@ import { appPath } from '@/routes/paths';
 
 import { LandingPage } from '@/pages/LandingPage';
 import { LoginPage } from '@/pages/LoginPage';
-import { ForgotPasswordPage } from '@/pages/ForgotPasswordPage';
-import { ResetPasswordPage } from '@/pages/ResetPasswordPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
-
-import { DashboardPage } from '@/pages/DashboardPage';
 
 import { ProductosPage } from '@/pages/ProductosPage';
 import { ConsultaProductoPage } from '@/pages/ConsultaProductoPage';
@@ -51,7 +47,7 @@ registerCrudPanels();
 
 function LegacyInventarioRedirect() {
   const { pathname } = useLocation();
-  const suffix = pathname.replace(/^\/inventario/, '') || '/dashboard';
+  const suffix = pathname.replace(/^\/inventario/, '') || '/stock';
   return <Navigate to={appPath(`/inventario${suffix}`)} replace />;
 }
 
@@ -75,8 +71,6 @@ export default function App() {
 
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/olvido-contrasena" element={<ForgotPasswordPage />} />
-          <Route path="/restablecer-contrasena" element={<ResetPasswordPage />} />
 
           <Route
             path="app"
@@ -87,7 +81,7 @@ export default function App() {
             }
           >
 
-            <Route index element={<DashboardPage />} />
+            <Route index element={<Navigate to={appPath('/productos')} replace />} />
 
             <Route path="productos" element={guarded(appPath('/productos'), <ProductosPage />)} />
             <Route path="productos/consulta" element={guarded(appPath('/productos/consulta'), <ConsultaProductoPage />)} />
@@ -97,7 +91,7 @@ export default function App() {
             <Route path="tipos-zona" element={guarded(appPath('/tipos-zona'), <TiposZonaPage />)} />
             <Route path="zonas-bodega" element={guarded(appPath('/zonas-bodega'), <ZonasBodegaPage />)} />
             <Route path="inventario" element={<InventarioIndexRedirect />} />
-            <Route path="inventario/dashboard" element={guarded(appPath('/inventario/dashboard'), <InventarioPage vista="dashboard" />)} />
+            <Route path="inventario/dashboard" element={<Navigate to={appPath('/inventario/stock')} replace />} />
             <Route path="inventario/stock" element={guarded(appPath('/inventario/stock'), <InventarioPage vista="stock" />)} />
             <Route path="inventario/movimientos" element={guarded(appPath('/inventario/movimientos'), <InventarioPage vista="movimientos" />)} />
             <Route path="inventario/recepcion" element={guarded(appPath('/inventario/recepcion'), <InventarioPage vista="recepcion" />)} />

@@ -110,9 +110,6 @@ class InventarioOperacionService:
             )
         )
 
-    async def resumen_dashboard(self, empresa_id: int, **kwargs: Any) -> dict:
-        return await self._handlers.dashboard.handle(empresa_id, **kwargs)
-
     async def listar_stock(self, empresa_id: int, **kwargs: Any) -> dict:
         return await self._handlers.listar_stock.handle(empresa_id, **kwargs)
 

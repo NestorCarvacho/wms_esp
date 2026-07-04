@@ -13,6 +13,7 @@ from app.modules.iam.domain.ports import (
     IUserAuthRepository,
 )
 from app.modules.iam.domain.services.login_policy import aplicar_fallo_login, validar_estado_login
+from app.shared.kernel.result import Result
 
 
 class LoginHandler:
@@ -28,12 +29,15 @@ class LoginHandler:
         self.token_issuer = token_issuer
         self.password_hasher = password_hasher
 
-    async def handle(self, cmd: LoginCommand) -> dict:
+    async def handle(self, cmd: LoginCommand) -> Result[dict]:
         usuario = await self.usuarios.obtener_por_email_login(cmd.email)
         if not usuario:
-            raise ValueError(MSG_CREDENCIALES)
+            return Result.failure(MSG_CREDENCIALES)
 
-        validar_estado_login(usuario)
+        try:
+            validar_estado_login(usuario)
+        except ValueError as exc:
+            return Result.failure(str(exc))
 
         if not self.password_hasher.verificar(cmd.contrasena, usuario.password_hash):
             error_msg = MSG_CREDENCIALES
@@ -42,7 +46,7 @@ class LoginHandler:
             except ValueError as exc:
                 error_msg = str(exc)
             await self.usuarios.actualizar(usuario)
-            raise ValueError(error_msg)
+            return Result.failure(error_msg)
 
         usuario.intentos_fallidos = 0
         usuario.bloqueado_hasta = None
@@ -64,4 +68,4 @@ class LoginHandler:
                 "es_empresa_maestra": es_empresa_maestra,
             }
         )
-        return construir_respuesta_sesion(usuario, permisos, roles, token)
+        return Result.success(construir_respuesta_sesion(usuario, permisos, roles, token))

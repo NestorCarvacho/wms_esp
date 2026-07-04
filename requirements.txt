@@ -12,7 +12,6 @@ bcrypt==3.2.2
 pymysql
 openpyxl
 reportlab
-resend
 pytest
 pytest-asyncio
 import-linter

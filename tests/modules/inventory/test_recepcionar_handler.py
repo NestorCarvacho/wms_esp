@@ -70,7 +70,7 @@ class FakeUoW:
 @pytest.mark.asyncio
 async def test_recepcionar_sin_zona_default_falla():
     repo = FakeInventarioRepo()
-    handler = RecepcionarHandler(FakeUoW(repo), AsyncMock())
+    handler = RecepcionarHandler(FakeUoW(repo))
     cmd = RecepcionarCommand(
         empresa_id=1,
         usuario_id=1,
@@ -85,8 +85,7 @@ async def test_recepcionar_sin_zona_default_falla():
 @pytest.mark.asyncio
 async def test_recepcionar_con_zona_destino_ok():
     repo = FakeInventarioRepo()
-    events = AsyncMock()
-    handler = RecepcionarHandler(FakeUoW(repo), events, PresentacionConverter())
+    handler = RecepcionarHandler(FakeUoW(repo), PresentacionConverter())
     cmd = RecepcionarCommand(
         empresa_id=1,
         usuario_id=1,
@@ -98,7 +97,6 @@ async def test_recepcionar_con_zona_destino_ok():
     result = await handler.handle(cmd)
     assert result["id"] == 99
     assert result["stock_destino"] == 10.0
-    events.publish.assert_awaited_once()
 
 
 @pytest.mark.asyncio

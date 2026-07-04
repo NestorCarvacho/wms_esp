@@ -1,15 +1,9 @@
 """Endpoints de presentaciones comerciales de producto."""
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.infrastructure.database import get_db_session
-from app.infrastructure.repositories.producto_presentacion_crud_repository import (
-    ProductoPresentacionCRUDRepository,
-)
-from app.infrastructure.repositories.producto_crud_repository import ProductoCRUDRepository
-from app.infrastructure.repositories.unidadMedida_crud_repository import UnidadMedidaCRUDRepository
-from app.domain.services.producto_presentacion_service import ProductoPresentacionService
-from app.api.v1.dependencies import obtener_usuario_autenticado, requiere_permiso
-from app.api.v1.empresa_contexto import ContextoEmpresa, obtener_contexto_empresa, contexto_requiere_permiso
+
+from app.bootstrap.catalog_container import CatalogHandlers
+from app.modules.catalog.presentation.http.dependencies import obtener_catalog_handlers
+from app.api.v1.empresa_contexto import ContextoEmpresa, obtener_contexto_empresa
 from app.schemas.producto_presentacion import (
     ProductoPresentacionCrearDTO,
     ProductoPresentacionActualizarDTO,
@@ -20,22 +14,12 @@ from app.schemas.producto_presentacion import (
 router = APIRouter(prefix="/api/v1", tags=["Presentaciones de Producto"])
 
 
-async def obtener_presentacion_service(
-    session: AsyncSession = Depends(get_db_session),
-) -> ProductoPresentacionService:
-    return ProductoPresentacionService(
-        ProductoPresentacionCRUDRepository(session),
-        ProductoCRUDRepository(session),
-        UnidadMedidaCRUDRepository(session),
-    )
-
-
 async def _empresa_para_producto(
     producto_id: int,
     ctx: ContextoEmpresa,
-    service: ProductoPresentacionService,
+    handlers: CatalogHandlers,
 ) -> int:
-    return await service.resolver_empresa_para_producto(
+    return await handlers.presentaciones.resolver_empresa_producto(
         producto_id,
         ctx.empresa_usuario_id,
         ctx.es_empresa_maestra,
@@ -46,9 +30,9 @@ async def _empresa_para_producto(
 async def _empresa_para_presentacion(
     presentacion_id: int,
     ctx: ContextoEmpresa,
-    service: ProductoPresentacionService,
+    handlers: CatalogHandlers,
 ) -> int:
-    return await service.resolver_empresa_para_presentacion(
+    return await handlers.presentaciones.resolver_empresa_presentacion(
         presentacion_id,
         ctx.empresa_usuario_id,
         ctx.es_empresa_maestra,
@@ -67,11 +51,11 @@ async def listar_presentaciones(
     por_pagina: int = 50,
     buscar: str | None = None,
     ctx: ContextoEmpresa = Depends(obtener_contexto_empresa),
-    service: ProductoPresentacionService = Depends(obtener_presentacion_service)
+    handlers: CatalogHandlers = Depends(obtener_catalog_handlers),
 ):
     try:
-        empresa_id = await _empresa_para_producto(producto_id, ctx, service)
-        resultado = await service.listar_presentaciones(
+        empresa_id = await _empresa_para_producto(producto_id, ctx, handlers)
+        resultado = await handlers.presentaciones.listar(
             producto_id=producto_id,
             empresa_id=empresa_id,
             pagina=pagina,
@@ -100,15 +84,12 @@ async def listar_presentaciones(
 async def resolver_barcode(
     codigo: str,
     ctx: ContextoEmpresa = Depends(obtener_contexto_empresa),
-    service: ProductoPresentacionService = Depends(obtener_presentacion_service),
+    handlers: CatalogHandlers = Depends(obtener_catalog_handlers),
 ):
-    """
-    Resuelve un código de barras escaneado al producto y presentación correspondiente.
-    Retorna producto_id, presentacion_id y factor_conversion (cantidad de unidades base).
-    """
     try:
-        empresa_id = ctx.empresa_usuario_id
-        resultado = await service.buscar_por_barcode(empresa_id, codigo.strip())
+        resultado = await handlers.presentaciones.buscar_barcode(
+            ctx.empresa_usuario_id, codigo.strip()
+        )
         if resultado is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -130,11 +111,11 @@ async def crear_presentacion(
     producto_id: int,
     dto: ProductoPresentacionCrearDTO,
     ctx: ContextoEmpresa = Depends(obtener_contexto_empresa),
-    service: ProductoPresentacionService = Depends(obtener_presentacion_service)
+    handlers: CatalogHandlers = Depends(obtener_catalog_handlers),
 ):
     try:
-        empresa_id = await _empresa_para_producto(producto_id, ctx, service)
-        datos = await service.crear_presentacion(
+        empresa_id = await _empresa_para_producto(producto_id, ctx, handlers)
+        datos = await handlers.presentaciones.crear(
             producto_id=producto_id,
             empresa_id=empresa_id,
             nombre=dto.nombre,
@@ -162,12 +143,12 @@ async def actualizar_presentacion(
     presentacion_id: int,
     dto: ProductoPresentacionActualizarDTO,
     ctx: ContextoEmpresa = Depends(obtener_contexto_empresa),
-    service: ProductoPresentacionService = Depends(obtener_presentacion_service)
+    handlers: CatalogHandlers = Depends(obtener_catalog_handlers),
 ):
     try:
         payload = dto.model_dump(exclude_unset=True)
-        empresa_id = await _empresa_para_presentacion(presentacion_id, ctx, service)
-        datos = await service.actualizar_presentacion(
+        empresa_id = await _empresa_para_presentacion(presentacion_id, ctx, handlers)
+        datos = await handlers.presentaciones.actualizar(
             presentacion_id=presentacion_id,
             empresa_id=empresa_id,
             **payload,
@@ -189,11 +170,11 @@ async def actualizar_presentacion(
 async def eliminar_presentacion(
     presentacion_id: int,
     ctx: ContextoEmpresa = Depends(obtener_contexto_empresa),
-    service: ProductoPresentacionService = Depends(obtener_presentacion_service)
+    handlers: CatalogHandlers = Depends(obtener_catalog_handlers),
 ):
     try:
-        empresa_id = await _empresa_para_presentacion(presentacion_id, ctx, service)
-        resultado = await service.eliminar_presentacion(presentacion_id, empresa_id)
+        empresa_id = await _empresa_para_presentacion(presentacion_id, ctx, handlers)
+        resultado = await handlers.presentaciones.eliminar(presentacion_id, empresa_id)
         return RespuestaAPIDTO(exito=True, datos=resultado, mensaje="Presentación eliminada").dict()
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
@@ -209,12 +190,11 @@ async def eliminar_presentacion(
 async def calcular_descuento_inventario(
     dto: VentaDescuentoDTO,
     ctx: ContextoEmpresa = Depends(obtener_contexto_empresa),
-    service: ProductoPresentacionService = Depends(obtener_presentacion_service)
+    handlers: CatalogHandlers = Depends(obtener_catalog_handlers),
 ):
-    """Calcula unidades base a descontar según tipo de venta (unidad o empaque)."""
     try:
-        empresa_id = await _empresa_para_presentacion(dto.presentacion_id, ctx, service)
-        datos = await service.calcular_descuento_stock(
+        empresa_id = await _empresa_para_presentacion(dto.presentacion_id, ctx, handlers)
+        datos = await handlers.presentaciones.calcular_descuento(
             presentacion_id=dto.presentacion_id,
             empresa_id=empresa_id,
             cantidad=dto.cantidad,
