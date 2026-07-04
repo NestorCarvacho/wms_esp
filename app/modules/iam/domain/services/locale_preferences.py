@@ -1,25 +1,14 @@
 """Preferencias regionales efectivas del usuario."""
 from __future__ import annotations
 
-from typing import Any
+from app.modules.iam.domain.entities import UsuarioAuth
 
 
-def resolver_preferencias_locale(usuario: Any) -> dict[str, str]:
-    empresa = usuario.empresa
-    perfil = usuario.perfil
-    locale = (
-        perfil.locale_override
-        if perfil and perfil.locale_override
-        else getattr(empresa, "locale", None) or "es-CL"
-    )
-    timezone = (
-        perfil.timezone_override
-        if perfil and perfil.timezone_override
-        else getattr(empresa, "timezone", None) or "America/Santiago"
-    )
-    currency = getattr(empresa, "moneda_codigo", None) or "CLP"
+def resolver_preferencias_locale(usuario: UsuarioAuth) -> dict[str, str]:
+    locale = usuario.perfil_locale_override or usuario.empresa_locale or "es-CL"
+    timezone = usuario.perfil_timezone_override or usuario.empresa_timezone or "America/Santiago"
     return {
         "locale": locale,
         "timezone": timezone,
-        "currency": currency,
+        "currency": usuario.empresa_moneda or "CLP",
     }

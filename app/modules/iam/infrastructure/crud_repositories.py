@@ -17,36 +17,44 @@ from app.infrastructure.repositories.rol_permiso_crud_repository import RolPermi
 from app.infrastructure.repositories.usuario_crud_repository import UsuarioCRUDRepository
 from app.infrastructure.repositories.usuario_rol_crud_repository import UsuarioRolCRUDRepository
 from app.modules.tenant.infrastructure.tenant_access_adapter import TenantAccessAdapter
+from app.modules.iam.domain.entities import Usuario
+from app.modules.iam.infrastructure.orm_mappers import usuario_desde_orm
 
 
 class SqlAlchemyUsuarioCrudRepository:
     def __init__(self, session: AsyncSession):
         self._repo = UsuarioCRUDRepository(session)
 
-    async def listar(self, empresa_id: int, **kwargs: Any) -> tuple[list[Any], int]:
-        return await self._repo.listar(empresa_id=empresa_id, **kwargs)
+    async def listar(self, empresa_id: int, **kwargs: Any) -> tuple[list[Usuario], int]:
+        rows, total = await self._repo.listar(empresa_id=empresa_id, **kwargs)
+        return [usuario_desde_orm(r) for r in rows], total
 
-    async def obtener_por_id(self, usuario_id: int, empresa_id: int | None) -> Any | None:
-        return await self._repo.obtener_por_id(usuario_id, empresa_id)
+    async def obtener_por_id(self, usuario_id: int, empresa_id: int | None) -> Usuario | None:
+        row = await self._repo.obtener_por_id(usuario_id, empresa_id)
+        return usuario_desde_orm(row) if row else None
 
-    async def obtener_por_email(self, email: str, empresa_id: int) -> Any | None:
-        return await self._repo.obtener_por_email(email, empresa_id)
+    async def obtener_por_email(self, email: str, empresa_id: int) -> Usuario | None:
+        row = await self._repo.obtener_por_email(email, empresa_id)
+        return usuario_desde_orm(row) if row else None
 
     async def crear(
         self, *, empresa_id: int, email: str, contrasena: str, cargo_id: int | None = None
-    ) -> Any:
-        return await self._repo.crear(
+    ) -> Usuario:
+        row = await self._repo.crear(
             empresa_id=empresa_id, email=email, contrasena=contrasena, cargo_id=cargo_id
         )
+        return usuario_desde_orm(row)
 
-    async def actualizar(self, usuario_id: int, empresa_id: int, **campos: Any) -> Any | None:
-        return await self._repo.actualizar(usuario_id=usuario_id, empresa_id=empresa_id, **campos)
+    async def actualizar(self, usuario_id: int, empresa_id: int, **campos: Any) -> Usuario | None:
+        row = await self._repo.actualizar(usuario_id=usuario_id, empresa_id=empresa_id, **campos)
+        return usuario_desde_orm(row) if row else None
 
     async def eliminar(self, usuario_id: int, empresa_id: int) -> bool:
         return await self._repo.eliminar(usuario_id, empresa_id)
 
-    async def reactivar(self, usuario_id: int, empresa_id: int) -> Any | None:
-        return await self._repo.reactivar(usuario_id, empresa_id)
+    async def reactivar(self, usuario_id: int, empresa_id: int) -> Usuario | None:
+        row = await self._repo.reactivar(usuario_id, empresa_id)
+        return usuario_desde_orm(row) if row else None
 
 
 class SqlAlchemyUsuarioRolRepository:

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from app.domain.services.display_helpers import format_empresa_nombre
+from app.shared.formatting import format_empresa_nombre
 
 
 def serializar_bodega_lista(b: Any) -> dict:

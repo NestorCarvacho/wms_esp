@@ -26,15 +26,17 @@ Estado de avance del roadmap acordado.
 - [x] Todos los endpoints HTTP → handlers directos (catalog, IAM, tenant, warehouse, inventory)
 - [x] `empresa_contexto.py` → `TenantHandlers.tenant`
 - [x] Dependencias IAM/warehouse/tenant/inventory simplificadas
-- [ ] Borrar fachadas delegadoras huérfanas en `app/domain/services/`
+- [x] Borrar fachadas delegadoras huérfanas en `app/domain/services/`
 - [x] Utilidades puras en `app/shared/` (`formatting.py`)
 
 ## Sprint 4 — Dominio rico
 
 - [x] Entidades de dominio geo (`Region`, `Ciudad`, `Comuna`)
 - [x] Entidades catalog (`Producto`, `TipoProducto`, `UnidadMedida`) — ORM mapeado en adaptadores
-- [ ] Entidades IAM (usuario/perfil)
-- [ ] Absorber repos legacy restantes en adaptadores de módulo
+- [x] Entidades IAM (`Usuario`, `PerfilUsuario`, `UsuarioAuth`)
+- [x] Adaptadores IAM: auth y perfil con SQL propio; CRUD usuario mapea a dominio
+- [x] Puertos catalog tipados con entidades de dominio
+- [ ] Absorber repos legacy restantes (tenant, warehouse, RBAC catalog, inventory)
 
 ## BBDD pendiente (opcional)
 

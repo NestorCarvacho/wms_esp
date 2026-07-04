@@ -6,32 +6,30 @@ import pytest
 
 from app.modules.iam.application.commands import LoginCommand
 from app.modules.iam.application.handlers.login_handler import LoginHandler
+from app.modules.iam.domain.entities import UsuarioAuth
 from app.modules.iam.domain.services.login_policy import aplicar_fallo_login, validar_estado_login
 
 
-class FakeUsuario:
-    def __init__(self):
-        self.id = 1
-        self.empresa_id = 1
-        self.email = "test@wms.com"
-        self.password_hash = "hashed"
-        self.cargo_id = 1
-        self.activo = True
-        self.bloqueado_permanente = False
-        self.bloqueado_hasta = None
-        self.intentos_fallidos = 0
-        self.bloqueos_temporales = 0
-        self.ultimo_login = None
-        self.fecha_creacion = datetime.utcnow()
-        self.fecha_actualizacion = datetime.utcnow()
-        self.empresa = MagicMock(es_empresa_maestra=False, esta_activa=True, activo=True)
-        self.cargo = MagicMock(nombre="Admin")
-        self.perfil = None
+def _usuario_auth(**overrides) -> UsuarioAuth:
+    base = UsuarioAuth(
+        id=1,
+        empresa_id=1,
+        email="test@wms.com",
+        password_hash="hashed",
+        cargo_id=1,
+        activo=True,
+        cargo_nombre="Admin",
+        fecha_creacion=datetime.utcnow(),
+        fecha_actualizacion=datetime.utcnow(),
+    )
+    for key, value in overrides.items():
+        setattr(base, key, value)
+    return base
 
 
 @pytest.mark.asyncio
 async def test_login_credenciales_invalidas():
-    usuario = FakeUsuario()
+    usuario = _usuario_auth()
     repo = AsyncMock()
     repo.obtener_por_email_login.return_value = usuario
     hasher = MagicMock()
@@ -45,7 +43,7 @@ async def test_login_credenciales_invalidas():
 
 @pytest.mark.asyncio
 async def test_login_exitoso():
-    usuario = FakeUsuario()
+    usuario = _usuario_auth()
     repo = AsyncMock()
     repo.obtener_por_email_login.return_value = usuario
     repo.actualizar.return_value = usuario
@@ -64,14 +62,13 @@ async def test_login_exitoso():
 
 
 def test_validar_estado_cuenta_bloqueada():
-    usuario = FakeUsuario()
-    usuario.bloqueado_hasta = datetime.utcnow().replace(year=2099)
+    usuario = _usuario_auth(bloqueado_hasta=datetime.utcnow().replace(year=2099))
     with pytest.raises(ValueError, match="bloqueada temporalmente"):
         validar_estado_login(usuario)
 
 
 def test_aplicar_fallo_login_incrementa_intentos():
-    usuario = FakeUsuario()
+    usuario = _usuario_auth()
     with pytest.raises(ValueError, match="incorrectos"):
         aplicar_fallo_login(usuario)
     assert usuario.intentos_fallidos == 1

@@ -56,7 +56,7 @@ class LoginHandler:
         permisos, roles = await self.autorizacion.resolver_permisos_por_usuario(
             usuario.id, usuario.empresa_id
         )
-        es_empresa_maestra = bool(getattr(usuario.empresa, "es_empresa_maestra", False))
+        es_empresa_maestra = usuario.es_empresa_maestra
         token = self.token_issuer.emitir(
             {
                 "usuario_id": usuario.id,

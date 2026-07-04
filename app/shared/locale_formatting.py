@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from decimal import Decimal
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from app.core.request_context import get_request_locale, DEFAULT_TIMEZONE
+from app.core.request_context import DEFAULT_TIMEZONE, get_request_locale
 
 
 def _zone() -> ZoneInfo:

@@ -3,11 +3,7 @@
 import argparse
 import asyncio
 import tracemalloc
-from unittest.mock import AsyncMock, MagicMock
 from app.core.security import hash_password
-from app.domain.services.auth_service import AuthService
-from app.infrastructure.repositories.usuario_repository import UsuarioRepository
-from app.infrastructure.models.usuario import Usuario # Asegúrate de importar tu modelo
 
 tracemalloc.start()
 
@@ -77,70 +73,8 @@ def mostrar_password_hash(contrasena: str, email: str) -> str:
 
 
 async def test_login(contrasena: str = DEFAULT_PASSWORD, email: str = DEFAULT_EMAIL):
-    print("Iniciando prueba de login con Mock...")
-
-    # evitar "Error inesperado: TypeError - AuthService.login() takes 3 positional arguments but 4 were given"
-
-    #base para usuario
-    # id = Column(BigInteger, primary_key=True, index=True)
-    # empresa_id = Column(BigInteger, ForeignKey("empresa.id"), nullable=False, index=True)
-    # cargo_id = Column(BigInteger, ForeignKey("cargo.id"), nullable=True)
-    # email = Column(String(255), unique=True, nullable=False, index=True)
-    # password_hash = Column(String(255), nullable=False)
-    # nombre_completo = Column(String(255), nullable=True)
-    # rut = Column(String(20), nullable=True, index=True)
-    # esta_activo = Column(Boolean, default=True)
-    # activo = Column(Boolean, default=True)
-    # fecha_creacion = Column(DateTime, default=datetime.utcnow)
-    # ultimo_login = Column(DateTime, nullable=True)
-    # fecha_actualizacion = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    # # Relaciones
-    # empresa = relationship("Empresa", back_populates="usuarios")
-
-    # 1. Creamos un "Usuario" falso que represente lo que hay en tu BD
-    usuario_falso = MagicMock(spec=Usuario)
-    usuario_falso.id = 1
-    usuario_falso.cargo_id = 1
-    usuario_falso.email = "tu_usuario@wms.com"
-    usuario_falso.empresa_id = 1
-    usuario_falso.nombre_completo = "Usuario de Prueba"
-    usuario_falso.rut = "12.345.678-9"
-    usuario_falso.esta_activo = True
-    usuario_falso.fecha_creacion = "2026-01-01"
-    usuario_falso.activo = True
-    # IMPORTANTE: Este hash debe ser válido para la contraseña "Test1234"
-    # Si usas passlib, puedes generar uno real aquí para la prueba
-    from app.core.security import hash_password
-    usuario_falso.password_hash = hash_password(contrasena)
-
-    # 2. Creamos un Repositorio falso (Mock)
-    # En lugar de session=None, simulamos el método que busca al usuario
-    usuario_repository = MagicMock(spec=UsuarioRepository)
-    usuario_repository.obtener_por_email = AsyncMock(return_value=usuario_falso)
-
-    # 3. Instanciamos el servicio con nuestro repo falso
-    auth_service = AuthService(usuario_repository)
-    
-    # "usuario_id": usuario.id,
-            # "empresa_id": usuario.empresa_id,
-            # "email": usuario.email,
-            # "cargo_id": usuario.cargo_id
-
-
-    try:
-        # Ahora sí funcionará porque el repo no intentará usar 'execute' en None
-        print(f"Intentando login con email: {email}, contraseña: {contrasena}")
-        # MagicMock no tiene el método 'execute', pero como no lo llamamos directamente, no causará error. El método 'obtener_por_email' devolverá nuestro 'usuario_falso'.
-
-        resultado = await auth_service.login(email, contrasena)
-        print("\n✅ Login exitoso!")
-        # print("Resultado del login:", resultado)
-        print("Hash de la contrasena:", usuario_falso.password_hash)
-
-    except ValueError as e:
-        print("\n❌ Error de autenticación esperado:", str(e))
-    except Exception as e:
-        print(f"\n🔥 Error inesperado: {type(e).__name__} - {str(e)}")
+    print("Login mock deshabilitado: use pytest tests/modules/iam/test_login_handler.py")
+    print(f"  email={email!r} contrasena=<redacted>")
 
 def parse_args():
     parser = argparse.ArgumentParser(

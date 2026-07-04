@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from app.domain.services.formato_service import serializar_timestamp
+from app.shared.locale_formatting import serializar_timestamp
 
 
 def serializar_movimiento(m: Any) -> dict:

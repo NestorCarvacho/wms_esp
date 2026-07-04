@@ -4,7 +4,7 @@ from io import BytesIO
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import StreamingResponse
 from app.bootstrap.container import InventoryHandlers
-from app.domain.services.inventario_reporte_service import InventarioReporteService
+from app.modules.inventory.application.inventario_reporte_service import InventarioReporteService
 from app.modules.inventory.application.commands import (
     ActualizarConfigBodegaCommand,
     DespacharCommand,

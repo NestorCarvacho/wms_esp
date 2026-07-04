@@ -4,27 +4,77 @@ from __future__ import annotations
 from typing import Any
 
 from sqlalchemy import select
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
-from app.infrastructure.models.usuario import Permiso, Rol, RolPermiso, UsuarioRol
-from app.infrastructure.repositories.usuario_repository import UsuarioRepository
+from app.infrastructure.models.usuario import Permiso, Rol, RolPermiso, Usuario, UsuarioRol
+from app.modules.iam.domain.entities import UsuarioAuth
+from app.modules.iam.infrastructure.orm_mappers import aplicar_auth_a_orm, usuario_auth_desde_orm
+
+_USUARIO_AUTH_LOAD = (
+    selectinload(Usuario.perfil),
+    selectinload(Usuario.empresa),
+    selectinload(Usuario.cargo),
+)
 
 
 class SqlAlchemyUsuarioAuthRepository:
     def __init__(self, session: AsyncSession):
-        self._repo = UsuarioRepository(session)
+        self.session = session
 
-    async def obtener_por_email_login(self, email: str) -> Any | None:
-        return await self._repo.obtener_por_email_login(email)
+    async def _obtener_orm_por_email(self, email: str) -> Usuario | None:
+        stmt = (
+            select(Usuario)
+            .options(*_USUARIO_AUTH_LOAD)
+            .where(Usuario.email == email)
+        )
+        result = await self.session.execute(stmt)
+        return result.scalars().first()
 
-    async def obtener_por_id_login(self, usuario_id: int) -> Any | None:
-        return await self._repo.obtener_por_id_login(usuario_id)
+    async def _obtener_orm_por_id(self, usuario_id: int) -> Usuario | None:
+        stmt = (
+            select(Usuario)
+            .options(*_USUARIO_AUTH_LOAD)
+            .where(Usuario.id == usuario_id)
+        )
+        result = await self.session.execute(stmt)
+        return result.scalars().first()
 
-    async def obtener_por_id(self, usuario_id: int, empresa_id: int) -> Any | None:
-        return await self._repo.obtener_por_id(usuario_id, empresa_id)
+    async def obtener_por_email_login(self, email: str) -> UsuarioAuth | None:
+        row = await self._obtener_orm_por_email(email)
+        return usuario_auth_desde_orm(row) if row else None
 
-    async def actualizar(self, usuario: Any) -> Any:
-        return await self._repo.actualizar(usuario)
+    async def obtener_por_id_login(self, usuario_id: int) -> UsuarioAuth | None:
+        row = await self._obtener_orm_por_id(usuario_id)
+        return usuario_auth_desde_orm(row) if row else None
+
+    async def obtener_por_id(self, usuario_id: int, empresa_id: int) -> UsuarioAuth | None:
+        stmt = (
+            select(Usuario)
+            .options(*_USUARIO_AUTH_LOAD)
+            .where(Usuario.id == usuario_id, Usuario.empresa_id == empresa_id, Usuario.activo == True)
+        )
+        result = await self.session.execute(stmt)
+        row = result.scalars().first()
+        return usuario_auth_desde_orm(row) if row else None
+
+    async def actualizar(self, usuario: UsuarioAuth) -> UsuarioAuth:
+        try:
+            row = await self._obtener_orm_por_id(usuario.id)
+            if not row:
+                raise ValueError("Usuario no encontrado")
+            aplicar_auth_a_orm(usuario, row)
+            self.session.add(row)
+            await self.session.commit()
+            await self.session.refresh(row)
+            refreshed = await self._obtener_orm_por_id(usuario.id)
+            if not refreshed:
+                raise ValueError("Usuario no encontrado tras actualizar")
+            return usuario_auth_desde_orm(refreshed)
+        except SQLAlchemyError as exc:
+            await self.session.rollback()
+            raise Exception(f"Error al actualizar usuario: {exc}") from exc
 
 
 class SqlAlchemyAutorizacionRepository:

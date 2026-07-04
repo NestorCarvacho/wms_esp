@@ -2,22 +2,21 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from typing import Any
 
 from app.core.config import LOGIN_LOCKOUT_MINUTES, LOGIN_MAX_ATTEMPTS
 from app.modules.iam.domain.constants import MSG_BLOQUEO_PERMANENTE, MSG_CREDENCIALES
+from app.modules.iam.domain.entities import UsuarioAuth
 
 
-def validar_estado_login(usuario: Any, now: datetime | None = None) -> None:
+def validar_estado_login(usuario: UsuarioAuth, now: datetime | None = None) -> None:
     now = now or datetime.utcnow()
     if usuario.bloqueado_permanente:
         raise ValueError(MSG_BLOQUEO_PERMANENTE)
     if not usuario.activo:
         raise ValueError(MSG_BLOQUEO_PERMANENTE)
 
-    empresa = usuario.empresa
-    if empresa and not bool(getattr(empresa, "es_empresa_maestra", False)):
-        if not empresa.esta_activa or not empresa.activo:
+    if not usuario.es_empresa_maestra:
+        if not usuario.empresa_esta_activa or not usuario.empresa_activo:
             raise ValueError(
                 "La empresa está inhabilitada. Comuníquese con el administrador del sistema."
             )
@@ -34,7 +33,7 @@ def validar_estado_login(usuario: Any, now: datetime | None = None) -> None:
         usuario.bloqueado_hasta = None
 
 
-def aplicar_fallo_login(usuario: Any, now: datetime | None = None) -> None:
+def aplicar_fallo_login(usuario: UsuarioAuth, now: datetime | None = None) -> None:
     """Mutates usuario and raises ValueError with appropriate message."""
     now = now or datetime.utcnow()
     usuario.intentos_fallidos = (usuario.intentos_fallidos or 0) + 1

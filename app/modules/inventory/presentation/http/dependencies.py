@@ -3,7 +3,7 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.bootstrap.container import InventoryHandlers, build_inventory_handlers
-from app.domain.services.inventario_reporte_service import InventarioReporteService
+from app.modules.inventory.application.inventario_reporte_service import InventarioReporteService
 from app.infrastructure.database import get_db_session
 
 
