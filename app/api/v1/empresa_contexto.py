@@ -5,9 +5,8 @@ from fastapi import Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.dependencies import obtener_usuario_autenticado, requiere_permiso
-from app.domain.services.empresa_maestra_service import EmpresaMaestraService
+from app.bootstrap.tenant_container import build_tenant_handlers
 from app.infrastructure.database import get_db_session
-from app.infrastructure.repositories.empresa_administrada_repository import EmpresaAdministradaRepository
 
 
 @dataclass
@@ -51,6 +50,7 @@ async def resolver_empresa_creacion(
     """Determina la empresa destino al crear registros."""
     empresa_usuario_id = usuario.get("empresa_id")
     es_maestra = bool(usuario.get("es_empresa_maestra"))
+    tenant = build_tenant_handlers(session).tenant
 
     if not es_maestra:
         if empresa_id_body is not None and empresa_id_body != empresa_usuario_id:
@@ -66,10 +66,13 @@ async def resolver_empresa_creacion(
             detail="Debe indicar la empresa (empresa_id)",
         )
 
-    maestra_service = EmpresaMaestraService(EmpresaAdministradaRepository(session))
     try:
-        await maestra_service.validar_acceso(empresa_usuario_id, empresa_id_body)
-        await maestra_service.assert_operativa_para_escritura(empresa_id_body)
+        await tenant.validar_acceso(empresa_usuario_id, empresa_id_body)
+        if not await tenant.empresa_esta_operativa(empresa_id_body):
+            raise ValueError(
+                "La empresa está inhabilitada. Actívela desde Configuración → Empresas "
+                "para crear o modificar registros."
+            )
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e)) from e
     return empresa_id_body
@@ -82,6 +85,7 @@ async def obtener_contexto_empresa(
 ) -> ContextoEmpresa:
     empresa_usuario_id = usuario.get("empresa_id")
     es_maestra = bool(usuario.get("es_empresa_maestra"))
+    tenant = build_tenant_handlers(session).tenant
 
     if not es_maestra:
         if empresa_id is not None and empresa_id != empresa_usuario_id:
@@ -96,13 +100,14 @@ async def obtener_contexto_empresa(
             empresas_administradas_ids=[empresa_usuario_id],
         )
 
-    maestra_service = EmpresaMaestraService(EmpresaAdministradaRepository(session))
-    administradas_ids = await maestra_service.ids_administradas(empresa_usuario_id)
+    administradas_ids = await tenant.ids_empresas_administradas_activas(empresa_usuario_id)
+    if not administradas_ids:
+        administradas_ids = [empresa_usuario_id]
 
     filtro = empresa_id
     if filtro is not None:
         try:
-            await maestra_service.validar_acceso(empresa_usuario_id, filtro)
+            await tenant.validar_acceso(empresa_usuario_id, filtro)
         except ValueError as e:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e)) from e
 
@@ -120,10 +125,10 @@ def contexto_requiere_permiso(*permisos_requeridos: str):
     Uso: ctx: ContextoEmpresa = Depends(contexto_requiere_permiso("productos.leer"))
     """
 
-    async def _dep(
+    async def _resolver(
         ctx: ContextoEmpresa = Depends(obtener_contexto_empresa),
         _auth: dict = Depends(requiere_permiso(*permisos_requeridos)),
     ) -> ContextoEmpresa:
         return ctx
 
-    return _dep
+    return _resolver

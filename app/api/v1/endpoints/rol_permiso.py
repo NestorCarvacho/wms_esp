@@ -2,8 +2,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.api.v1.dependencies import requiere_permiso
-from app.domain.services.rol_permiso_service import RolPermisoService
-from app.modules.iam.presentation.http.dependencies import obtener_rol_permiso_service
+from app.bootstrap.container import IamHandlers
+from app.modules.iam.application.commands_rbac import SincronizarPermisosRolCommand
+from app.modules.iam.presentation.http.dependencies import obtener_iam_handlers
 from app.schemas.permiso import RolPermisoSincronizarDTO
 from app.schemas.usuario import RespuestaAPIDTO
 
@@ -14,10 +15,10 @@ router = APIRouter(prefix="/api/v1/roles", tags=["Roles"])
 async def listar_permisos_rol(
     rol_id: int,
     usuario_autenticado: dict = Depends(requiere_permiso("roles.leer")),
-    service: RolPermisoService = Depends(obtener_rol_permiso_service),
+    handlers: IamHandlers = Depends(obtener_iam_handlers),
 ):
     try:
-        resultado = await service.listar_por_rol(rol_id, usuario_autenticado)
+        resultado = await handlers.listar_permisos_rol.handle(rol_id, usuario_autenticado)
         return RespuestaAPIDTO(exito=True, datos=resultado, mensaje="Permisos del rol obtenidos").dict()
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
@@ -30,10 +31,16 @@ async def sincronizar_permisos_rol(
     rol_id: int,
     dto: RolPermisoSincronizarDTO,
     usuario_autenticado: dict = Depends(requiere_permiso("roles.editar")),
-    service: RolPermisoService = Depends(obtener_rol_permiso_service),
+    handlers: IamHandlers = Depends(obtener_iam_handlers),
 ):
     try:
-        resultado = await service.sincronizar(rol_id, usuario_autenticado, dto.permiso_ids)
+        resultado = await handlers.sincronizar_permisos_rol.handle(
+            SincronizarPermisosRolCommand(
+                rol_id=rol_id,
+                usuario=usuario_autenticado,
+                permiso_ids=dto.permiso_ids,
+            )
+        )
         return RespuestaAPIDTO(exito=True, datos=resultado, mensaje="Permisos del rol actualizados").dict()
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))

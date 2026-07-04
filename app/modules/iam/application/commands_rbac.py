@@ -42,3 +42,29 @@ class SincronizarRolesCargoCommand:
     empresa_id: int
     rol_ids: list[int]
     es_super_admin: bool = False
+
+
+@dataclass(frozen=True)
+class CrearPermisoCargoCommand:
+    empresa_id: int
+    cargo_id: int
+    rol_id: int
+    activo: bool
+    es_super_admin: bool = False
+
+
+@dataclass(frozen=True)
+class ActualizarPermisoCargoCommand:
+    empresa_id: int
+    cargo_id: int
+    rol_id: int
+    activo: bool
+    es_super_admin: bool = False
+
+
+@dataclass(frozen=True)
+class EliminarPermisoCargoCommand:
+    empresa_id: int
+    cargo_id: int
+    rol_id: int
+    es_super_admin: bool = False

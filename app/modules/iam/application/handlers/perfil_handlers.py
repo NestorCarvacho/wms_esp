@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from app.modules.iam.application.commands import ActualizarPerfilCommand
+from app.modules.iam.application.commands_perfil import ActualizarPerfilCommand
 from app.modules.iam.application.perfil_mappers import serializar_perfil
 from app.modules.iam.domain.ports import IPerfilUsuarioRepository, IUserCrudRepository
 

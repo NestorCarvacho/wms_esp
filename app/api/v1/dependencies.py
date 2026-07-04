@@ -88,7 +88,3 @@ def requiere_permiso(*permisos_requeridos: str):
     async def _validar(usuario: dict = Depends(obtener_usuario_autenticado)) -> dict:
         return await validar_permisos(list(permisos_requeridos), usuario)
     return _validar
-
-
-# Re-export para compatibilidad con imports existentes
-from app.modules.iam.presentation.http.dependencies import obtener_auth_service  # noqa: E402

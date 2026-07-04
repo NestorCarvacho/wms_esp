@@ -2,25 +2,11 @@
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.domain.services.bodega_service import BodegaService
-from app.domain.services.tipo_zona_service import TipoZonaService
-from app.domain.services.zona_bodega_service import ZonaBodegaService
+from app.bootstrap.warehouse_container import WarehouseHandlers, build_warehouse_handlers
 from app.infrastructure.database import get_db_session
 
 
-async def obtener_bodega_service(
+async def obtener_warehouse_handlers(
     session: AsyncSession = Depends(get_db_session),
-) -> BodegaService:
-    return BodegaService(session)
-
-
-async def obtener_tipo_zona_service(
-    session: AsyncSession = Depends(get_db_session),
-) -> TipoZonaService:
-    return TipoZonaService(session)
-
-
-async def obtener_zona_bodega_service(
-    session: AsyncSession = Depends(get_db_session),
-) -> ZonaBodegaService:
-    return ZonaBodegaService(session)
+) -> WarehouseHandlers:
+    return build_warehouse_handlers(session)

@@ -12,7 +12,7 @@ from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
-from app.domain.services.inventario_operacion_service import InventarioOperacionService
+from app.bootstrap.container import InventoryHandlers
 
 FormatoExport = Literal["xlsx", "pdf"]
 MAX_FILAS_EXPORT = 50_000
@@ -42,12 +42,12 @@ MOV_HEADERS = [
 
 
 class InventarioReporteService:
-    def __init__(self, operacion_service: InventarioOperacionService):
-        self.operacion = operacion_service
+    def __init__(self, handlers: InventoryHandlers):
+        self._handlers = handlers
 
     async def _obtener_stock_filas(self, empresa_id: int, **kwargs: Any) -> list[dict]:
-        resultado = await self.operacion.listar_stock(
-            empresa_id=empresa_id,
+        resultado = await self._handlers.listar_stock.handle(
+            empresa_id,
             pagina=1,
             por_pagina=MAX_FILAS_EXPORT,
             **kwargs,
@@ -61,8 +61,8 @@ class InventarioReporteService:
         return resultado["stock"]
 
     async def _obtener_movimientos_filas(self, empresa_id: int, **kwargs: Any) -> list[dict]:
-        resultado = await self.operacion.listar_movimientos(
-            empresa_id=empresa_id,
+        resultado = await self._handlers.listar_movimientos.handle(
+            empresa_id,
             pagina=1,
             por_pagina=MAX_FILAS_EXPORT,
             **kwargs,

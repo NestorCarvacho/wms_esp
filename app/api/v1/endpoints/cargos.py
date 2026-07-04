@@ -6,9 +6,10 @@ Multi-tenant con soporte para super admin.
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.domain.services.cargo_service import CargoService
+from app.bootstrap.container import IamHandlers
 from app.infrastructure.database import get_db_session
-from app.modules.iam.presentation.http.dependencies import obtener_cargo_service
+from app.modules.iam.application.commands_catalog import ActualizarCargoCommand, CrearCargoCommand
+from app.modules.iam.presentation.http.dependencies import obtener_iam_handlers
 from app.api.v1.dependencies import obtener_usuario_autenticado, requiere_permiso, es_super_admin
 from app.api.v1.empresa_contexto import ContextoEmpresa, kwargs_listado, obtener_contexto_empresa, resolver_empresa_creacion, contexto_requiere_permiso
 from app.api.v1.listado_query import orden_listado
@@ -37,7 +38,7 @@ async def listar_cargos(
     buscar: str | None = None,
     orden_params: dict = Depends(orden_listado),
     ctx: ContextoEmpresa = Depends(obtener_contexto_empresa),
-    service: CargoService = Depends(obtener_cargo_service)
+    handlers: IamHandlers = Depends(obtener_iam_handlers),
 
 ):
     """
@@ -58,8 +59,8 @@ async def listar_cargos(
     - Requiere autenticación JWT
     """
     try:
-        resultado = await service.listar_cargos(
-            empresa_id=ctx.empresa_usuario_id,
+        resultado = await handlers.listar_cargos.handle(
+            ctx.empresa_usuario_id,
             pagina=pagina,
             por_pagina=por_pagina,
             buscar=buscar,
@@ -90,7 +91,7 @@ async def obtener_cargo(
     id: int,
     usuario_autenticado: dict = Depends(requiere_permiso("cargos.leer")),
     es_admin: bool = Depends(es_super_admin),
-    service: CargoService = Depends(obtener_cargo_service),
+    handlers: IamHandlers = Depends(obtener_iam_handlers),,
 ):
     """
     Obtiene los datos de un cargo específico.
@@ -113,7 +114,7 @@ async def obtener_cargo(
         
         # Si es super admin, obtener sin filtro de empresa
         cargo_empresa_id = None if es_admin else empresa_id
-        cargo = await service.obtener_cargo(id, cargo_empresa_id)
+        cargo = await handlers.obtener_cargo.handle(id, cargo_empresa_id)
         
         # Validar permisos si no es super admin
         if not es_admin and cargo["empresa_id"] != empresa_id:
@@ -152,7 +153,7 @@ async def crear_cargo(
     cargo_dto: CargoCrearDTO,
     usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
     session: AsyncSession = Depends(get_db_session),
-    service: CargoService = Depends(obtener_cargo_service)
+    handlers: IamHandlers = Depends(obtener_iam_handlers),
 
 ):
     """
@@ -182,9 +183,8 @@ async def crear_cargo(
             usuario_autenticado, cargo_dto.empresa_id, session
         )
         
-        nuevo_cargo = await service.crear_cargo(
-            empresa_id=empresa_id,
-            nombre=cargo_dto.nombre
+        nuevo_cargo = await handlers.crear_cargo.handle(
+            CrearCargoCommand(empresa_id=empresa_id, nombre=cargo_dto.nombre)
         )
         
         return RespuestaAPIDTO(
@@ -222,7 +222,7 @@ async def actualizar_cargo(
     actualizar_dto: CargoActualizarDTO,
     usuario_autenticado: dict = Depends(requiere_permiso("cargos.editar")),
     es_admin: bool = Depends(es_super_admin),
-    service: CargoService = Depends(obtener_cargo_service),
+    handlers: IamHandlers = Depends(obtener_iam_handlers),,
 ):
     """
     Actualiza los datos de un cargo existente.
@@ -255,10 +255,12 @@ async def actualizar_cargo(
         # Si es super admin, obtener sin filtro de empresa para verificar existencia
         cargo_empresa_id = None if es_admin else empresa_id
         
-        cargo_actualizado = await service.actualizar_cargo(
-            cargo_id=id,
-            empresa_id=empresa_id,
-            nombre=actualizar_dto.nombre
+        cargo_actualizado = await handlers.actualizar_cargo.handle(
+            ActualizarCargoCommand(
+                cargo_id=id,
+                empresa_id=empresa_id,
+                nombre=actualizar_dto.nombre,
+            )
         )
         
         return RespuestaAPIDTO(
@@ -300,7 +302,7 @@ async def eliminar_cargo(
     id: int,
     usuario_autenticado: dict = Depends(requiere_permiso("cargos.eliminar")),
     es_admin: bool = Depends(es_super_admin),
-    service: CargoService = Depends(obtener_cargo_service),
+    handlers: IamHandlers = Depends(obtener_iam_handlers),,
 ):
     """
     Elimina un cargo.
@@ -326,7 +328,7 @@ async def eliminar_cargo(
     try:
         empresa_id = usuario_autenticado.get("empresa_id")
         
-        resultado = await service.eliminar_cargo(id, empresa_id)
+        resultado = await handlers.eliminar_cargo.handle(id, empresa_id)
         
         return RespuestaAPIDTO(
             exito=True,

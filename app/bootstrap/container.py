@@ -27,6 +27,12 @@ from app.modules.iam.application.handlers.perfil_handlers import (
     ActualizarPerfilHandler,
     ObtenerPerfilQueryHandler,
 )
+from app.modules.iam.application.handlers.permiso_cargo_handlers import (
+    ActualizarPermisoCargoHandler,
+    CrearPermisoCargoHandler,
+    EliminarPermisoCargoHandler,
+    ListarPermisosCargoQueryHandler,
+)
 from app.modules.iam.application.handlers.login_handler import LoginHandler
 from app.modules.iam.application.handlers.resolver_permisos_handler import (
     ResolverPermisosUsuarioQueryHandler,
@@ -79,10 +85,20 @@ from app.modules.inventory.application.handlers.query_handlers import (
     ListarStockHandler,
 )
 from app.modules.inventory.application.handlers.recepcionar_handler import RecepcionarHandler
+from app.modules.inventory.application.handlers.serie_handlers import (
+    DespacharSerieHandler,
+    ListarSeriesProductoQueryHandler,
+    RecepcionarSerieHandler,
+    TrasladarSerieHandler,
+    UbicarSerieQueryHandler,
+)
 from app.modules.inventory.application.handlers.trasladar_handler import TrasladarHandler
 from app.modules.inventory.domain.services.presentacion_converter import PresentacionConverter
 from app.modules.inventory.infrastructure.sqlalchemy_repository import SqlAlchemyInventarioRepository
+from app.modules.inventory.infrastructure.serie_producto_service import SerieProductoService
 from app.modules.inventory.infrastructure.unit_of_work import SqlAlchemyInventoryUnitOfWork
+from app.infrastructure.repositories.inventario_crud_repository import InventarioCRUDRepository
+from app.infrastructure.repositories.serie_producto_crud_repository import SerieProductoCRUDRepository
 
 
 @dataclass
@@ -120,6 +136,10 @@ class IamHandlers:
     provisionar_rbac: ProvisionarRbacEmpresaHandler
     obtener_perfil: ObtenerPerfilQueryHandler
     actualizar_perfil: ActualizarPerfilHandler
+    listar_permisos_cargo: ListarPermisosCargoQueryHandler
+    crear_permiso_cargo: CrearPermisoCargoHandler
+    actualizar_permiso_cargo: ActualizarPermisoCargoHandler
+    eliminar_permiso_cargo: EliminarPermisoCargoHandler
 
 
 def build_iam_handlers(session: AsyncSession) -> IamHandlers:
@@ -175,6 +195,10 @@ def build_iam_handlers(session: AsyncSession) -> IamHandlers:
         ),
         obtener_perfil=ObtenerPerfilQueryHandler(usuarios_crud, perfiles),
         actualizar_perfil=ActualizarPerfilHandler(usuarios_crud, perfiles),
+        listar_permisos_cargo=ListarPermisosCargoQueryHandler(permiso_cargo),
+        crear_permiso_cargo=CrearPermisoCargoHandler(permiso_cargo),
+        actualizar_permiso_cargo=ActualizarPermisoCargoHandler(permiso_cargo),
+        eliminar_permiso_cargo=EliminarPermisoCargoHandler(permiso_cargo),
     )
 
 
@@ -187,6 +211,11 @@ class InventoryHandlers:
     listar_movimientos: ListarMovimientosHandler
     obtener_config_bodega: ObtenerConfigBodegaHandler
     actualizar_config_bodega: ActualizarConfigBodegaHandler
+    recepcionar_serie: RecepcionarSerieHandler
+    trasladar_serie: TrasladarSerieHandler
+    despachar_serie: DespacharSerieHandler
+    ubicar_serie: UbicarSerieQueryHandler
+    listar_series_producto: ListarSeriesProductoQueryHandler
 
 
 def build_inventory_handlers(session: AsyncSession) -> InventoryHandlers:
@@ -194,6 +223,10 @@ def build_inventory_handlers(session: AsyncSession) -> InventoryHandlers:
     uow = SqlAlchemyInventoryUnitOfWork(session)
     repo = SqlAlchemyInventarioRepository(session)
     conversion = PresentacionConverter()
+    series = SerieProductoService(
+        SerieProductoCRUDRepository(session),
+        InventarioCRUDRepository(session),
+    )
 
     return InventoryHandlers(
         recepcionar=RecepcionarHandler(uow, conversion),
@@ -203,4 +236,9 @@ def build_inventory_handlers(session: AsyncSession) -> InventoryHandlers:
         listar_movimientos=ListarMovimientosHandler(repo),
         obtener_config_bodega=ObtenerConfigBodegaHandler(repo),
         actualizar_config_bodega=ActualizarConfigBodegaHandler(uow),
+        recepcionar_serie=RecepcionarSerieHandler(series),
+        trasladar_serie=TrasladarSerieHandler(series),
+        despachar_serie=DespacharSerieHandler(series),
+        ubicar_serie=UbicarSerieQueryHandler(series),
+        listar_series_producto=ListarSeriesProductoQueryHandler(series),
     )

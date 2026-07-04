@@ -4,8 +4,9 @@ Endpoints CRUD de Bodegas (Capa de Presentación).
 Multi-tenant con soporte para super admin.
 """
 from fastapi import APIRouter, Depends, HTTPException, status, Query
-from app.domain.services.bodega_service import BodegaService
-from app.modules.warehouse.presentation.http.dependencies import obtener_bodega_service
+from app.bootstrap.warehouse_container import WarehouseHandlers
+from app.modules.warehouse.application.commands import ActualizarBodegaCommand, CrearBodegaCommand
+from app.modules.warehouse.presentation.http.dependencies import obtener_warehouse_handlers
 from app.api.v1.dependencies import obtener_usuario_autenticado, requiere_permiso, es_super_admin
 from app.api.v1.empresa_contexto import ContextoEmpresa, kwargs_listado, obtener_contexto_empresa, contexto_requiere_permiso
 from app.api.v1.listado_query import orden_listado
@@ -34,7 +35,7 @@ async def listar_Bodegas(
     buscar: str | None = None,
     orden_params: dict = Depends(orden_listado),
     ctx: ContextoEmpresa = Depends(obtener_contexto_empresa),
-    service: BodegaService = Depends(obtener_bodega_service)
+    handlers: WarehouseHandlers = Depends(obtener_warehouse_handlers),
 ):
     """
     Obtiene la lista de bodegas.
@@ -54,7 +55,7 @@ async def listar_Bodegas(
     - Requiere autenticación JWT
     """
     try:
-        resultado = await service.listar_bodegas(
+        resultado = await handlers.listar_bodegas.handle(
             empresa_id=ctx.empresa_usuario_id,
             pagina=pagina,
             por_pagina=por_pagina,
@@ -86,7 +87,7 @@ async def obtener_bodega(
     id: int,
     usuario_autenticado: dict = Depends(requiere_permiso("bodegas.leer")),
     es_admin: bool = Depends(es_super_admin),
-    service: BodegaService = Depends(obtener_bodega_service),
+    handlers: WarehouseHandlers = Depends(obtener_warehouse_handlers),,
 ):
     """
     Obtiene los datos de una bodega específica.
@@ -109,7 +110,7 @@ async def obtener_bodega(
         
         # Si es super admin, obtener sin filtro de empresa
         bodega_empresa_id = None if es_admin else empresa_id
-        bodega = await service.obtener_bodega(id, bodega_empresa_id)
+        bodega = await handlers.obtener_bodega.handle(id, bodega_empresa_id)
         
         # Validar permisos si no es super admin
         if not es_admin and bodega["empresa_id"] != empresa_id:
@@ -148,7 +149,7 @@ async def crear_bodega(
     bodega_dto: BodegaCrearDTO,
     usuario_autenticado: dict = Depends(requiere_permiso("bodegas.crear")),
     es_admin: bool = Depends(es_super_admin),
-    service: BodegaService = Depends(obtener_bodega_service),
+    handlers: WarehouseHandlers = Depends(obtener_warehouse_handlers),,
 ):
     """
     Crea un nueva bodega en la empresa.
@@ -177,11 +178,13 @@ async def crear_bodega(
     try:
         empresa_id = usuario_autenticado.get("empresa_id")
         
-        nueva_bodega = await service.crear_bodega(
-            empresa_id=empresa_id,
-            nombre=bodega_dto.nombre,
-            codigo=bodega_dto.codigo,
-            activo=bodega_dto.activo
+        nueva_bodega = await handlers.crear_bodega.handle(
+            CrearBodegaCommand(
+                empresa_id=empresa_id,
+                nombre=bodega_dto.nombre,
+                codigo=bodega_dto.codigo,
+                activo=bodega_dto.activo,
+            )
         )
         
         return RespuestaAPIDTO(
@@ -219,7 +222,7 @@ async def actualizar_bodega(
     actualizar_dto: BodegaActualizarDTO,
     usuario_autenticado: dict = Depends(requiere_permiso("bodegas.editar")),
     es_admin: bool = Depends(es_super_admin),
-    service: BodegaService = Depends(obtener_bodega_service),
+    handlers: WarehouseHandlers = Depends(obtener_warehouse_handlers),,
 ):
     """
     Actualiza los datos de una bodega existente.
@@ -254,12 +257,14 @@ async def actualizar_bodega(
         # Si es super admin, obtener sin filtro de empresa para verificar existencia
         bodega_empresa_id = None if es_admin else empresa_id
         
-        bodega_actualizada = await service.actualizar_bodega(
-            bodega_id=id,
-            empresa_id=empresa_id,
-            nombre=actualizar_dto.nombre,
-            codigo=actualizar_dto.codigo,
-            activo=bool(actualizar_dto.activo) if actualizar_dto.activo is not None else None,
+        bodega_actualizada = await handlers.actualizar_bodega.handle(
+            ActualizarBodegaCommand(
+                bodega_id=id,
+                empresa_id=empresa_id,
+                nombre=actualizar_dto.nombre,
+                codigo=actualizar_dto.codigo,
+                activo=bool(actualizar_dto.activo) if actualizar_dto.activo is not None else None,
+            )
         )
         
         return RespuestaAPIDTO(
@@ -301,7 +306,7 @@ async def eliminar_bodega(
     id: int,
     usuario_autenticado: dict = Depends(requiere_permiso("bodegas.eliminar")),
     es_admin: bool = Depends(es_super_admin),
-    service: BodegaService = Depends(obtener_bodega_service),
+    handlers: WarehouseHandlers = Depends(obtener_warehouse_handlers),,
 ):
     """
     Elimina una bodega.
@@ -327,7 +332,7 @@ async def eliminar_bodega(
     try:
         empresa_id = usuario_autenticado.get("empresa_id")
         
-        resultado = await service.eliminar_bodega(id, empresa_id)
+        resultado = await handlers.eliminar_bodega.handle(id, empresa_id)
         
         return RespuestaAPIDTO(
             exito=True,

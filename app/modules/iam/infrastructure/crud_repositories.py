@@ -90,8 +90,39 @@ class SqlAlchemyPermisoCargoRepository:
     def __init__(self, session: AsyncSession):
         self._repo = PermisoCargoCRUDRepository(session)
 
+    async def listar(
+        self,
+        empresa_id: int,
+        pagina: int = 1,
+        por_pagina: int = 10,
+        es_super_admin: bool = False,
+    ) -> tuple[list[Any], int]:
+        return await self._repo.listar(
+            empresa_id=empresa_id,
+            pagina=pagina,
+            por_pagina=por_pagina,
+            es_super_admin=es_super_admin,
+        )
+
+    async def obtener(
+        self, cargo_id: int, rol_id: int, empresa_id: int | None = None
+    ) -> Any | None:
+        return await self._repo.obtener(cargo_id, rol_id, empresa_id)
+
+    async def crear(self, cargo_id: int, rol_id: int, activo: bool = True) -> Any:
+        return await self._repo.crear(cargo_id, rol_id, activo)
+
+    async def actualizar(self, cargo_id: int, rol_id: int, activo: bool) -> Any | None:
+        return await self._repo.actualizar(cargo_id, rol_id, activo)
+
+    async def eliminar(self, cargo_id: int, rol_id: int) -> bool:
+        return await self._repo.eliminar(cargo_id, rol_id)
+
     async def obtener_cargo(self, cargo_id: int, empresa_id: int | None) -> Any | None:
         return await self._repo.obtener_cargo(cargo_id, empresa_id)
+
+    async def obtener_rol(self, rol_id: int, empresa_id: int | None) -> Any | None:
+        return await self._repo.obtener_rol(rol_id, empresa_id)
 
     async def listar_roles_por_cargo(self, cargo_id: int, empresa_id: int) -> list[int]:
         return await self._repo.listar_roles_por_cargo(cargo_id, empresa_id)

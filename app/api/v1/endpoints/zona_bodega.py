@@ -1,9 +1,11 @@
 """Endpoints CRUD de Zonas de Bodega."""
-from fastapi import APIRouter, Depends, HTTPException, Query, status
-from app.domain.services.zona_bodega_service import ZonaBodegaService
-from app.modules.warehouse.presentation.http.dependencies import obtener_zona_bodega_service
-from app.api.v1.dependencies import obtener_usuario_autenticado, requiere_permiso, es_super_admin
-from app.api.v1.empresa_contexto import ContextoEmpresa, kwargs_listado, obtener_contexto_empresa, contexto_requiere_permiso
+from fastapi import APIRouter, Depends, HTTPException, status
+
+from app.bootstrap.warehouse_container import WarehouseHandlers
+from app.modules.warehouse.application.commands import ActualizarZonaBodegaCommand, CrearZonaBodegaCommand
+from app.modules.warehouse.presentation.http.dependencies import obtener_warehouse_handlers
+from app.api.v1.dependencies import requiere_permiso, es_super_admin
+from app.api.v1.empresa_contexto import ContextoEmpresa, kwargs_listado, obtener_contexto_empresa
 from app.api.v1.listado_query import orden_listado
 from app.schemas.zona_bodega import ZonaBodegaCrearDTO, ZonaBodegaActualizarDTO, RespuestaAPIDTO
 
@@ -18,10 +20,10 @@ async def listar_zonas_bodega(
     buscar: str | None = None,
     orden_params: dict = Depends(orden_listado),
     ctx: ContextoEmpresa = Depends(obtener_contexto_empresa),
-    service: ZonaBodegaService = Depends(obtener_zona_bodega_service)
+    handlers: WarehouseHandlers = Depends(obtener_warehouse_handlers),
 ):
     try:
-        resultado = await service.listar_zonas_bodega(
+        resultado = await handlers.listar_zonas_bodega.handle(
             empresa_id=ctx.empresa_usuario_id,
             pagina=pagina,
             por_pagina=por_pagina,
@@ -44,11 +46,11 @@ async def obtener_zona_bodega(
     id: int,
     usuario_autenticado: dict = Depends(requiere_permiso("zonas_bodega.leer")),
     es_admin: bool = Depends(es_super_admin),
-    service: ZonaBodegaService = Depends(obtener_zona_bodega_service),
+    handlers: WarehouseHandlers = Depends(obtener_warehouse_handlers),
 ):
     try:
         empresa_filtro = None if es_admin else usuario_autenticado.get("empresa_id")
-        datos = await service.obtener_zona_bodega(id, empresa_filtro)
+        datos = await handlers.obtener_zona_bodega.handle(id, empresa_filtro)
         if not es_admin and datos.get("empresa_id") != usuario_autenticado.get("empresa_id"):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado")
         return RespuestaAPIDTO(exito=True, datos=datos, mensaje="Zona de bodega recuperada").dict()
@@ -65,16 +67,18 @@ async def crear_zona_bodega(
     dto: ZonaBodegaCrearDTO,
     usuario_autenticado: dict = Depends(requiere_permiso("zonas_bodega.crear")),
     es_admin: bool = Depends(es_super_admin),
-    service: ZonaBodegaService = Depends(obtener_zona_bodega_service),
+    handlers: WarehouseHandlers = Depends(obtener_warehouse_handlers),
 ):
     try:
-        datos = await service.crear_zona_bodega(
-            empresa_id=usuario_autenticado.get("empresa_id"),
-            bodega_id=dto.bodega_id,
-            tipo_zona_id=dto.tipo_zona_id,
-            nombre=dto.nombre,
-            activo=bool(dto.activo),
-            es_super_admin=es_admin,
+        datos = await handlers.crear_zona_bodega.handle(
+            CrearZonaBodegaCommand(
+                empresa_id=usuario_autenticado.get("empresa_id"),
+                bodega_id=dto.bodega_id,
+                tipo_zona_id=dto.tipo_zona_id,
+                nombre=dto.nombre,
+                activo=bool(dto.activo),
+                es_super_admin=es_admin,
+            )
         )
         return RespuestaAPIDTO(exito=True, datos=datos, mensaje="Zona de bodega creada").dict()
     except ValueError as e:
@@ -89,17 +93,19 @@ async def actualizar_zona_bodega(
     dto: ZonaBodegaActualizarDTO,
     usuario_autenticado: dict = Depends(requiere_permiso("zonas_bodega.editar")),
     es_admin: bool = Depends(es_super_admin),
-    service: ZonaBodegaService = Depends(obtener_zona_bodega_service),
+    handlers: WarehouseHandlers = Depends(obtener_warehouse_handlers),
 ):
     try:
-        datos = await service.actualizar_zona_bodega(
-            zona_id=id,
-            empresa_id=usuario_autenticado.get("empresa_id"),
-            bodega_id=dto.bodega_id,
-            tipo_zona_id=dto.tipo_zona_id,
-            nombre=dto.nombre,
-            activo=bool(dto.activo) if dto.activo is not None else None,
-            es_super_admin=es_admin,
+        datos = await handlers.actualizar_zona_bodega.handle(
+            ActualizarZonaBodegaCommand(
+                zona_id=id,
+                empresa_id=usuario_autenticado.get("empresa_id"),
+                bodega_id=dto.bodega_id,
+                tipo_zona_id=dto.tipo_zona_id,
+                nombre=dto.nombre,
+                activo=bool(dto.activo) if dto.activo is not None else None,
+                es_super_admin=es_admin,
+            )
         )
         return RespuestaAPIDTO(exito=True, datos=datos, mensaje="Zona de bodega actualizada").dict()
     except ValueError as e:
@@ -115,10 +121,10 @@ async def eliminar_zona_bodega(
     id: int,
     usuario_autenticado: dict = Depends(requiere_permiso("zonas_bodega.eliminar")),
     es_admin: bool = Depends(es_super_admin),
-    service: ZonaBodegaService = Depends(obtener_zona_bodega_service),
+    handlers: WarehouseHandlers = Depends(obtener_warehouse_handlers),
 ):
     try:
-        resultado = await service.eliminar_zona_bodega(
+        resultado = await handlers.eliminar_zona_bodega.handle(
             id,
             usuario_autenticado.get("empresa_id"),
             es_super_admin=es_admin,

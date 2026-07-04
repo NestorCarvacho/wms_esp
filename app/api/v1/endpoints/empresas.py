@@ -4,14 +4,13 @@ Endpoints CRUD de Empresas (Capa de Presentación).
 Solo accesible por super admin.
 """
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from app.domain.services.empresa_service import EmpresaService
-from app.domain.services.empresa_rbac_bootstrap_service import EmpresaRbacBootstrapService
-from app.domain.services.empresa_maestra_service import EmpresaMaestraService
-from app.modules.iam.presentation.http.dependencies import obtener_empresa_rbac_bootstrap_service
-from app.modules.tenant.presentation.http.dependencies import (
-    obtener_empresa_maestra_service,
-    obtener_empresa_service,
-)
+from app.bootstrap.container import IamHandlers
+from app.bootstrap.tenant_container import TenantHandlers
+from app.modules.iam.application.commands_catalog import ProvisionarRbacCommand
+from app.modules.iam.presentation.http.dependencies import obtener_iam_handlers
+from app.modules.tenant.application.commands import ActualizarEmpresaCommand, CrearEmpresaCommand
+from app.modules.tenant.presentation.http.dependencies import obtener_tenant_handlers
+from app.shared.formatting import format_empresa_nombre
 from app.api.v1.dependencies import obtener_usuario_autenticado, requiere_permiso, es_super_admin
 from app.api.v1.listado_query import orden_listado
 from app.schemas.empresa import (
@@ -48,7 +47,7 @@ async def listar_empresas_administradas(
         description="Incluir empresas inhabilitadas (selector de empresa maestra)",
     ),
     usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
-    service: EmpresaMaestraService = Depends(obtener_empresa_maestra_service),
+    tenant: TenantHandlers = Depends(obtener_tenant_handlers),
 ):
     try:
         if not usuario_autenticado.get("es_empresa_maestra") and usuario_autenticado.get("empresa_id") != 1:
@@ -56,10 +55,28 @@ async def listar_empresas_administradas(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Solo usuarios de empresa maestra pueden listar empresas administradas",
             )
-        resultado = await service.listar_administradas(
-            usuario_autenticado.get("empresa_id"),
-            incluir_inactivas=incluir_inactivas,
+        empresa_maestra_id = usuario_autenticado.get("empresa_id")
+        es_maestra = await tenant.tenant.es_empresa_maestra(empresa_maestra_id)
+        if not es_maestra and empresa_maestra_id != 1:
+            raise ValueError("La empresa no está configurada como maestra")
+        empresas = await tenant.tenant.listar_empresas_administradas(
+            empresa_maestra_id, solo_activas=not incluir_inactivas
         )
+        resultado = {
+            "total": len(empresas),
+            "empresas": [
+                {
+                    "id": e.id,
+                    "codigo": e.codigo,
+                    "razon_social": e.razon_social,
+                    "rut": e.rut,
+                    "esta_activa": e.esta_activa,
+                    "es_empresa_maestra": bool(e.es_empresa_maestra),
+                    "empresa_nombre": format_empresa_nombre(e),
+                }
+                for e in empresas
+            ],
+        }
         return RespuestaAPIDTO(
             exito=True,
             datos=resultado,
@@ -86,8 +103,7 @@ async def listar_empresas(
     orden_params: dict = Depends(orden_listado),
     usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
     es_admin: bool = Depends(validar_super_admin),
-    service: EmpresaService = Depends(obtener_empresa_service)
-
+    tenant: TenantHandlers = Depends(obtener_tenant_handlers),
 ):
     """
     Obtiene la lista de empresas.
@@ -108,7 +124,7 @@ async def listar_empresas(
     - Requiere autenticación JWT y rol de super admin
     """
     try:
-        resultado = await service.listar_empresas(
+        resultado = await tenant.listar_empresas.handle(
             pagina=pagina,
             por_pagina=por_pagina,
             solo_activas=solo_activas,
@@ -139,8 +155,7 @@ async def obtener_empresa(
     id: int,
     usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
     es_admin: bool = Depends(validar_super_admin),
-    service: EmpresaService = Depends(obtener_empresa_service)
-
+    tenant: TenantHandlers = Depends(obtener_tenant_handlers),
 ):
     """
     Obtiene los datos de una empresa específica.
@@ -163,7 +178,7 @@ async def obtener_empresa(
     - Requiere autenticación JWT y rol de super admin
     """
     try:
-        resultado = await service.obtener_empresa(id)
+        resultado = await tenant.obtener_empresa.handle(id)
         
         return RespuestaAPIDTO(
             exito=True,
@@ -193,8 +208,8 @@ async def crear_empresa(
     dto: EmpresaCrearDTO,
     usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
     es_admin: bool = Depends(validar_super_admin),
-    service: EmpresaService = Depends(obtener_empresa_service),
-    rbac_service: EmpresaRbacBootstrapService = Depends(obtener_empresa_rbac_bootstrap_service),
+    tenant: TenantHandlers = Depends(obtener_tenant_handlers),
+    iam: IamHandlers = Depends(obtener_iam_handlers),
 ):
     """
     Crea una nueva empresa.
@@ -221,26 +236,32 @@ async def crear_empresa(
     - Requiere autenticación JWT y rol de super admin
     """
     try:
-        resultado = await service.crear_empresa(
-            codigo=dto.codigo,
-            razon_social=dto.razon_social,
-            nombre_fantasia=dto.nombre_fantasia,
-            rut=dto.rut,
-            giro=dto.giro,
-            telefono=dto.telefono,
-            correo=dto.correo,
-            sitio_web=dto.sitio_web,
-            direccion=dto.direccion,
-            region_id=dto.region_id,
-            ciudad_id=dto.ciudad_id,
-            comuna_id=dto.comuna_id,
+        resultado = await tenant.crear_empresa.handle(
+            CrearEmpresaCommand(
+                codigo=dto.codigo,
+                razon_social=dto.razon_social,
+                campos={
+                    "nombre_fantasia": dto.nombre_fantasia,
+                    "rut": dto.rut,
+                    "giro": dto.giro,
+                    "telefono": dto.telefono,
+                    "correo": dto.correo,
+                    "sitio_web": dto.sitio_web,
+                    "direccion": dto.direccion,
+                    "region_id": dto.region_id,
+                    "ciudad_id": dto.ciudad_id,
+                    "comuna_id": dto.comuna_id,
+                },
+            )
         )
 
-        rbac = await rbac_service.provisionar(
-            empresa_destino_id=resultado["id"],
-            usuario=usuario_autenticado,
-            es_super_admin=True,
-            empresa_maestra_id=usuario_autenticado.get("empresa_id"),
+        rbac = await iam.provisionar_rbac.handle(
+            ProvisionarRbacCommand(
+                empresa_destino_id=resultado["id"],
+                usuario=usuario_autenticado,
+                es_super_admin=True,
+                empresa_maestra_id=usuario_autenticado.get("empresa_id"),
+            )
         )
         resultado["rbac"] = rbac
         
@@ -272,7 +293,7 @@ async def provisionar_rbac_empresa(
     id: int,
     usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
     es_admin: bool = Depends(validar_super_admin),
-    rbac_service: EmpresaRbacBootstrapService = Depends(obtener_empresa_rbac_bootstrap_service),
+    iam: IamHandlers = Depends(obtener_iam_handlers),
 ):
     """
     Copia permisos y roles estándar desde la empresa plantilla (id=1) hacia otra empresa.
@@ -280,11 +301,13 @@ async def provisionar_rbac_empresa(
     Idempotente: solo agrega permisos y roles faltantes; sincroniza asignaciones rol↔permiso.
     """
     try:
-        resultado = await rbac_service.provisionar(
-            empresa_destino_id=id,
-            usuario=usuario_autenticado,
-            es_super_admin=True,
-            empresa_maestra_id=usuario_autenticado.get("empresa_id"),
+        resultado = await iam.provisionar_rbac.handle(
+            ProvisionarRbacCommand(
+                empresa_destino_id=id,
+                usuario=usuario_autenticado,
+                es_super_admin=True,
+                empresa_maestra_id=usuario_autenticado.get("empresa_id"),
+            )
         )
         return RespuestaAPIDTO(
             exito=True,
@@ -315,8 +338,7 @@ async def actualizar_empresa(
     dto: EmpresaActualizarDTO,
     usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
     es_admin: bool = Depends(validar_super_admin),
-    service: EmpresaService = Depends(obtener_empresa_service)
-
+    tenant: TenantHandlers = Depends(obtener_tenant_handlers),
 ):
     """
     Actualiza una empresa existente.
@@ -343,20 +365,24 @@ async def actualizar_empresa(
     - Requiere autenticación JWT y rol de super admin
     """
     try:
-        resultado = await service.actualizar_empresa(
-            empresa_id=id,
-            razon_social=dto.razon_social,
-            nombre_fantasia=dto.nombre_fantasia,
-            rut=dto.rut,
-            giro=dto.giro,
-            telefono=dto.telefono,
-            correo=dto.correo,
-            sitio_web=dto.sitio_web,
-            esta_activa=dto.esta_activa,
-            direccion=dto.direccion,
-            region_id=dto.region_id,
-            ciudad_id=dto.ciudad_id,
-            comuna_id=dto.comuna_id,
+        resultado = await tenant.actualizar_empresa.handle(
+            ActualizarEmpresaCommand(
+                empresa_id=id,
+                campos={
+                    "razon_social": dto.razon_social,
+                    "nombre_fantasia": dto.nombre_fantasia,
+                    "rut": dto.rut,
+                    "giro": dto.giro,
+                    "telefono": dto.telefono,
+                    "correo": dto.correo,
+                    "sitio_web": dto.sitio_web,
+                    "esta_activa": dto.esta_activa,
+                    "direccion": dto.direccion,
+                    "region_id": dto.region_id,
+                    "ciudad_id": dto.ciudad_id,
+                    "comuna_id": dto.comuna_id,
+                },
+            )
         )
         
         return RespuestaAPIDTO(
@@ -387,8 +413,7 @@ async def eliminar_empresa(
     id: int,
     usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
     es_admin: bool = Depends(validar_super_admin),
-    service: EmpresaService = Depends(obtener_empresa_service)
-
+    tenant: TenantHandlers = Depends(obtener_tenant_handlers),
 ):
     """
     Inhabilita una empresa (no borra datos relacionados).
@@ -415,7 +440,7 @@ async def eliminar_empresa(
     - Requiere autenticación JWT y rol de super admin
     """
     try:
-        resultado = await service.eliminar_empresa(id)
+        resultado = await tenant.inhabilitar_empresa.handle(id)
         
         return RespuestaAPIDTO(
             exito=True,

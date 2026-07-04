@@ -1,14 +1,14 @@
 """Endpoints CRUD de permisos atómicos."""
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.bootstrap.container import IamHandlers
 from app.infrastructure.database import get_db_session
-
 from app.api.v1.dependencies import requiere_permiso
 from app.api.v1.empresa_contexto import ContextoEmpresa, kwargs_listado, resolver_empresa_creacion, contexto_requiere_permiso
 from app.api.v1.listado_query import orden_listado
-from app.domain.services.permiso_service import PermisoService
-from app.modules.iam.presentation.http.dependencies import obtener_permiso_service
+from app.modules.iam.application.commands_catalog import ActualizarPermisoCommand, CrearPermisoCommand
+from app.modules.iam.presentation.http.dependencies import obtener_iam_handlers
 from app.schemas.permiso import PermisoActualizarDTO, PermisoCrearDTO
 from app.schemas.usuario import RespuestaAPIDTO
 
@@ -22,11 +22,11 @@ async def listar_permisos(
     buscar: str | None = None,
     orden_params: dict = Depends(orden_listado),
     ctx: ContextoEmpresa = Depends(contexto_requiere_permiso("permisos.leer")),
-    service: PermisoService = Depends(obtener_permiso_service)
+    handlers: IamHandlers = Depends(obtener_iam_handlers),
 ):
     try:
-        resultado = await service.listar(
-            empresa_id=ctx.empresa_usuario_id,
+        resultado = await handlers.listar_permisos.handle(
+            ctx.empresa_usuario_id,
             pagina=pagina,
             por_pagina=por_pagina,
             buscar=buscar,
@@ -43,17 +43,19 @@ async def crear_permiso(
     dto: PermisoCrearDTO,
     usuario_autenticado: dict = Depends(requiere_permiso("permisos.crear")),
     session: AsyncSession = Depends(get_db_session),
-    service: PermisoService = Depends(obtener_permiso_service),
+    handlers: IamHandlers = Depends(obtener_iam_handlers),
 ):
     try:
         empresa_id = await resolver_empresa_creacion(
             usuario_autenticado, dto.empresa_id, session
         )
-        resultado = await service.crear(
-            empresa_id=empresa_id,
-            codigo=dto.codigo,
-            descripcion=dto.descripcion,
-            activo=dto.activo == 1,
+        resultado = await handlers.crear_permiso.handle(
+            CrearPermisoCommand(
+                empresa_id=empresa_id,
+                codigo=dto.codigo,
+                descripcion=dto.descripcion,
+                activo=dto.activo == 1,
+            )
         )
         return RespuestaAPIDTO(exito=True, datos=resultado, mensaje="Permiso creado exitosamente").dict()
     except ValueError as e:
@@ -65,13 +67,15 @@ async def actualizar_permiso(
     id: int,
     dto: PermisoActualizarDTO,
     usuario_autenticado: dict = Depends(requiere_permiso("permisos.editar")),
-    service: PermisoService = Depends(obtener_permiso_service),
+    handlers: IamHandlers = Depends(obtener_iam_handlers),
 ):
     try:
-        resultado = await service.actualizar(
-            permiso_id=id,
-            empresa_id=usuario_autenticado.get("empresa_id"),
-            **dto.model_dump(exclude_unset=True),
+        resultado = await handlers.actualizar_permiso.handle(
+            ActualizarPermisoCommand(
+                permiso_id=id,
+                empresa_id=usuario_autenticado.get("empresa_id"),
+                campos=dto.model_dump(exclude_unset=True),
+            )
         )
         return RespuestaAPIDTO(exito=True, datos=resultado, mensaje="Permiso actualizado exitosamente").dict()
     except ValueError as e:
@@ -82,10 +86,10 @@ async def actualizar_permiso(
 async def eliminar_permiso(
     id: int,
     usuario_autenticado: dict = Depends(requiere_permiso("permisos.eliminar")),
-    service: PermisoService = Depends(obtener_permiso_service),
+    handlers: IamHandlers = Depends(obtener_iam_handlers),
 ):
     try:
-        resultado = await service.eliminar(id, usuario_autenticado.get("empresa_id"))
+        resultado = await handlers.eliminar_permiso.handle(id, usuario_autenticado.get("empresa_id"))
         return RespuestaAPIDTO(exito=True, datos=resultado, mensaje=resultado["mensaje"]).dict()
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
