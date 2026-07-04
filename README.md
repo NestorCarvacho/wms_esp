@@ -28,10 +28,11 @@ wms_esp/
 
 ```
 app/
-├── api/v1/endpoints/       # Controladores REST
-├── core/                   # Config, JWT, seguridad
-├── domain/services/        # Lógica de negocio
-├── infrastructure/         # Repositorios, modelos, BD
+├── api/v1/endpoints/       # Routers REST (presentación HTTP)
+├── bootstrap/              # Composition roots — build_*_handlers
+├── modules/                # Bounded contexts hexagonales (iam, catalog, inventory, …)
+├── shared/                 # Kernel, formatting, helpers HTTP
+├── infrastructure/         # Modelos ORM + re-exports legacy
 ├── schemas/                # DTOs Pydantic
 └── main.py
 ```
@@ -139,14 +140,23 @@ Todo acceso a datos **debe filtrar por `empresa_id`**:
 - No se acepta como parámetro del body
 - Garantiza aislamiento entre empresas
 
-## Arquitectura de capas
+## Arquitectura
 
-1. **Presentación** — `api/v1/endpoints/`
-2. **Negocio** — `domain/services/`
-3. **Datos** — `infrastructure/`
-4. **Seguridad** — `core/security.py`
+Monolito modular **hexagonal**. Los casos de uso viven en `app/modules/*/application/handlers`; los endpoints inyectan handlers vía `Depends(obtener_*_handlers)`.
 
-Detalle en [`docs/capas/`](docs/capas/) y [`docs/ESTRUCTURA_PROYECTO.md`](docs/ESTRUCTURA_PROYECTO.md).
+| Capa | Ubicación |
+|------|-----------|
+| Presentación HTTP | `app/api/v1/endpoints/` |
+| Casos de uso | `app/modules/*/application/handlers/` |
+| Dominio | `app/modules/*/domain/` |
+| Persistencia | `app/modules/*/infrastructure/` |
+| ORM compartido | `app/infrastructure/models/` |
+
+Detalle en [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md), [`docs/ESTRUCTURA_PROYECTO.md`](docs/ESTRUCTURA_PROYECTO.md) y [`docs/capas/`](docs/capas/).
+
+## CI (GitHub Actions)
+
+En cada push/PR a `main`: `pytest`, `lint-imports` (aislamiento de capas) y `npm run build` del frontend. Ver [`.github/workflows/ci.yml`](.github/workflows/ci.yml) y [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md).
 
 ## Despliegue en Railway
 
@@ -197,7 +207,8 @@ railway up ./frontend --path-as-root --detach
 | [**docs/INDEX.md**](docs/INDEX.md) | **Índice maestro** de toda la documentación |
 | [**docs/MANUAL_USUARIO.md**](docs/MANUAL_USUARIO.md) | **Manual de uso** para operadores y administradores |
 | [docs/CORE_WMS.md](docs/CORE_WMS.md) | Inventario operativo (referencia técnica) |
-| [docs/capas/](docs/capas/) | Capas presentación, negocio, datos, seguridad |
+| [**docs/ARCHITECTURE.md**](docs/ARCHITECTURE.md) | Arquitectura hexagonal modular |
+| [**docs/CONTRIBUTING.md**](docs/CONTRIBUTING.md) | Guía para contribuir (PRs, CI, convenciones) |
 | [docs/DEPLOY_RAILWAY.md](docs/DEPLOY_RAILWAY.md) | Despliegue en Railway |
 | [docs/RAILWAY_WMS_ESP.md](docs/RAILWAY_WMS_ESP.md) | Configuración actual en Railway |
 | [mysql-init/README_RAILWAY.md](mysql-init/README_RAILWAY.md) | Migraciones SQL en Railway |

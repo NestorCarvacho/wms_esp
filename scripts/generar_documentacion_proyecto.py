@@ -267,7 +267,7 @@ def gen_casos_uso() -> Path:
     casos_alto = [
         ("CU001", "Autenticar usuario", "Administrador, Operador, Super admin",
          "Seguridad, Operatividad", "R.01, R.03, R.49, R.50"),
-        ("CU002", "Recuperar contraseña", "Administrador, Operador",
+        ("CU002", "Restablecer contraseña (admin)", "Administrador",
          "Seguridad, Fiabilidad", "R.02, R.28, R.26"),
         ("CU003", "Gestionar empresas", "Super admin",
          "Seguridad, Mantenibilidad", "R.04, R.05, R.06, R.46"),
@@ -279,8 +279,8 @@ def gen_casos_uso() -> Path:
          "Rendimiento", "R.18"),
         ("CU007", "Operar inventario (recepción/traslado/despacho)", "Operador",
          "Precisión, Trazabilidad", "R.19, R.29–R.33, R.35"),
-        ("CU008", "Consultar dashboard inventario", "Administrador, Operador",
-         "Usabilidad", "R.20"),
+        ("CU008", "Consultar stock y movimientos", "Administrador, Operador",
+         "Usabilidad, Rendimiento", "R.18, R.20"),
         ("CU009", "Exportar reportes", "Administrador, Operador",
          "Rendimiento", "R.21, R.47"),
         ("CU010", "Gestionar perfil", "Administrador, Operador",
@@ -305,7 +305,7 @@ def gen_casos_uso() -> Path:
         [
             ("Ingresa email y contraseña en /login y envía formulario.",
              "Valida credenciales, estado de cuenta y empresa; genera token JWT."),
-            ("—", "Redirige al dashboard /app con menú según permisos."),
+            ("—", "Redirige al panel principal /app con menú según permisos."),
         ],
         [
             ("Credenciales incorrectas", "Muestra error genérico; incrementa intentos fallidos."),
@@ -314,14 +314,14 @@ def gen_casos_uso() -> Path:
         ],
     )
     _cu_extendido(
-        doc, "CU002.1", "Solicitar recuperación de contraseña",
-        "Administrador, Operador",
-        "Recibir enlace para restablecer contraseña.",
-        "Usuario existe en BD (respuesta siempre genérica en UI).",
-        "Token de un solo uso creado o solicitud registrada silenciosamente.",
+        doc, "CU002.1", "Restablecer contraseña por administrador",
+        "Administrador",
+        "Asignar contraseña temporal a un usuario del tenant.",
+        "Permiso usuarios.editar; usuario destino activo.",
+        "Contraseña actualizada; usuario puede iniciar sesión.",
         [
-            ("Ingresa email en /olvido-contrasena.", "Busca usuario; aplica rate limit por IP."),
-            ("—", "Si aplica: envía correo o imprime enlace en consola (dev); muestra mensaje genérico de éxito."),
+            ("En Usuarios edita el usuario y define nueva contraseña.", "Valida política de contraseña; persiste hash."),
+            ("—", "Usuario cambia contraseña en Mi perfil si lo desea."),
         ],
     )
     _cu_extendido(
@@ -333,7 +333,7 @@ def gen_casos_uso() -> Path:
         [
             ("Selecciona bodega, zona y producto (SKU o búsqueda).", "Muestra stock actual y presentaciones."),
             ("Ingresa cantidad y confirma recepción.", "Valida datos; actualiza stock_zona; crea movimiento_inventario."),
-            ("—", "Muestra notificación de éxito."),
+            ("—", "Muestra mensaje de éxito en pantalla."),
         ],
     )
     _cu_extendido(
@@ -365,13 +365,13 @@ def gen_casos_uso() -> Path:
 
 EDT_ITEMS = [
     ("1.0", "Khepri Software — WMS multi-tenant", "Proyecto completo"),
-    ("1.1", "Autenticación y seguridad", "Login, JWT, recuperación contraseña, bloqueo"),
+    ("1.1", "Autenticación y seguridad", "Login, JWT, cambio contraseña, bloqueo"),
     ("1.2", "Multi-empresa y RBAC", "Empresas, usuarios, roles, permisos, cargos"),
     ("1.3", "Catálogo maestro", "Productos, bodegas, zonas, unidades, tipos"),
     ("1.4", "Inventario operativo", "Stock, recepción, traslado, despacho, historial"),
-    ("1.5", "Reportes y dashboard", "Gráficos, export Excel/PDF"),
-    ("1.6", "Frontend y experiencia de usuario", "Landing, temas, tablas, notificaciones"),
-    ("1.7", "Infraestructura y despliegue", "Railway, MySQL, migraciones, Resend"),
+    ("1.5", "Reportes y exportaciones", "Export Excel/PDF stock y movimientos"),
+    ("1.6", "Frontend y experiencia de usuario", "Landing, temas, tablas CRUD, regionalización"),
+    ("1.7", "Infraestructura y despliegue", "Railway, MySQL, migraciones, CI GitHub"),
     ("1.8", "Pruebas y QA", "Pruebas funcionales y UAT"),
     ("1.9", "Migración a producción", "Puesta en marcha Railway"),
 ]
@@ -575,9 +575,9 @@ def gen_plan_pruebas() -> Path:
         cell.font = hf
         cell.fill = fill
     casos = [
-        ("TP01", "Login válido", "Ingresar credenciales correctas", "Acceso al dashboard", "R.01", "Pendiente"),
+        ("TP01", "Login válido", "Ingresar credenciales correctas", "Acceso al panel /app", "R.01", "Pendiente"),
         ("TP02", "Login inválido", "3 intentos fallidos", "Bloqueo temporal", "R.03", "Pendiente"),
-        ("TP03", "Recuperar contraseña", "Solicitar enlace", "Mensaje genérico éxito", "R.02", "Pendiente"),
+        ("TP03", "Cambio contraseña perfil", "Usuario cambia contraseña en /app/perfil", "Contraseña actualizada", "R.02", "Pendiente"),
         ("TP04", "Recepción stock", "Recepcionar 10 unidades SKU X", "Stock incrementado", "R.29", "Pendiente"),
         ("TP05", "Inhabilitar empresa", "Super admin inhabilita tenant", "Oculta en agregados", "R.46", "Pendiente"),
         ("TP06", "Exportar stock Excel", "Descargar desde inventario", "Archivo xlsx válido", "R.47", "Pendiente"),

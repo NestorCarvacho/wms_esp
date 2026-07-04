@@ -39,6 +39,13 @@ Estado de avance del roadmap acordado.
 - [x] Absorber repos legacy: warehouse, tenant, catalog CRUD, inventory (SQL en módulos)
 - [x] Absorber repos legacy IAM RBAC (cargo, rol, permiso, usuario_rol, bootstrap, junctions)
 
+## Documentación
+
+- [x] README, CLAUDE, copilot-instructions, PLANTILLA_ENDPOINT
+- [x] MANUAL_USUARIO, INDEX, ARCHITECTURE, ESTRUCTURA_PROYECTO, CORE_WMS
+- [x] docs/capas/*, CONTRIBUTING, .github/README
+- [x] ADR 001/003 actualizados post-normalización
+
 ## BBDD pendiente (opcional)
 
 - [ ] Simplificar geo a solo `comuna_id`

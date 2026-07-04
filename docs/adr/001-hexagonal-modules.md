@@ -25,9 +25,9 @@ presentation/    → dependencias FastAPI
 
 **Piloto:** `inventory` (recepción, traslado, despacho, consultas, config bodega).
 
-**Composition root:** `app/bootstrap/container.py` (`build_inventory_handlers`).
+**Composition root:** `app/bootstrap/container.py` y contenedores por contexto (`catalog_container`, `warehouse_container`, `tenant_container`, `geo_container`).
 
-**Compatibilidad:** `InventarioOperacionService` permanece como fachada delegando a handlers; endpoints y reportes no rompen contrato.
+**Estado (2026-06):** Todos los bounded contexts principales migrados. Endpoints consumen handlers directamente; `app/domain/services/` eliminado.
 
 ## Consecuencias
 
@@ -37,11 +37,11 @@ presentation/    → dependencias FastAPI
 - `import-linter` enforcea aislamiento de capas
 - Camino claro para extraer `inventory-service` (mismo bounded context)
 
-### Negativas / deuda
+### Negativas / deuda resuelta
 
-- Duplicación temporal: adaptador envuelve `InventarioCRUDRepository` legacy
-- Otros bounded contexts siguen en estructura antigua hasta Fase 1+
-- `InventarioOperacionService` se eliminará cuando todos los consumidores usen handlers directamente
+- ~~Duplicación temporal con repos legacy~~ — absorbidos en módulos (Sprint 3–4)
+- ~~Fachadas en `domain/services`~~ — eliminadas
+- Repos de compatibilidad restantes en `app/infrastructure/repositories/` (usuario, perfil, tipo_cambio) — opcional eliminar
 
 ## Próximos pasos
 

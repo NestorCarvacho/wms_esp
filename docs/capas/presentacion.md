@@ -1,13 +1,18 @@
-# Capa de Presentación (Controllers & DTOs)
+# Capa de Presentación (Endpoints & DTOs)
 
 ## Responsabilidades
-- Gestionar peticiones HTTP y respuestas.
-- Validar esquemas de entrada mediante DTOs (Data Transfer Objects).
-- Extraer claims del JWT (id, empresa_id) y pasarlos a la capa de negocio.
 
-## Reglas de Implementación
-- **Validación:** Validar formatos de RUT, correos y campos obligatorios antes de procesar.
-- **Formato de Respuesta Unificado:**
+- Gestionar peticiones HTTP en `app/api/v1/endpoints/`.
+- Validar esquemas de entrada mediante DTOs Pydantic (`app/schemas/`).
+- Extraer claims del JWT y construir `ContextoEmpresa` para multi-tenant.
+- Inyectar handlers: `Depends(obtener_*_handlers)` desde `app/bootstrap/` o `presentation/http/dependencies.py`.
+
+## Reglas de implementación
+
+- **Router delgado:** validar DTO → armar comando → `await handler.handle(...)` → mapear respuesta.
+- **Permisos:** `contexto_requiere_permiso("recurso.accion")` en endpoints que lo requieran.
+- **Formato de respuesta unificado:**
+
   ```json
   {
     "exito": true,
@@ -17,15 +22,15 @@
   }
   ```
 
-## DTOs (Data Transfer Objects)
-- Crear DTOs específicos para cada endpoint (CrearProductoDTO, ActualizarProductoDTO, etc.).
-- Los DTOs deben validar datos de entrada y mapear hacia entidades de dominio.
-- Nunca exponer entidades de BD directamente; serializar a través de DTOs.
+## DTOs
 
-## Manejo de Errores
-- Capturar excepciones de la capa de negocio.
-- Retornar errores con códigos HTTP apropiados (400, 401, 403, 404, 500).
-- Registrar errores en logs para auditoría.
+- Un archivo por recurso en `app/schemas/`.
+- Los DTOs validan entrada; los handlers devuelven dicts o entidades mapeadas en `application/*_mappers.py`.
+- No exponer modelos ORM directamente en respuestas.
 
-## Prohibición
-No debe contener lógica de base de datos ni cálculos de negocio.
+## Prohibiciones
+
+- No importar SQLAlchemy ni repositorios concretos en endpoints.
+- No implementar reglas de negocio (stock, RBAC efectivo, conversiones de presentación).
+
+Plantilla: [PLANTILLA_ENDPOINT.py](../../PLANTILLA_ENDPOINT.py)

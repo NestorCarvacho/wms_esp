@@ -1,13 +1,25 @@
-# Capa de Negocio (Services / Domain)
+# Capa de Negocio (Handlers / Dominio)
 
 ## Responsabilidades
-- Implementar las reglas de flujo de inventario.
-- Validar si un producto puede cambiar de estado (ej: de "Disponible" a "Merma").
-- Orquestar la trazabilidad: al mover stock, se debe invocar la creación del log en `movimientos_stock`.
 
-## Reglas de Implementación
-- **Validaciones Críticas:**
-  - Verificar existencia de stock suficiente antes de reservar.
-  - Asegurar que el `estado_id` de destino pertenezca a la misma `empresa_id`.
-- **Transaccionalidad:** Asegurar que si falla la actualización de inventario, no se guarde el movimiento de stock (Atomicidad).
-- **Excepciones:** Lanzar excepciones de dominio claras (ej: `StockInsuficienteException`) para que la capa de presentación las capture.
+- Implementar casos de uso en `app/modules/<contexto>/application/handlers/`.
+- Validar reglas de dominio (stock suficiente, zonas válidas, permisos de negocio).
+- Orquestar persistencia a través de **puertos** (`domain/ports.py`), no de SQL directo.
+
+## Reglas de implementación
+
+- **Handlers delgados:** reciben un comando o query, delegan en servicios de dominio o repositorios vía puerto.
+- **Transaccionalidad:** una operación de inventario debe actualizar stock y registrar movimiento en la misma unidad de trabajo.
+- **Excepciones:** lanzar excepciones de dominio claras (`StockInsuficienteError`, etc.) para mapearlas a HTTP en la capa API.
+- **Sin FastAPI:** los handlers no importan `Request`, `Depends` ni routers.
+
+## Ejemplo de flujo
+
+```
+RecepcionHandler
+  → InventarioOperacionPolicy (domain/services)
+  → IInventarioRepository (port)
+  → SqlAlchemyInventarioRepository (infrastructure)
+```
+
+Ver [ARCHITECTURE.md](../ARCHITECTURE.md) para la estructura completa por módulo.

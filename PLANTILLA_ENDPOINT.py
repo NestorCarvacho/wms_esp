@@ -1,13 +1,12 @@
 """
-PLANTILLA: Endpoint de Ejemplo
-Este archivo es una plantilla para crear nuevos endpoints siguiendo la arquitectura de capas.
+PLANTILLA: Endpoint hexagonal
+Patrón actual: router → handler (módulo) → port → adaptador SQL.
 
-Reemplazar:
-- NOMBRE_RECURSO por el nombre real (ej: Producto, Empresa, etc.)
-- nombre_recurso por la versión en minúsculas
+Reemplazar NOMBRE_RECURSO / nombre_recurso / <contexto> según el bounded context.
+Ver docs/ARCHITECTURE.md y docs/CONTRIBUTING.md
 """
 
-# ============ 1. CREAR DTO (schemas/nombre_recurso.py) ============
+# ============ 1. DTO (app/schemas/nombre_recurso.py) ============
 """
 from pydantic import BaseModel, Field
 from datetime import datetime
@@ -15,108 +14,91 @@ from typing import Optional
 
 class NombreRecursoCrearDTO(BaseModel):
     campo1: str = Field(..., min_length=1, max_length=255)
-    campo2: Optional[int] = None
 
 class NombreRecursoRespuestaDTO(BaseModel):
     id: int
     campo1: str
-    campo2: Optional[int]
     fecha_creacion: datetime
-    
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
 """
 
-# ============ 2. CREAR MODELO ORM (infrastructure/models/nombre_recurso.py) ============
+# ============ 2. PUERTO (app/modules/<contexto>/domain/ports.py) ============
 """
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
-from sqlalchemy.orm import relationship
-from datetime import datetime
-from app.infrastructure.models.usuario import Base
+from typing import Protocol
 
-class NombreRecurso(Base):
-    __tablename__ = "nombre_recursos"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    empresa_id = Column(Integer, ForeignKey("empresas.empresa_id"), nullable=False, index=True)
-    campo1 = Column(String(255), nullable=False)
-    campo2 = Column(Integer, nullable=True)
-    fecha_creacion = Column(DateTime, default=datetime.utcnow)
-    
-    def __repr__(self):
-        return f"<NombreRecurso(id={self.id}, empresa_id={self.empresa_id})>"
+class INombreRecursoRepository(Protocol):
+    async def crear(self, empresa_id: int, **kwargs) -> dict: ...
+    async def obtener_por_id(self, id: int, empresa_id: int) -> dict | None: ...
 """
 
-# ============ 3. CREAR REPOSITORIO (infrastructure/repositories/nombre_recurso_repository.py) ============
+# ============ 3. ADAPTADOR (app/modules/<contexto>/infrastructure/nombre_recurso_repository.py) ============
 """
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.infrastructure.models.nombre_recurso import NombreRecurso
 
-class NombreRecursoRepository:
+class SqlAlchemyNombreRecursoRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
-    
-    async def crear(self, empresa_id: int, **kwargs) -> NombreRecurso:
-        # Crear registro
-        # Filtrar por empresa_id SIEMPRE
-        pass
-    
-    async def obtener_por_id(self, id: int, empresa_id: int) -> NombreRecurso | None:
-        # Obtener por ID filtrando por empresa_id
-        stmt = select(NombreRecurso).where(
-            NombreRecurso.id == id,
-            NombreRecurso.empresa_id == empresa_id
-        )
-        result = await self.session.execute(stmt)
-        return result.scalars().first()
+
+    async def crear(self, empresa_id: int, **kwargs) -> dict:
+        entidad = NombreRecurso(empresa_id=empresa_id, **kwargs)
+        self.session.add(entidad)
+        await self.session.flush()
+        return {"id": entidad.id, "campo1": entidad.campo1}
 """
 
-# ============ 4. CREAR SERVICIO (domain/services/nombre_recurso_service.py) ============
+# ============ 4. HANDLER (app/modules/<contexto>/application/handlers/nombre_recurso_handlers.py) ============
 """
-class NombreRecursoService:
-    def __init__(self, nombre_recurso_repository):
-        self.repo = nombre_recurso_repository
-    
-    async def crear(self, empresa_id: int, **kwargs):
-        # Validaciones de negocio
-        # Llamar al repositorio
-        pass
+from app.modules.<contexto>.domain.ports import INombreRecursoRepository
+
+class CrearNombreRecursoHandler:
+    def __init__(self, repo: INombreRecursoRepository):
+        self.repo = repo
+
+    async def handle(self, empresa_id: int, campo1: str) -> dict:
+        return await self.repo.crear(empresa_id=empresa_id, campo1=campo1)
 """
 
-# ============ 5. CREAR ENDPOINT (api/v1/endpoints/nombre_recurso.py) ============
+# ============ 5. COMPOSITION ROOT (app/bootstrap/<contexto>_container.py) ============
 """
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.infrastructure.database import get_db_session
-from app.schemas.nombre_recurso import NombreRecursoCrearDTO, NombreRecursoRespuestaDTO
-from app.api.v1.dependencies import obtener_usuario_autenticado, obtener_empresa_id
+@dataclass
+class ContextoHandlers:
+    crear_nombre_recurso: CrearNombreRecursoHandler
 
-router = APIRouter(
-    prefix="/api/v1/nombre_recursos",
-    tags=["Nombre Recursos"]
-)
+def build_<contexto>_handlers(session: AsyncSession) -> ContextoHandlers:
+    repo = SqlAlchemyNombreRecursoRepository(session)
+    return ContextoHandlers(crear_nombre_recurso=CrearNombreRecursoHandler(repo))
+"""
 
-@router.post("/", response_model=dict)
-async def crear_nombre_recurso(
+# ============ 6. ENDPOINT (app/api/v1/endpoints/nombre_recurso.py) ============
+"""
+from fastapi import APIRouter, Depends
+from app.api.v1.empresa_contexto import ContextoEmpresa, contexto_requiere_permiso, kwargs_listado
+from app.bootstrap.<contexto>_container import ContextoHandlers, build_<contexto>_handlers
+from app.modules.<contexto>.presentation.http.dependencies import obtener_<contexto>_handlers
+from app.schemas.nombre_recurso import NombreRecursoCrearDTO, RespuestaAPIDTO
+
+router = APIRouter(prefix="/api/v1/nombre_recursos", tags=["Nombre Recursos"])
+
+@router.post("/", response_model=RespuestaAPIDTO)
+async def crear(
     datos: NombreRecursoCrearDTO,
-    empresa_id: int = Depends(obtener_empresa_id),
-    session: AsyncSession = Depends(get_db_session)
+    ctx: ContextoEmpresa = Depends(contexto_requiere_permiso("nombre_recursos.crear")),
+    handlers: ContextoHandlers = Depends(obtener_<contexto>_handlers),
 ):
-    # 1. Crear repositorio y servicio
-    # 2. Validar y crear
-    # 3. Retornar con RespuestaAPIDTO
-    pass
+    resultado = await handlers.crear_nombre_recurso.handle(
+        empresa_id=ctx.empresa_operacion(),
+        campo1=datos.campo1,
+    )
+    return RespuestaAPIDTO(exito=True, datos=resultado, mensaje="Creado")
 """
 
-# ============ NOTAS IMPORTANTES ============
+# ============ NOTAS ============
 """
-✓ SIEMPRE filtrar por empresa_id en SELECT
-✓ NUNCA aceptar empresa_id como parámetro de entrada (extraer del JWT)
-✓ SIEMPRE retornar RespuestaAPIDTO
-✓ SIEMPRE validar en DTOs con Pydantic
-✓ SIEMPRE usar AsyncSession para operaciones BD
-✓ SIEMPRE usar transacciones para operaciones críticas
-✓ SIEMPRE registrar cambios en auditoría
-✓ NO exponer contraseñas, tokens o datos sensibles en respuestas
+✓ Filtrar por empresa_id en adaptadores
+✓ Inyectar handlers con Depends — no SQL en endpoints
+✓ Validar permisos con contexto_requiere_permiso
+✓ Pasar lint-imports (domain/application sin SQLAlchemy)
+✓ Registrar permiso en SQL + menuConfig.ts + App.tsx si hay UI
 """

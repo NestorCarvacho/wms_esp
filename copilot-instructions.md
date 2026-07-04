@@ -1,26 +1,44 @@
-# WMS Multi-Tenant - Instrucciones Maestras de Arquitectura
+# WMS Multi-Tenant — Instrucciones de arquitectura
 
-Eres un experto en ingeniería de software y arquitectura de sistemas. Tu misión es asistir en la construcción de un WMS (Warehouse Management System) basado en el esquema SQL de tablas dinámicas y multi-tenant proporcionado.
+Asistente para el WMS multi-tenant de Khepri Software. Sigue la arquitectura **hexagonal modular** documentada en [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
-## 1. Regla de Oro: Multi-tenancy (Aislamiento)
-- Todo acceso a datos DEBE filtrar por `empresa_id`. 
-- El `empresa_id` se extrae del JWT del usuario autenticado, nunca se recibe como parámetro en el cuerpo (body) de peticiones de usuario final.
-- Los datos son privados por empresa; el cruce de datos entre empresas está estrictamente prohibido excepto para el rol `super_admin` en la empresa maestra.
+## 1. Regla de oro: multi-tenancy
 
-## 2. Arquitectura de Capas (N-Tier Architecture)
-Debes respetar la separación de responsabilidades definida en los siguientes archivos de referencia:
-- Capa de Presentación: `docs/capas/presentacion.md`
-- Capa de Negocio: `docs/capas/negocio.md`
-- Capa de Datos: `docs/capas/datos.md`
-- Seguridad y Auth: `docs/capas/seguridad.md`
+- Todo acceso a datos **debe filtrar por `empresa_id`**.
+- El `empresa_id` se extrae del JWT, no del body (salvo empresa maestra creando recursos para un tenant).
+- Usar `ContextoEmpresa` y `kwargs_listado(ctx)` en listados.
 
-## 3. Estándares Técnicos
-- **Idioma:** Nombres de variables, funciones y tablas en español.
-- **Sin ENUMs:** La lógica de estados debe basarse en las tablas `estados_inventario`, `estados_orden`, etc.
-- **Auditoría:** Cada operación de escritura debe registrar el `id` en `ultimo_movimiento_por` y generar un registro en `movimientos_stock`.
-- **Precios:** Usar tipos de datos de alta precisión para `precio_costo` y `precio_venta`.
+## 2. Capas (hexagonal)
 
-## 4. Cargos y Roles
-- Un `Cargo` pertenece a una empresa.
-- Un `Cargo` tiene una relación muchos-a-muchos con `Roles` mediante `permisos_cargo`.
-- Los permisos de los endpoints deben validar esta jerarquía.
+| Capa | Ubicación |
+|------|-----------|
+| Presentación HTTP | `app/api/v1/endpoints/` |
+| Handlers | `app/modules/<ctx>/application/handlers/` |
+| Dominio | `app/modules/<ctx>/domain/` |
+| Adaptadores SQL | `app/modules/<ctx>/infrastructure/` |
+| ORM compartido | `app/infrastructure/models/` |
+
+Referencias: [docs/capas/presentacion.md](docs/capas/presentacion.md), [negocio.md](docs/capas/negocio.md), [datos.md](docs/capas/datos.md), [seguridad.md](docs/capas/seguridad.md).
+
+**No crear** código en `app/domain/services/` (eliminado).
+
+## 3. Estándares técnicos
+
+- **Idioma:** variables, funciones y tablas en español.
+- **Permisos:** formato `recurso.accion`; cadena `Usuario → Rol → Permiso`.
+- **Respuestas API:** `{ "exito", "datos", "mensaje", "errores" }`.
+- **Precios:** `DECIMAL(12,2)` o superior.
+
+## 4. RBAC
+
+- Permisos efectivos vía `usuario_rol` → `rol_permiso`.
+- Los cargos pueden heredar roles al crear/actualizar usuarios.
+- Validar con `contexto_requiere_permiso("codigo")` en endpoints.
+
+## 5. Fuera de alcance
+
+No implementar sin acuerdo: notificaciones WebSocket, dashboard inventario, password reset por email.
+
+## 6. CI
+
+Antes de PR: `pytest`, `lint-imports`, `npm run build` en frontend. Ver [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md).

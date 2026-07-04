@@ -1,123 +1,95 @@
-# Índice de documentación — WMS Multi-Tenant (Khepri Software)
+# Índice de documentación — WMS ESP
 
-Mapa central de toda la documentación del proyecto **wms_esp**. Use este archivo como punto de entrada.
+Repositorio: [github.com/NestorCarvacho/wms_esp](https://github.com/NestorCarvacho/wms_esp)
 
----
-
-## Para usuarios finales
+## Para usuarios y administradores
 
 | Documento | Descripción |
 |-----------|-------------|
-| [**MANUAL_USUARIO.md**](./MANUAL_USUARIO.md) | Manual de uso de la aplicación web: login, menús, inventario, administración y regionalización |
-| [**CORE_WMS.md**](./CORE_WMS.md) | Referencia técnica del módulo de inventario operativo (API + permisos) |
+| [MANUAL_USUARIO.md](./MANUAL_USUARIO.md) | Manual completo: login, catálogo, inventario, RBAC, multi-empresa |
+| [CORE_WMS.md](./CORE_WMS.md) | Inventario operativo: API, permisos, exportaciones |
 
----
-
-## Para desarrolladores e implementadores
+## Para desarrolladores
 
 | Documento | Descripción |
 |-----------|-------------|
-| [README.md](../README.md) | Instalación local, variables de entorno, estructura del monorepo |
-| [CLAUDE.md](../CLAUDE.md) | **Guía rápida** de arquitectura, comandos y convenciones para desarrolladores |
-| [ESTRUCTURA_PROYECTO.md](./ESTRUCTURA_PROYECTO.md) | Árbol de carpetas y archivos principales |
-| [API_EXAMPLES.md](../API_EXAMPLES.md) | Ejemplos de llamadas a la API REST |
-| [PLANTILLA_ENDPOINT.py](../PLANTILLA_ENDPOINT.py) | Plantilla para nuevos endpoints FastAPI |
-| [copilot-instructions.md](../copilot-instructions.md) | Reglas de arquitectura para asistentes de código |
+| [ARCHITECTURE.md](./ARCHITECTURE.md) | Arquitectura hexagonal modular |
+| [ESTRUCTURA_PROYECTO.md](./ESTRUCTURA_PROYECTO.md) | Árbol de carpetas y convenciones |
+| [CONTRIBUTING.md](./CONTRIBUTING.md) | CI, PRs, reglas de capas |
+| [PLAN_NORMALIZACION.md](./PLAN_NORMALIZACION.md) | Refactor N-capas → hexagonal (completado) |
+| [../CLAUDE.md](../CLAUDE.md) | Contexto para asistentes IA |
+| [../copilot-instructions.md](../copilot-instructions.md) | Instrucciones GitHub Copilot |
+| [../PLANTILLA_ENDPOINT.py](../PLANTILLA_ENDPOINT.py) | Plantilla de endpoint con handlers |
 
-### Capas de la aplicación (`docs/capas/`)
+## Capas (referencia histórica adaptada)
 
-| Archivo | Capa |
-|---------|------|
-| [presentacion.md](./capas/presentacion.md) | API REST, endpoints, DTOs |
-| [negocio.md](./capas/negocio.md) | Servicios de dominio |
-| [datos.md](./capas/datos.md) | Repositorios, modelos ORM |
-| [seguridad.md](./capas/seguridad.md) | JWT, RBAC, multi-tenant |
+| Documento | Tema |
+|-----------|------|
+| [capas/presentacion.md](./capas/presentacion.md) | Routers, DTOs, respuestas API |
+| [capas/negocio.md](./capas/negocio.md) | Handlers y reglas de dominio |
+| [capas/datos.md](./capas/datos.md) | Adaptadores SQL y multi-tenant |
+| [capas/seguridad.md](./capas/seguridad.md) | JWT, RBAC, empresa maestra |
 
-### Frontend
+## Decisiones de arquitectura (ADR)
 
-| Recurso | Descripción |
-|---------|-------------|
-| [frontend/src/hooks/README.md](../frontend/src/hooks/README.md) | Convenciones de hooks React |
-| [FRONTEND_SERUI_MIGRATION.md](./FRONTEND_SERUI_MIGRATION.md) | Notas de migración UI |
+| ADR | Tema | Estado |
+|-----|------|--------|
+| [001](./adr/001-hexagonal-modules.md) | Módulos hexagonales | Aceptado — normalización completada |
+| [002](./adr/002-iam-module.md) | Módulo IAM | Aceptado |
+| [003](./adr/003-tenant-module.md) | Módulo tenant | Aceptado |
+| [004](./adr/004-catalog-module.md) | Módulo catálogo | Aceptado |
+| [006](./adr/006-warehouse-module.md) | Módulo almacén | Aceptado |
 
----
+> Notificaciones en tiempo real y recuperación de contraseña por email quedaron **fuera de alcance** (Sprint 1).
 
-## Despliegue y base de datos
+## Módulos del sistema
 
-| Documento | Descripción |
-|-----------|-------------|
-| [DEPLOY_RAILWAY.md](./DEPLOY_RAILWAY.md) | Guía general de despliegue en Railway |
-| [RAILWAY_WMS_ESP.md](./RAILWAY_WMS_ESP.md) | Configuración del proyecto WMS_ESP en producción |
-| [mysql-init/README_RAILWAY.md](../mysql-init/README_RAILWAY.md) | Migraciones SQL en Railway |
-| [mysql-init/railway_migration_steps.md](../mysql-init/railway_migration_steps.md) | Pasos manuales en consola Railway |
-| [scripts/apply_railway_migrations.py](../scripts/apply_railway_migrations.py) | Script automatizado de migraciones |
+| Módulo | Menú / API | Permisos clave |
+|--------|------------|----------------|
+| Catálogo | Productos, tipos, unidades, consulta | `productos.*`, `tipos_producto.*`, `unidades_medida.*` |
+| Almacén | Bodegas, tipos de zona, zonas | `bodegas.*`, `tipos_zona.*`, `zonas_bodega.*` |
+| Inventario | Stock, movimientos, recepción, traslado, despacho, config | `inventario.*` |
+| IAM | Usuarios, cargos, roles, permisos | `usuarios.*`, `cargos.*`, `roles.*`, `permisos.*` |
+| Tenant | Empresas (super admin) | `empresas.*` |
+| Geo | Regiones, ciudades, comunas | (interno / formularios) |
 
-### Migraciones SQL relevantes (orden)
+## Rutas frontend (`/app/*`)
 
-| # | Archivo | Contenido |
-|---|---------|-----------|
-| 04–08 | RBAC, multiempresa, usuario_rol | Permisos, roles, empresa maestra |
-| 12 | `12_inventario_operativo.sql` | Stock, movimientos, permisos `inventario.*` |
-| 14 | `14_auth_security.sql` | Bloqueo por intentos, reset de contraseña |
-| 18 | `18_serie_producto.sql` | Inventario serializado |
-| 19 | `19_locale_currency.sql` | Locale, timezone, moneda por empresa |
+| Ruta | Pantalla |
+|------|----------|
+| `/app/productos` | Listado de productos |
+| `/app/productos/consulta` | Consulta rápida |
+| `/app/inventario/stock` | Stock por ubicación |
+| `/app/inventario/movimientos` | Historial |
+| `/app/inventario/recepcion` | Recepción |
+| `/app/inventario/traslado` | Traslado |
+| `/app/inventario/despacho` | Despacho |
+| `/app/inventario/configuracion` | Zona de recepción |
+| `/app/usuarios` | Usuarios |
+| `/app/asignar-permisos` | Matriz rol–permiso |
+| `/app/empresas` | Empresas (super admin) |
 
----
+> `/app/inventario/dashboard` redirige a stock (dashboard eliminado del alcance).
 
-## Módulos funcionales del sistema
+## API en producción
 
-| Módulo | Ruta en la app | Permiso típico | Backend |
-|--------|----------------|----------------|---------|
-| Panel principal | `/app` | — | — |
-| Productos | `/app/productos` | `productos.leer` | `productos.py` |
-| Consulta producto | `/app/productos/consulta` | `productos.leer` | `productos.py` |
-| Tipos de producto | `/app/tipos-producto` | `tipos_producto.leer` | `tipo_producto.py` |
-| Unidades de medida | `/app/unidades-medida` | `unidades_medida.leer` | `unidadesMedidas.py` |
-| Bodegas | `/app/bodegas` | `bodegas.leer` | `bodegas.py` |
-| Tipos de zona | `/app/tipos-zona` | `tipos_zona.leer` | `tipo_zona.py` |
-| Zonas de bodega | `/app/zonas-bodega` | `zonas_bodega.leer` | `zona_bodega.py` |
-| Inventario — dashboard | `/app/inventario/dashboard` | `inventario.leer` | `inventario.py` |
-| Inventario — stock | `/app/inventario/stock` | `inventario.leer` | `inventario.py` |
-| Inventario — movimientos | `/app/inventario/movimientos` | `inventario.leer` | `inventario.py` |
-| Inventario — recepción | `/app/inventario/recepcion` | `inventario.recepcionar` | `inventario.py` |
-| Inventario — traslado | `/app/inventario/traslado` | `inventario.trasladar` | `inventario.py` |
-| Inventario — despacho | `/app/inventario/despacho` | `inventario.despachar` | `inventario.py` |
-| Inventario — configuración | `/app/inventario/configuracion` | `inventario.configurar` | `inventario.py` |
-| Usuarios | `/app/usuarios` | `usuarios.leer` | `usuarios.py` |
-| Cargos | `/app/cargos` | `cargos.leer` | `cargos.py` |
-| Roles | `/app/roles` | `roles.leer` | `roles.py` |
-| Asignar permisos | `/app/asignar-permisos` | `roles.leer` | `rol_permiso.py` |
-| Permisos | `/app/permisos` | `permisos.leer` | `permisos.py` |
-| Empresas | `/app/empresas` | Super admin | `empresas.py` |
-| Perfil | `/app/perfil` | Autenticado | `perfil_usuario.py` |
+- Swagger: https://wmsesp-production.up.railway.app/docs
+- Health: https://wmsesp-production.up.railway.app/health
 
----
+## Migraciones SQL relevantes
 
-## URLs de producción (Railway)
+| Script | Contenido |
+|--------|-----------|
+| `mysql-init/01_setup.sql` | Esquema base |
+| `mysql-init/12_inventario_operativo.sql` | Stock, movimientos, permisos inventario |
+| `mysql-init/19_locale_currency.sql` | Regionalización por empresa |
 
-| Servicio | URL |
-|----------|-----|
-| Aplicación web | https://wms-frontend-production-296e.up.railway.app |
-| API REST | https://wmsesp-production.up.railway.app |
-| Documentación API (Swagger) | https://wmsesp-production.up.railway.app/docs |
-| Health check | https://wmsesp-production.up.railway.app/health |
+## CI / GitHub
+
+Workflow: `.github/workflows/ci.yml` — pytest, lint-imports, build frontend.
+
+Guía de contribución: [CONTRIBUTING.md](./CONTRIBUTING.md)
 
 ---
 
-## Diagramas y otros
-
-| Archivo | Descripción |
-|---------|-------------|
-| [decision-tree-escaneo.bpmn](./decision-tree-escaneo.bpmn) | Diagrama BPMN del flujo de escaneo en operaciones |
-
----
-
-## Índice rápido por rol
-
-| Rol | Empiece por |
-|-----|-------------|
-| Operador de bodega | [MANUAL_USUARIO.md § Inventario operativo](./MANUAL_USUARIO.md#6-inventario-operativo) |
-| Administrador de empresa | [MANUAL_USUARIO.md § Configuración inicial](./MANUAL_USUARIO.md#4-configuración-inicial-recomendada) |
-| Super administrador (SaaS) | [MANUAL_USUARIO.md § Multi-empresa](./MANUAL_USUARIO.md#8-multi-empresa-empresa-maestra) |
-| Desarrollador | [README.md](../README.md) → [capas/](./capas/) → [CORE_WMS.md](./CORE_WMS.md) |
-| DevOps | [DEPLOY_RAILWAY.md](./DEPLOY_RAILWAY.md) → [README_RAILWAY.md](../mysql-init/README_RAILWAY.md) |
+*Índice actualizado — junio 2026*

@@ -15,10 +15,13 @@ Crear `app/modules/tenant/` con:
 - **Puerto** `ITenantRepository`: es_empresa_maestra, validar_acceso, listar administradas, ids scope
 - **Infraestructura** `SqlAlchemyTenantRepository` + `TenantAccessAdapter` (consumido por IAM)
 - **Composition root** `build_tenant_handlers()` en `app/bootstrap/tenant_container.py`
-- **Fachada** `EmpresaMaestraService` delega al módulo tenant
-- **CRUD empresa** (`EmpresaService`): handlers en `application/handlers/empresa_handlers.py`, puerto `IEmpresaRepository`, fachada en `app/domain/services/empresa_service.py`
+- **CRUD empresa:** handlers en `application/handlers/empresa_handlers.py`, puerto `IEmpresaRepository`
 
 IAM importa `TenantAccessAdapter` desde tenant (dependencia unidireccional: iam → tenant).
+
+## Estado (2026-06)
+
+Fachada `EmpresaService` eliminada; endpoints consumen `TenantHandlers` directamente.
 
 ## Consecuencias
 

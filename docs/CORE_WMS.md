@@ -4,16 +4,18 @@
 > Índice general: [INDEX.md](./INDEX.md)
 
 ## Estado (MVP implementado)
+
 | Capacidad | API | UI |
 |-----------|-----|-----|
-| Dashboard operativo | `GET /api/v1/inventario/dashboard` | Pestaña *Dashboard* |
-| Stock por zona (`stock_zona`) | `GET /api/v1/inventario/stock` | Pestaña *Stock por ubicación* |
-| Recepción | `POST /api/v1/inventario/recepcion` | Pestaña *Operaciones* |
-| Traslado (misma bodega) | `POST /api/v1/inventario/traslado` | Pestaña *Operaciones* |
-| Despacho | `POST /api/v1/inventario/despacho` | Pestaña *Operaciones* |
-| Historial auditado | `GET /api/v1/inventario/movimientos` | Pestaña *Historial* |
-| Escaneo (pistola) | SKU = `producto.sku` | Recepción / Traslado / Despacho: lista lateral + lote |
-| Zona recepción por bodega | `GET/PUT .../bodegas/{id}/configuracion` | Pestaña *Recepción por bodega* |
+| Stock por zona (`stock_zona`) | `GET /api/v1/inventario/stock` | *Stock por ubicación* |
+| Recepción | `POST /api/v1/inventario/recepcion` | *Recepción* |
+| Traslado (misma bodega) | `POST /api/v1/inventario/traslado` | *Traslado* |
+| Despacho | `POST /api/v1/inventario/despacho` | *Despacho* |
+| Historial auditado | `GET /api/v1/inventario/movimientos` | *Historial de movimientos* |
+| Escaneo (pistola) | SKU = `producto.sku` | Recepción / Traslado / Despacho |
+| Zona recepción por bodega | `GET/PUT .../bodegas/{id}/configuracion` | *Zona de recepción* |
+
+> El dashboard operativo fue retirado del alcance. La ruta `/app/inventario/dashboard` redirige a stock.
 
 Migración: `mysql-init/12_inventario_operativo.sql` (tablas + permisos `inventario.*`).  
 Regionalización: `mysql-init/19_locale_currency.sql` (locale, timezone, moneda por empresa).

@@ -18,8 +18,7 @@ Manual para operadores de bodega, jefes de almacén y administradores del sistem
 8. [Multi-empresa (empresa maestra)](#8-multi-empresa-empresa-maestra)
 9. [Regionalización (idioma, hora y moneda)](#9-regionalización-idioma-hora-y-moneda)
 10. [Exportaciones e informes](#10-exportaciones-e-informes)
-11. [Notificaciones en tiempo real](#11-notificaciones-en-tiempo-real)
-12. [Preguntas frecuentes](#12-preguntas-frecuentes)
+11. [Preguntas frecuentes](#11-preguntas-frecuentes)
 
 ---
 
@@ -57,12 +56,11 @@ Tras un login exitoso llegará al **Panel principal** (`/app`).
 
 > **Importante:** Si acaba de cambiar permisos, configuración regional de la empresa o migraciones del sistema, **cierre sesión y vuelva a entrar** para refrescar su sesión.
 
-### 2.3 Recuperar contraseña
+### 2.3 Contraseña olvidada
 
-1. En la pantalla de login, haga clic en **¿Olvidó su contraseña?**
-2. Ingrese su correo registrado.
-3. Revise su bandeja de entrada (o la consola del servidor en entornos de prueba) y siga el enlace de recuperación.
-4. Defina una contraseña nueva que cumpla: mínimo 8 caracteres, al menos una mayúscula y un número.
+La recuperación automática por correo **no está habilitada** en esta versión. Si olvidó su contraseña, contacte al **administrador de su empresa** para que le asigne una contraseña temporal o la restablezca desde **Administración → Usuarios**.
+
+Una vez dentro, puede cambiarla en **Mi perfil** (`/app/perfil`).
 
 ### 2.4 Bloqueo por intentos fallidos
 
@@ -83,7 +81,7 @@ El menú se organiza en tres bloques principales:
 | Bloque | Contenido |
 |--------|-----------|
 | **Inventario** | Catálogo de productos y configuración de almacén (bodegas, zonas) |
-| **Inventario operativo** | Dashboard, consultas de stock, operaciones y configuración de recepción |
+| **Inventario operativo** | Consultas de stock y movimientos, operaciones y configuración de recepción |
 | **Administración** | Usuarios, cargos, roles y permisos |
 | **Configuración** | Panel principal y, para super administradores, gestión de empresas |
 
@@ -97,7 +95,7 @@ Los permisos siguen el formato `modulo.accion`. Ejemplos:
 |---------|---------|
 | `productos.leer` | Ver listado de productos |
 | `productos.crear` | Crear productos |
-| `inventario.leer` | Ver dashboard, stock y movimientos |
+| `inventario.leer` | Ver stock por ubicación e historial de movimientos |
 | `inventario.recepcionar` | Registrar recepciones |
 | `inventario.trasladar` | Traslados entre zonas |
 | `inventario.despachar` | Despachos / salidas |
@@ -198,24 +196,13 @@ Si un producto está marcado como **serializado**, en recepción deberá registr
 
 Use las pestañas superiores para cambiar de vista.
 
-### 6.1 Dashboard
-
-Muestra un resumen operativo:
-
-- Cantidad de líneas de stock y productos con existencias.
-- Movimientos del día y de la semana.
-- Gráficos de distribución de stock por bodega o ubicación.
-- Últimos movimientos registrados.
-
-Puede filtrar el gráfico por bodega.
-
-### 6.2 Stock por ubicación
+### 6.1 Stock por ubicación
 
 Lista el stock actual: **producto + bodega + zona + cantidad** (en unidades base).
 
 Use la búsqueda y paginación para localizar referencias. Desde aquí puede **exportar** a Excel o PDF (botón Exportar).
 
-### 6.3 Historial de movimientos
+### 6.2 Historial de movimientos
 
 Registro auditado de todas las operaciones: recepciones, traslados y despachos.
 
@@ -228,7 +215,7 @@ Cada movimiento incluye:
 
 También admite **exportación** Excel/PDF.
 
-### 6.4 Recepción
+### 6.3 Recepción
 
 **Permiso requerido:** `inventario.recepcionar`
 
@@ -242,13 +229,13 @@ Ingreso de mercancía a una zona de la bodega.
 4. Opcional: folio de documento (guía, OC) y observaciones.
 5. Confirme la recepción.
 
-**Zona de destino:** si no elige una zona, el sistema usa la **zona de recepción por defecto** configurada para esa bodega (véase § 6.7).
+**Zona de destino:** si no elige una zona, el sistema usa la **zona de recepción por defecto** configurada para esa bodega (véase § 6.6).
 
 **Escaneo con pistola:** el campo de búsqueda acepta el SKU escaneado. Puede acumular varias líneas en un lote antes de confirmar.
 
 **Productos serializados:** use el panel de recepción serializada para ingresar cada número de serie.
 
-### 6.5 Traslado
+### 6.4 Traslado
 
 **Permiso requerido:** `inventario.trasladar`
 
@@ -260,7 +247,7 @@ Mueve stock entre **dos zonas de la misma bodega** (ej.: de recepción a picking
 
 El stock disminuye en origen y aumenta en destino en una sola operación atómica.
 
-### 6.6 Despacho
+### 6.5 Despacho
 
 **Permiso requerido:** `inventario.despachar`
 
@@ -271,7 +258,7 @@ Salida de mercancía desde una zona (venta, consumo, devolución a proveedor, et
 3. Opcional: documento de referencia.
 4. Confirme.
 
-### 6.7 Configuración — Zona de recepción
+### 6.6 Configuración — Zona de recepción
 
 **Permiso requerido:** `inventario.configurar`
 
@@ -279,12 +266,12 @@ Salida de mercancía desde una zona (venta, consumo, devolución a proveedor, et
 
 Para cada bodega, defina la **zona de recepción por defecto**. Sin esta configuración, las recepciones sin zona explícita fallarán con un mensaje indicando que debe configurarla.
 
-### 6.8 Unidades y presentaciones en operaciones
+### 6.7 Unidades y presentaciones en operaciones
 
 - El stock interno siempre se registra en **unidades base** del producto.
 - Si opera en cajas o displays, seleccione la presentación; el sistema convierte automáticamente según la cantidad contenida configurada en el producto.
 
-### 6.9 Flujo operativo típico del día
+### 6.8 Flujo operativo típico del día
 
 ```
 Recepción (zona recepción)
@@ -303,14 +290,16 @@ Consulte stock y movimientos en cualquier momento para conciliar.
 ### 7.1 Modelo de accesos
 
 ```
-Usuario  →  Cargo  →  Rol(es)  →  Permiso(s)
+Usuario  →  Rol(es)  →  Permiso(s)
+     ↘
+      Cargo (puesto; puede heredar roles al crear el usuario)
 ```
 
 - **Cargo:** puesto de trabajo (ej.: Jefe de bodega).
 - **Rol:** conjunto reutilizable de permisos (ej.: Administrador, Operador inventario).
 - **Permiso:** acción atómica (ej.: `inventario.recepcionar`).
 
-Al crear un usuario se le asigna un cargo; los roles del cargo se heredan automáticamente.
+Los permisos efectivos se calculan desde los **roles asignados al usuario**. Al crear un usuario con un cargo, el sistema puede copiar los roles vinculados a ese cargo.
 
 ### 7.2 Usuarios
 
@@ -324,7 +313,7 @@ Al crear un usuario se le asigna un cargo; los roles del cargo se heredan autom�
 
 **Menú:** Administración → Cargos
 
-Catálogo de puestos por empresa. Vincule roles a cargos desde **Asignar permisos** (vía matriz cargo–rol en el backend) o asigne roles directamente al usuario según la configuración de su implementación.
+Catálogo de puestos por empresa. Los roles del cargo se aplican al crear o actualizar usuarios con ese cargo.
 
 ### 7.4 Roles
 
@@ -389,7 +378,7 @@ El sistema adapta fechas, números y moneda según la configuración de la empre
 
 | Campo | Ejemplo | Efecto |
 |-------|---------|--------|
-| Idioma / locale | `es-CL`, `en-US`, `es-MX` | Textos de interfaz e idioma de notificaciones |
+| Idioma / locale | `es-CL`, `en-US`, `es-MX` | Textos de interfaz |
 | Zona horaria | `America/Santiago` | Horas en movimientos e informes |
 | Moneda | `CLP`, `USD`, `MXN` | Formato de montos |
 
@@ -419,22 +408,7 @@ Los export respetan el filtro de empresa activo y el orden de la tabla. Límite:
 
 ---
 
-## 11. Notificaciones en tiempo real
-
-Mientras tenga abierta una vista de **Inventario operativo**, el sistema mantiene una conexión en vivo con el servidor.
-
-Recibirá avisos en pantalla (toast) cuando:
-
-- Se registre una recepción, traslado o despacho en su empresa.
-- Otro usuario realice una operación de stock.
-
-El mensaje aparece en el **idioma configurado** en su sesión (ej.: *"Recepción registrada…"* en español o *"Receipt recorded…"* en inglés).
-
-> Si no ve notificaciones, verifique que no tenga bloqueados los WebSocket en su red corporativa.
-
----
-
-## 12. Preguntas frecuentes
+## 11. Preguntas frecuentes
 
 ### No veo una opción del menú
 
@@ -480,4 +454,4 @@ Descargue la **plantilla actual** desde Productos → Importar. Verifique que lo
 
 ---
 
-*Manual versión 1.0 — Khepri Software WMS — Junio 2026*
+*Manual versión 1.1 — Khepri Software WMS — Junio 2026*

@@ -1,11 +1,19 @@
-# Capa de Acceso a Datos (Data Access / Repositories)
+# Capa de Acceso a Datos (Adaptadores / Repositorios)
 
 ## Responsabilidades
-- Ejecutar consultas SQL (CRUD).
-- Mapear registros de la DB a objetos del lenguaje (Entidades).
-- Llamar a Stored Procedures para procesos masivos de gran magnitud.
 
-## Reglas de Implementación
-- **Filtro Automático:** Inyectar `WHERE empresa_id = @eid` en cada consulta de lectura.
-- **Auditoría Silenciosa:** El repositorio debe encargarse de setear la fecha de actualización y el ID del usuario que realiza la acción.
-- **Rendimiento:** Usar carga diferida (Lazy Loading) o inmediata (Eager Loading) según la complejidad del dashboard solicitado.
+- Ejecutar consultas SQL en `app/modules/<contexto>/infrastructure/`.
+- Implementar puertos definidos en `domain/ports.py`.
+- Mapear registros ORM a entidades de dominio cuando aplique (`orm_mappers.py`).
+
+## Reglas de implementación
+
+- **Filtro multi-tenant:** incluir `empresa_id` en lecturas y escrituras según el contexto del handler.
+- **ORM centralizado:** modelos en `app/infrastructure/models/`; los adaptadores de módulo los importan solo en infrastructure.
+- **Compatibilidad:** re-exports en `app/infrastructure/repositories/` para código legacy que aún no migró.
+- **Listados:** reutilizar `listado_helpers.py` (`filtro_empresa`, `condicion_buscar`, `aplicar_orden`).
+
+## Prohibiciones
+
+- Los adaptadores no validan permisos HTTP (eso es responsabilidad del endpoint + JWT).
+- `domain/` y `application/` no importan SQLAlchemy.

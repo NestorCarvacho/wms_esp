@@ -1,119 +1,136 @@
+# Estructura del proyecto WMS ESP
+
+> Última actualización: junio 2026 — arquitectura hexagonal modular (Sprints 1–4 completados).
+
+## Vista general
+
 ```
 wms_esp/
-├── 📄 copilot-instructions.md          ← Instrucciones maestras de arquitectura
-├── 📄 docker-compose.yml               ← Configuración Docker
-├── 📄 dockerfile                       ← Imagen Docker
-├── 📄 requirements.txt                 ← Dependencias Python
-├── 📄 .env.example                     ← Variables de entorno (ejemplo)
-├── 📄 README.md                        ← Guía de instalación y uso
-├── 📄 API_EXAMPLES.md                  ← Ejemplos de uso de la API
-├── 📄 PLANTILLA_ENDPOINT.py            ← Plantilla para nuevos endpoints
-│
-├── app/                                ← APLICACIÓN FASTAPI
-│   ├── 📄 main.py                      ← Punto de entrada (FastAPI app)
-│   │
-│   ├── api/v1/                         ← CAPA DE PRESENTACIÓN (Controllers)
-│   │   ├── 📄 dependencies.py          ← Inyección de dependencias
-│   │   └── endpoints/
-│   │       └── 📄 auth.py              ← Endpoints: login, registrar
-│   │
-│   ├── core/                           ← CONFIGURACIÓN Y SEGURIDAD
-│   │   ├── 📄 config.py                ← Variables de entorno
-│   │   └── 📄 security.py              ← JWT, BCrypt
-│   │
-│   ├── domain/services/                ← CAPA DE NEGOCIO (Services)
-│   │   └── 📄 auth_service.py          ← Lógica de autenticación
-│   │
-│   ├── infrastructure/                 ← CAPA DE DATOS
-│   │   ├── 📄 database.py              ← Conexión AsyncIO MySQL
-│   │   ├── models/
-│   │   │   └── 📄 usuario.py           ← ORM: Empresa, Usuario, Cargo
-│   │   └── repositories/
-│   │       └── 📄 usuario_repository.py ← Acceso a datos usuarios
-│   │
-│   └── schemas/                        ← DTOs (Data Transfer Objects)
-│       └── 📄 usuario.py               ← Validación entrada/salida
-│
-├── docs/                               ← DOCUMENTACIÓN
-│   └── capas/
-│       ├── 📄 presentacion.md          ← Capa de Presentación (corregida)
-│       ├── 📄 negocio.md               ← Capa de Negocio
-│       ├── 📄 datos.md                 ← Capa de Datos
-│       └── 📄 seguridad.md             ← Capa de Seguridad
-│
-└── mysql-init/                         ← SCRIPTS SQL
-    ├── 📄 01_setup.sql                 ← Setup inicial (existente)
-    └── 📄 02_usuarios_auth.sql         ← Tablas de autenticación
+├── app/
+│   ├── api/v1/              # Routers HTTP (presentación)
+│   ├── bootstrap/           # Composition roots (handlers)
+│   ├── modules/             # Bounded contexts hexagonales
+│   ├── shared/              # Kernel, formatting, presentation helpers
+│   └── infrastructure/      # ORM models + re-exports legacy
+├── frontend/                # React + TypeScript + Vite
+├── mysql-init/              # Scripts SQL de esquema y datos semilla
+├── tests/                   # pytest
+├── docs/                    # Documentación del proyecto
+└── .github/workflows/       # CI (pytest, lint-imports, frontend build)
 ```
 
-═══════════════════════════════════════════════════════════════════
+## Backend — capa API
 
-## 📦 ARCHIVOS CREADOS (17 archivos)
+```
+app/api/v1/
+├── endpoints/          # Un router por recurso (productos, inventario, auth, …)
+├── dependencies.py       # JWT, empresa_id, permisos
+├── empresa_contexto.py   # ContextoEmpresa multi-tenant
+└── router.py             # Registro de routers
+```
 
-✅ **Estructura de carpetas** (7 directorios)
-   - app/api/v1/endpoints/
-   - app/core/
-   - app/domain/services/
-   - app/infrastructure/{models, repositories}
-   - app/schemas/
+Patrón de endpoint:
 
-✅ **Archivos __init__.py** (11 archivos)
-   - Inicializadores de módulos Python
+```python
+handlers: CatalogHandlers = Depends(obtener_catalog_handlers)
+resultado = await handlers.crear_producto.handle(comando)
+```
 
-✅ **Configuración**
-   - app/core/config.py          → Variables de entorno
-   - app/core/security.py        → JWT + BCrypt
-   - app/infrastructure/database.py → AsyncIO MySQL
-   - .env.example                → Variables de ejemplo
+## Backend — módulos hexagonales
 
-✅ **Modelos y Datos**
-   - app/infrastructure/models/usuario.py → ORM (Empresa, Usuario, Cargo, PermisoCargo)
-   - mysql-init/02_usuarios_auth.sql     → Tablas + datos de prueba
+| Módulo | Handlers (bootstrap) | Endpoints principales |
+|--------|----------------------|------------------------|
+| `iam` | `build_iam_handlers` | auth, usuarios, roles, cargos, permisos, perfil |
+| `tenant` | `build_tenant_handlers` | empresas |
+| `catalog` | `build_catalog_handlers` | productos, tipos, unidades, consulta, import |
+| `warehouse` | `build_warehouse_handlers` | bodegas, tipos_zona, zonas_bodega |
+| `inventory` | `build_inventory_handlers` | stock, movimientos, recepción, traslado, despacho, config |
+| `geo` | `build_geo_handlers` | regiones, ciudades, comunas |
 
-✅ **Capa de Datos (Repositorios)**
-   - app/infrastructure/repositories/usuario_repository.py → CRUD + auditoría
+Estructura interna típica:
 
-✅ **Capa de Negocio (Services)**
-   - app/domain/services/auth_service.py → Lógica de login y registro
+```
+app/modules/inventory/
+├── domain/
+│   ├── entities.py
+│   ├── ports.py
+│   └── services/           # políticas (stock, series, presentación)
+├── application/
+│   ├── commands.py
+│   └── handlers/
+├── infrastructure/
+│   ├── inventario_crud.py
+│   ├── inventario_repository.py
+│   └── orm_mappers.py
+└── presentation/http/
+    └── dependencies.py
+```
 
-✅ **Capa de Presentación (APIs)**
-   - app/api/v1/endpoints/auth.py → Endpoints /login y /registrar
-   - app/api/v1/dependencies.py   → Inyección de dependencias
+## Backend — shared
 
-✅ **Punto de Entrada**
-   - app/main.py → FastAPI app, rutas, middlewares, CORS
+```
+app/shared/
+├── kernel/result.py
+├── formatting.py
+├── locale_formatting.py
+└── presentation/result_http.py
+```
 
-✅ **Documentación**
-   - README.md                   → Instalación y setup
-   - API_EXAMPLES.md             → Ejemplos curl/postman
-   - PLANTILLA_ENDPOINT.py       → Patrón para nuevos endpoints
+## Backend — infraestructura compartida
 
-═══════════════════════════════════════════════════════════════════
+```
+app/infrastructure/
+├── models/              # Modelos SQLAlchemy (todas las tablas)
+├── database.py          # Session async
+├── security/            # JWT, bcrypt
+├── middleware/          # Locale, errores
+└── repositories/        # Re-exports hacia módulos (compatibilidad)
+```
 
-## 🎯 CARACTERÍSTICAS IMPLEMENTADAS
+**Nota:** `app/domain/services/` fue eliminado. La lógica vive en handlers de módulos.
 
-✓ Arquitectura N-Tier con 4 capas (Presentación, Negocio, Datos, Seguridad)
-✓ Multi-tenancy con filtrado automático por empresa_id
-✓ JWT con claims (id, empresa_id, roles)
-✓ Cifrado de contraseñas con BCrypt
-✓ Validación con Pydantic DTOs
-✓ Manejo de errores unificado
-✓ AsyncIO para base de datos
-✓ Formato de respuesta API unificado
-✓ CORS configurado para desarrollo
-✓ Health check y documentación interactiva (Swagger/ReDoc)
+## Frontend
 
-═══════════════════════════════════════════════════════════════════
+```
+frontend/src/
+├── api/                 # Clientes REST + menuConfig
+├── pages/               # Páginas por ruta
+├── features/            # Lógica por dominio UI
+├── components/          # Layout, CRUD genérico, UI
+├── routing/             # ProtectedRoute, PermissionRoute
+└── context/             # Auth, Locale, Theme
+```
 
-## 🚀 PRÓXIMOS PASOS
+Rutas de la app: prefijo `/app/*` (ej. `/app/inventario/stock`).
 
-Para continuar con otros endpoints, seguir la PLANTILLA_ENDPOINT.py:
+## Tests
 
-1. ✅ Login (COMPLETADO)
-2. ⏳ Usuarios (CRUD usuarios)
-3. ⏳ Empresas (CRUD empresas)
-4. ⏳ Productos (CRUD productos)
-5. ⏳ Inventario (Movimientos stock)
-6. ⏳ Órdenes (Órdenes de venta/compra)
+```
+tests/
+├── conftest.py
+├── test_auth.py
+├── test_inventario.py
+└── …
+```
 
-═══════════════════════════════════════════════════════════════════
+## CI (GitHub Actions)
+
+Archivo: `.github/workflows/ci.yml`
+
+1. `pytest tests/`
+2. `lint-imports` (contratos en `.importlinter`)
+3. `npm run build` en `frontend/`
+
+## Documentación
+
+| Archivo | Audiencia |
+|---------|-----------|
+| [MANUAL_USUARIO.md](./MANUAL_USUARIO.md) | Operadores y administradores |
+| [ARCHITECTURE.md](./ARCHITECTURE.md) | Arquitectura técnica |
+| [CONTRIBUTING.md](./CONTRIBUTING.md) | Contribuidores / PRs |
+| [CORE_WMS.md](./CORE_WMS.md) | Inventario operativo (API + permisos) |
+| [INDEX.md](./INDEX.md) | Índice maestro |
+
+## Plantilla para nuevos recursos
+
+Ver `PLANTILLA_ENDPOINT.py` en la raíz del repo (patrón hexagonal con handlers).

@@ -105,9 +105,9 @@ Patrón en endpoint:
 @router.get("")
 async def listar(
     ctx: ContextoEmpresa = Depends(contexto_requiere_permiso("productos.leer")),
-    service: ProductoService = Depends(obtener_producto_service),
+    handlers: CatalogHandlers = Depends(obtener_catalog_handlers),
 ):
-    return await service.listar(
+    return await handlers.listar_productos.handle(
         empresa_id=ctx.empresa_usuario_id,
         **kwargs_listado(ctx),
     )
@@ -115,24 +115,48 @@ async def listar(
 
 ---
 
-## Arquitectura N-tier (flujo estricto)
+## Arquitectura hexagonal modular
 
 ```
 Request → endpoint (app/api/v1/endpoints/)
-       → service   (app/domain/services/)
-       → repository (app/infrastructure/repositories/)
+       → handler   (app/modules/<ctx>/application/handlers/)
+       → port      (app/modules/<ctx>/domain/ports.py)
+       → adapter   (app/modules/<ctx>/infrastructure/)
        → ORM       (app/infrastructure/models/)
 ```
 
+Composition roots en `app/bootstrap/*_container.py`. Los routers inyectan handlers con `Depends(obtener_*_handlers)`.
+
 | Capa | Responsabilidad | No debe |
 |------|-----------------|---------|
-| **Endpoint** | HTTP, DTOs, Depends, status codes | Lógica de negocio, SQL directo |
-| **Service** | Reglas de negocio, orquestación | Conocer FastAPI Request |
-| **Repository** | Queries SQLAlchemy, CRUD | Validar permisos HTTP |
-| **Schema** | Pydantic DTOs entrada/salida | Acceder a BD |
-| **Core** | config, security, middleware, request_context | Lógica de dominio |
+| **Endpoint** | HTTP, DTOs, Depends, status codes | SQL, lógica de negocio pesada |
+| **Handler** | Caso de uso, orquestación | Importar FastAPI Request |
+| **Domain** | Entidades, puertos, políticas | SQLAlchemy, infraestructura |
+| **Infrastructure** | Queries, mappers ORM | Validar permisos HTTP |
+| **Schema** | Pydantic DTOs | Acceder a BD |
 
-Referencia extendida: [docs/capas/](docs/capas/)
+`app/domain/services/` fue **eliminado** — no crear servicios allí.
+
+Referencia: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/capas/](docs/capas/)
+
+### Módulos (`app/modules/`)
+
+| Módulo | Bootstrap |
+|--------|-----------|
+| `iam` | `build_iam_handlers` |
+| `tenant` | `build_tenant_handlers` |
+| `catalog` | `build_catalog_handlers` |
+| `warehouse` | `build_warehouse_handlers` |
+| `inventory` | `build_inventory_handlers` |
+| `geo` | `build_geo_handlers` |
+
+### CI local
+
+```bash
+python -m pytest -q
+lint-imports
+cd frontend && npm run build
+```
 
 ### Modelos ORM
 
@@ -156,7 +180,7 @@ Concentrados en `app/infrastructure/models/usuario.py` (Empresa, Usuario, Produc
 
 ### Auditoría de inventario
 
-Operaciones de stock en `inventario_operacion_service.py` → tabla `movimiento_inventario` (tipos: `RECEPCION`, `TRASLADO`, `DESPACHO`). Timestamps UTC en BD; presentación local vía `formato_service.py` + headers de timezone.
+Handlers en `app/modules/inventory/` → tabla `movimiento_inventario` (tipos: `RECEPCION`, `TRASLADO`, `DESPACHO`). Timestamps UTC en BD; presentación local vía `locale_formatting` + headers de timezone.
 
 ---
 
@@ -165,23 +189,17 @@ Operaciones de stock en `inventario_operacion_service.py` → tabla `movimiento_
 ```
 wms_esp/
 ├── app/
-│   ├── main.py                 # FastAPI app, CORS, LocaleMiddleware, routers
-│   ├── api/v1/endpoints/       # Routers REST
-│   ├── api/v1/dependencies.py  # JWT, requiere_permiso
-│   ├── api/v1/empresa_contexto.py
-│   ├── core/                   # config, security, locale_middleware, request_context
-│   ├── domain/services/        # Lógica de negocio
-│   ├── infrastructure/
-│   │   ├── models/             # ORM SQLAlchemy
-│   │   ├── repositories/       # Acceso a datos
-│   │   └── ws/                 # WebSocket event bus (inventario)
-│   └── schemas/                # DTOs Pydantic
-├── frontend/
-│   ├── src/                    # Páginas, hooks, API client, contexts (activo)
-│   └── component/              # UI legacy aún importada vía @/components
-├── mysql-init/                 # schema_completo.sql + migraciones incrementales
-├── scripts/apply_railway_migrations.py
-└── docs/                       # INDEX, MANUAL_USUARIO, CORE_WMS, deploy
+│   ├── main.py
+│   ├── api/v1/endpoints/
+│   ├── bootstrap/              # build_*_handlers
+│   ├── modules/                # iam, catalog, warehouse, inventory, tenant, geo
+│   ├── shared/
+│   ├── infrastructure/models/
+│   └── schemas/
+├── frontend/src/
+├── mysql-init/
+├── tests/
+└── docs/
 ```
 
 ### Frontend — patrones clave
@@ -260,7 +278,7 @@ Guías: [docs/DEPLOY_RAILWAY.md](docs/DEPLOY_RAILWAY.md), [docs/RAILWAY_WMS_ESP.
 |--------|---------|-------|
 | Auth / usuarios / RBAC | `auth.py`, `usuarios.py`, `roles.py`, `permisos.py` | Multi-tenant + empresa maestra |
 | Catálogo | `productos.py`, `bodegas.py`, `tipo_zona.py`, … | CRUD estándar |
-| Inventario operativo | `inventario.py` | Stock, movimientos, export, WS | Ver [docs/CORE_WMS.md](docs/CORE_WMS.md) |
+| Inventario operativo | `inventario.py` | Handlers en `modules/inventory` | Ver [docs/CORE_WMS.md](docs/CORE_WMS.md) |
 | Regionalización | `locale_middleware`, `auth_service._resolver_preferencias_locale` | Migración `19_locale_currency.sql` |
 | Órdenes compra/venta | — | Próximamente (tag OpenAPI existe) |
 
@@ -269,11 +287,12 @@ Guías: [docs/DEPLOY_RAILWAY.md](docs/DEPLOY_RAILWAY.md), [docs/RAILWAY_WMS_ESP.
 ## Checklist al agregar una feature
 
 1. ¿Filtra por `empresa_id` vía JWT / `ContextoEmpresa`?
-2. ¿Endpoint delgado → service → repository?
+2. ¿Endpoint delgado → handler (módulo) → port → adapter?
 3. ¿DTO en `app/schemas/`?
 4. ¿Permiso `recurso.accion` registrado y sembrado en SQL si es nuevo?
 5. ¿Ruta frontend en `App.tsx` + `menuConfig.ts` + `ROUTE_PERMISSIONS`?
 6. ¿Migración SQL si hay cambio de esquema?
+7. ¿Pasa `lint-imports` y pytest?
 
 ---
 
@@ -284,5 +303,7 @@ Guías: [docs/DEPLOY_RAILWAY.md](docs/DEPLOY_RAILWAY.md), [docs/RAILWAY_WMS_ESP.
 | [docs/INDEX.md](docs/INDEX.md) | Índice maestro |
 | [docs/MANUAL_USUARIO.md](docs/MANUAL_USUARIO.md) | Usuarios finales |
 | [docs/CORE_WMS.md](docs/CORE_WMS.md) | Inventario (técnico) |
-| [copilot-instructions.md](copilot-instructions.md) | Reglas legacy para Copilot |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Arquitectura hexagonal |
+| [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) | PRs y CI |
+| [copilot-instructions.md](copilot-instructions.md) | Instrucciones Copilot |
 | [API_EXAMPLES.md](API_EXAMPLES.md) | Ejemplos curl/API |
