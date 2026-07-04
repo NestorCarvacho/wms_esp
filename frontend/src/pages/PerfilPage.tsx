@@ -60,8 +60,6 @@ export function PerfilPage() {
     comuna_id?: number | null;
   }>({});
   const [pais, setPais] = useState('');
-  const [fotoUrl, setFotoUrl] = useState('');
-  const [biografia, setBiografia] = useState('');
   const [contrasenaActual, setContrasenaActual] = useState('');
   const [contrasenaNueva, setContrasenaNueva] = useState('');
   const [contrasenaConfirmacion, setContrasenaConfirmacion] = useState('');
@@ -91,8 +89,6 @@ export function PerfilPage() {
         comuna_id: perfil?.comuna_id ?? null,
       });
       setPais(perfil?.pais ?? 'Chile');
-      setFotoUrl(perfil?.foto_url ?? '');
-      setBiografia(perfil?.biografia ?? '');
     } catch (err) {
       showNotification({ type: 'error', message: err instanceof ApiError ? err.message : 'Error al cargar el perfil' });
     } finally {
@@ -133,8 +129,6 @@ export function PerfilPage() {
         ciudad_id: direccionData.ciudad_id ?? null,
         comuna_id: direccionData.comuna_id ?? null,
         pais: emptyIfBlank(pais),
-        foto_url: emptyIfBlank(fotoUrl),
-        biografia: emptyIfBlank(biografia),
       };
 
       await actualizarPerfilUsuario(user.id, perfilPayload);
@@ -259,11 +253,6 @@ export function PerfilPage() {
               disabled={submitting}
             />
             <LabelInput id="pais" label="País" value={pais} onChange={setPais} />
-          </FormLayout.Section>
-
-          <FormLayout.Section title="Información adicional">
-            <LabelInput id="fotoUrl" label="URL foto de perfil" value={fotoUrl} onChange={setFotoUrl} />
-            <LabelInput id="biografia" label="Biografía" value={biografia} onChange={setBiografia} />
           </FormLayout.Section>
 
           <FormLayout.Footer
