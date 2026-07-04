@@ -4,16 +4,16 @@ Endpoints CRUD de Usuarios (Capa de Presentación).
 Multi-tenant con soporte para super admin.
 """
 from fastapi import APIRouter, Depends, HTTPException, status, Query
-from app.modules.iam.presentation.http.dependencies import (
-    obtener_auth_service,
-    obtener_usuario_rol_service,
-    obtener_usuario_service,
+from app.bootstrap.container import IamHandlers
+from app.modules.iam.application.commands_rbac import (
+    ActualizarUsuarioCommand,
+    CrearUsuarioCommand,
+    SincronizarRolesUsuarioCommand,
 )
-from app.domain.services.usuario_service import UsuarioService
+from app.modules.iam.presentation.http.dependencies import obtener_iam_handlers
 from app.api.v1.dependencies import obtener_usuario_autenticado, requiere_permiso, es_super_admin
 from app.api.v1.empresa_contexto import ContextoEmpresa, kwargs_listado, obtener_contexto_empresa, contexto_requiere_permiso
 from app.api.v1.listado_query import orden_listado
-from app.domain.services.usuario_rol_service import UsuarioRolService
 from app.schemas.permiso import UsuarioRolSincronizarDTO
 from app.schemas.usuario import (
     UsuarioCrearDTO,
@@ -41,7 +41,7 @@ async def listar_usuarios(
     cargo_id: int | None = None,
     orden_params: dict = Depends(orden_listado),
     ctx: ContextoEmpresa = Depends(obtener_contexto_empresa),
-    service: UsuarioService = Depends(obtener_usuario_service)
+    handlers: IamHandlers = Depends(obtener_iam_handlers),
 
 ):
     """
@@ -62,8 +62,8 @@ async def listar_usuarios(
     - Requiere autenticación JWT
     """
     try:
-        resultado = await service.listar_usuarios(
-            empresa_id=ctx.empresa_usuario_id,
+        resultado = await handlers.listar_usuarios.handle(
+            ctx.empresa_usuario_id,
             pagina=pagina,
             por_pagina=por_pagina,
             buscar=buscar,
@@ -95,7 +95,7 @@ async def obtener_usuario(
     id: int,
     usuario_autenticado: dict = Depends(requiere_permiso("usuarios.leer")),
     es_admin: bool = Depends(es_super_admin),
-    service: UsuarioService = Depends(obtener_usuario_service),
+    handlers: IamHandlers = Depends(obtener_iam_handlers),,
 ):
     """
     Obtiene los datos de un usuario específico.
@@ -118,14 +118,14 @@ async def obtener_usuario(
         
         # Si no es super admin, validar que intente acceder solo a usuarios de su empresa
         if not es_admin:
-            usuario = await service.obtener_usuario(id, empresa_id)
+            usuario = await handlers.obtener_usuario.handle(id, empresa_id)
             if usuario["empresa_id"] != empresa_id:
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="No tiene permiso para acceder a usuarios de otras empresas"
                 )
         else:
-            usuario = await service.obtener_usuario(id, None)
+            usuario = await handlers.obtener_usuario.handle(id, None)
         
         return RespuestaAPIDTO(
             exito=True,
@@ -157,7 +157,7 @@ async def crear_usuario(
     usuario_dto: UsuarioCrearDTO,
     usuario_autenticado: dict = Depends(requiere_permiso("usuarios.crear")),
     es_admin: bool = Depends(es_super_admin),
-    service: UsuarioService = Depends(obtener_usuario_service),
+    handlers: IamHandlers = Depends(obtener_iam_handlers),,
 ):
     """
     Crea un nuevo usuario en la empresa.
@@ -198,11 +198,13 @@ async def crear_usuario(
                 )
             empresa_destino = usuario_empresa_id
         
-        nuevo_usuario = await service.crear_usuario(
-            empresa_id=empresa_destino,
-            email=usuario_dto.email,
-            contrasena=usuario_dto.contrasena,
-            cargo_id=usuario_dto.cargo_id,
+        nuevo_usuario = await handlers.crear_usuario.handle(
+            CrearUsuarioCommand(
+                empresa_id=empresa_destino,
+                email=usuario_dto.email,
+                contrasena=usuario_dto.contrasena,
+                cargo_id=usuario_dto.cargo_id,
+            )
         )
         
         return RespuestaAPIDTO(
@@ -236,7 +238,7 @@ async def actualizar_usuario(
     actualizar_dto: UsuarioActualizarDTO,
     usuario_autenticado: dict = Depends(requiere_permiso("usuarios.editar")),
     es_admin: bool = Depends(es_super_admin),
-    service: UsuarioService = Depends(obtener_usuario_service),
+    handlers: IamHandlers = Depends(obtener_iam_handlers),,
 ):
     """
     Actualiza los datos de un usuario existente.
@@ -266,11 +268,13 @@ async def actualizar_usuario(
         empresa_id = usuario_autenticado.get("empresa_id")
         campos = actualizar_dto.model_dump(exclude_unset=True)
 
-        usuario_actualizado = await service.actualizar_usuario(
-            usuario_id=id,
-            empresa_id=empresa_id,
-            es_super_admin=es_admin,
-            **campos,
+        usuario_actualizado = await handlers.actualizar_usuario.handle(
+            ActualizarUsuarioCommand(
+                usuario_id=id,
+                empresa_id=empresa_id,
+                es_super_admin=es_admin,
+                campos=campos,
+            )
         )
         
         return RespuestaAPIDTO(
@@ -301,7 +305,7 @@ async def eliminar_usuario(
     id: int,
     usuario_autenticado: dict = Depends(requiere_permiso("usuarios.eliminar")),
     es_admin: bool = Depends(es_super_admin),
-    service: UsuarioService = Depends(obtener_usuario_service),
+    handlers: IamHandlers = Depends(obtener_iam_handlers),,
 ):
     """
     Elimina (desactiva) un usuario.
@@ -325,10 +329,7 @@ async def eliminar_usuario(
     try:
         empresa_id = usuario_autenticado.get("empresa_id")
         
-        resultado = await service.eliminar_usuario(
-            usuario_id=id,
-            empresa_id=empresa_id
-        )
+        resultado = await handlers.desactivar_usuario.handle(id, empresa_id)
         
         return RespuestaAPIDTO(
             exito=True,
@@ -358,7 +359,7 @@ async def reactivar_usuario(
     id: int,
     usuario_autenticado: dict = Depends(requiere_permiso("usuarios.editar")),
     es_admin: bool = Depends(es_super_admin),
-    service: UsuarioService = Depends(obtener_usuario_service),
+    handlers: IamHandlers = Depends(obtener_iam_handlers),,
 ):
     """
     Reactiva un usuario que fue desactivado.
@@ -379,10 +380,7 @@ async def reactivar_usuario(
     try:
         empresa_id = usuario_autenticado.get("empresa_id")
         
-        usuario_reactivado = await service.reactivar_usuario(
-            usuario_id=id,
-            empresa_id=empresa_id
-        )
+        usuario_reactivado = await handlers.reactivar_usuario.handle(id, empresa_id)
         
         return RespuestaAPIDTO(
             exito=True,
@@ -405,10 +403,10 @@ async def reactivar_usuario(
 async def listar_roles_usuario(
     id: int,
     usuario_autenticado: dict = Depends(requiere_permiso("usuarios.leer")),
-    service: UsuarioRolService = Depends(obtener_usuario_rol_service),
+    handlers: IamHandlers = Depends(obtener_iam_handlers),
 ):
     try:
-        resultado = await service.listar_roles(
+        resultado = await handlers.listar_roles_usuario.handle(
             id,
             usuario_autenticado.get("empresa_id"),
             bool(usuario_autenticado.get("es_empresa_maestra")),
@@ -425,14 +423,16 @@ async def sincronizar_roles_usuario(
     id: int,
     dto: UsuarioRolSincronizarDTO,
     usuario_autenticado: dict = Depends(requiere_permiso("usuarios.editar")),
-    service: UsuarioRolService = Depends(obtener_usuario_rol_service),
+    handlers: IamHandlers = Depends(obtener_iam_handlers),
 ):
     try:
-        resultado = await service.sincronizar(
-            id,
-            usuario_autenticado.get("empresa_id"),
-            dto.rol_ids,
-            bool(usuario_autenticado.get("es_empresa_maestra")),
+        resultado = await handlers.sincronizar_roles_usuario.handle(
+            SincronizarRolesUsuarioCommand(
+                usuario_id=id,
+                empresa_id_caller=usuario_autenticado.get("empresa_id"),
+                rol_ids=dto.rol_ids,
+                es_maestra=bool(usuario_autenticado.get("es_empresa_maestra")),
+            )
         )
         return RespuestaAPIDTO(exito=True, datos=resultado, mensaje="Roles del usuario actualizados").dict()
     except ValueError as e:

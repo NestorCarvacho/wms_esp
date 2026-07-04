@@ -23,9 +23,11 @@ Estado de avance del roadmap acordado.
 
 ## Sprint 3 — Eliminar fachadas
 
-- [x] Endpoints catalog → `Depends(obtener_catalog_handlers)` directo (productos, tipos, unidades, presentaciones)
+- [x] Endpoints catalog → `Depends(obtener_catalog_handlers)` directo
 - [x] Auth → `Depends(obtener_iam_handlers)` directo
-- [ ] Endpoints IAM/warehouse/inventory → handlers directo (roles, usuarios, bodegas, inventario…)
+- [x] Usuarios, roles → `Depends(obtener_iam_handlers)` directo
+- [x] Inventario operativo → `Depends(obtener_inventory_handlers)` directo
+- [ ] Endpoints IAM/warehouse restantes (cargos, permisos, bodegas…)
 - [ ] Borrar fachadas delegadoras restantes en `app/domain/services/`
 - [x] Utilidades puras en `app/shared/` (`formatting.py`)
 

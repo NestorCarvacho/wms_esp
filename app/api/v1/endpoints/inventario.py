@@ -3,11 +3,17 @@ from io import BytesIO
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import StreamingResponse
-from app.domain.services.inventario_operacion_service import InventarioOperacionService
+from app.bootstrap.container import InventoryHandlers
 from app.domain.services.inventario_reporte_service import InventarioReporteService
+from app.modules.inventory.application.commands import (
+    ActualizarConfigBodegaCommand,
+    DespacharCommand,
+    RecepcionarCommand,
+    TrasladarCommand,
+)
 from app.modules.inventory.presentation.http.dependencies import (
     obtener_inventario_reporte_service,
-    obtener_inventario_service,
+    obtener_inventory_handlers,
 )
 from app.api.v1.dependencies import obtener_id
 from app.api.v1.empresa_contexto import ContextoEmpresa, kwargs_listado, contexto_requiere_permiso
@@ -32,11 +38,11 @@ async def listar_stock(
     zona_bodega_id: int | None = None,
     orden_params: dict = Depends(orden_listado),
     ctx: ContextoEmpresa = Depends(contexto_requiere_permiso("inventario.leer")),
-    service: InventarioOperacionService = Depends(obtener_inventario_service),
+    handlers: InventoryHandlers = Depends(obtener_inventory_handlers),
 ):
     try:
-        resultado = await service.listar_stock(
-            empresa_id=ctx.empresa_usuario_id,
+        resultado = await handlers.listar_stock.handle(
+            ctx.empresa_usuario_id,
             pagina=pagina,
             por_pagina=por_pagina,
             bodega_id=bodega_id,
@@ -62,11 +68,11 @@ async def listar_movimientos(
     tipo: str | None = Query(None, description="RECEPCION | TRASLADO | DESPACHO"),
     orden_params: dict = Depends(orden_listado),
     ctx: ContextoEmpresa = Depends(contexto_requiere_permiso("inventario.leer")),
-    service: InventarioOperacionService = Depends(obtener_inventario_service),
+    handlers: InventoryHandlers = Depends(obtener_inventory_handlers),
 ):
     try:
-        resultado = await service.listar_movimientos(
-            empresa_id=ctx.empresa_usuario_id,
+        resultado = await handlers.listar_movimientos.handle(
+            ctx.empresa_usuario_id,
             pagina=pagina,
             por_pagina=por_pagina,
             producto_id=producto_id,
@@ -162,21 +168,23 @@ async def recepcionar(
     dto: RecepcionDTO,
     ctx: ContextoEmpresa = Depends(contexto_requiere_permiso("inventario.recepcionar")),
     usuario_id: int = Depends(obtener_id),
-    service: InventarioOperacionService = Depends(obtener_inventario_service),
+    handlers: InventoryHandlers = Depends(obtener_inventory_handlers),
 ):
     try:
-        datos = await service.recepcionar(
-            empresa_id=ctx.empresa_operacion(),
-            usuario_id=usuario_id,
-            bodega_id=dto.bodega_id,
-            producto_id=dto.producto_id,
-            cantidad=dto.cantidad,
-            zona_destino_id=dto.zona_destino_id,
-            presentacion_id=dto.presentacion_id,
-            venta_por_presentacion=dto.venta_por_presentacion,
-            documento_tipo=dto.documento_tipo,
-            documento_folio=dto.documento_folio,
-            observaciones=dto.observaciones,
+        datos = await handlers.recepcionar.handle(
+            RecepcionarCommand(
+                empresa_id=ctx.empresa_operacion(),
+                usuario_id=usuario_id,
+                bodega_id=dto.bodega_id,
+                producto_id=dto.producto_id,
+                cantidad=dto.cantidad,
+                zona_destino_id=dto.zona_destino_id,
+                presentacion_id=dto.presentacion_id,
+                venta_por_presentacion=dto.venta_por_presentacion,
+                documento_tipo=dto.documento_tipo,
+                documento_folio=dto.documento_folio,
+                observaciones=dto.observaciones,
+            )
         )
         return RespuestaAPIDTO(exito=True, datos=datos, mensaje="Recepción registrada").dict()
     except ValueError as e:
@@ -190,21 +198,23 @@ async def trasladar(
     dto: TrasladoDTO,
     ctx: ContextoEmpresa = Depends(contexto_requiere_permiso("inventario.trasladar")),
     usuario_id: int = Depends(obtener_id),
-    service: InventarioOperacionService = Depends(obtener_inventario_service),
+    handlers: InventoryHandlers = Depends(obtener_inventory_handlers),
 ):
     try:
-        datos = await service.trasladar(
-            empresa_id=ctx.empresa_operacion(),
-            usuario_id=usuario_id,
-            producto_id=dto.producto_id,
-            cantidad=dto.cantidad,
-            zona_origen_id=dto.zona_origen_id,
-            zona_destino_id=dto.zona_destino_id,
-            presentacion_id=dto.presentacion_id,
-            venta_por_presentacion=dto.venta_por_presentacion,
-            documento_tipo=dto.documento_tipo,
-            documento_folio=dto.documento_folio,
-            observaciones=dto.observaciones,
+        datos = await handlers.trasladar.handle(
+            TrasladarCommand(
+                empresa_id=ctx.empresa_operacion(),
+                usuario_id=usuario_id,
+                producto_id=dto.producto_id,
+                cantidad=dto.cantidad,
+                zona_origen_id=dto.zona_origen_id,
+                zona_destino_id=dto.zona_destino_id,
+                presentacion_id=dto.presentacion_id,
+                venta_por_presentacion=dto.venta_por_presentacion,
+                documento_tipo=dto.documento_tipo,
+                documento_folio=dto.documento_folio,
+                observaciones=dto.observaciones,
+            )
         )
         return RespuestaAPIDTO(exito=True, datos=datos, mensaje="Traslado registrado").dict()
     except ValueError as e:
@@ -218,20 +228,22 @@ async def despachar(
     dto: DespachoDTO,
     ctx: ContextoEmpresa = Depends(contexto_requiere_permiso("inventario.despachar")),
     usuario_id: int = Depends(obtener_id),
-    service: InventarioOperacionService = Depends(obtener_inventario_service),
+    handlers: InventoryHandlers = Depends(obtener_inventory_handlers),
 ):
     try:
-        datos = await service.despachar(
-            empresa_id=ctx.empresa_operacion(),
-            usuario_id=usuario_id,
-            producto_id=dto.producto_id,
-            cantidad=dto.cantidad,
-            zona_origen_id=dto.zona_origen_id,
-            presentacion_id=dto.presentacion_id,
-            venta_por_presentacion=dto.venta_por_presentacion,
-            documento_tipo=dto.documento_tipo,
-            documento_folio=dto.documento_folio,
-            observaciones=dto.observaciones,
+        datos = await handlers.despachar.handle(
+            DespacharCommand(
+                empresa_id=ctx.empresa_operacion(),
+                usuario_id=usuario_id,
+                producto_id=dto.producto_id,
+                cantidad=dto.cantidad,
+                zona_origen_id=dto.zona_origen_id,
+                presentacion_id=dto.presentacion_id,
+                venta_por_presentacion=dto.venta_por_presentacion,
+                documento_tipo=dto.documento_tipo,
+                documento_folio=dto.documento_folio,
+                observaciones=dto.observaciones,
+            )
         )
         return RespuestaAPIDTO(exito=True, datos=datos, mensaje="Despacho registrado").dict()
     except ValueError as e:
@@ -248,10 +260,10 @@ async def despachar(
 async def obtener_config_bodega(
     bodega_id: int,
     ctx: ContextoEmpresa = Depends(contexto_requiere_permiso("inventario.leer")),
-    service: InventarioOperacionService = Depends(obtener_inventario_service),
+    handlers: InventoryHandlers = Depends(obtener_inventory_handlers),
 ):
     try:
-        datos = await service.obtener_config_bodega(bodega_id, ctx.empresa_operacion())
+        datos = await handlers.obtener_config_bodega.handle(bodega_id, ctx.empresa_operacion())
         return RespuestaAPIDTO(exito=True, datos=datos, mensaje="Configuración de bodega").dict()
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
@@ -268,13 +280,15 @@ async def actualizar_config_bodega(
     bodega_id: int,
     dto: BodegaConfigActualizarDTO,
     ctx: ContextoEmpresa = Depends(contexto_requiere_permiso("inventario.configurar")),
-    service: InventarioOperacionService = Depends(obtener_inventario_service),
+    handlers: InventoryHandlers = Depends(obtener_inventory_handlers),
 ):
     try:
-        datos = await service.actualizar_config_bodega(
-            bodega_id,
-            ctx.empresa_operacion(),
-            dto.zona_recepcion_default_id,
+        datos = await handlers.actualizar_config_bodega.handle(
+            ActualizarConfigBodegaCommand(
+                bodega_id=bodega_id,
+                empresa_id=ctx.empresa_operacion(),
+                zona_recepcion_default_id=dto.zona_recepcion_default_id,
+            )
         )
         return RespuestaAPIDTO(exito=True, datos=datos, mensaje="Configuración actualizada").dict()
     except ValueError as e:

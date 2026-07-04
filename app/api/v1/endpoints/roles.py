@@ -7,9 +7,10 @@ Multi-tenant con soporte para super admin.
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.domain.services.rol_service import RolService
+from app.bootstrap.container import IamHandlers
 from app.infrastructure.database import get_db_session
-from app.modules.iam.presentation.http.dependencies import obtener_rol_service
+from app.modules.iam.application.commands_catalog import ActualizarRolCommand, CrearRolCommand
+from app.modules.iam.presentation.http.dependencies import obtener_iam_handlers
 from app.api.v1.dependencies import obtener_usuario_autenticado, requiere_permiso, es_super_admin
 from app.api.v1.empresa_contexto import ContextoEmpresa, kwargs_listado, obtener_contexto_empresa, resolver_empresa_creacion, contexto_requiere_permiso
 from app.api.v1.listado_query import orden_listado
@@ -38,7 +39,7 @@ async def listar_roles(
     buscar: str | None = None,
     orden_params: dict = Depends(orden_listado),
     ctx: ContextoEmpresa = Depends(contexto_requiere_permiso("roles.leer")),
-    service: RolService = Depends(obtener_rol_service)
+    handlers: IamHandlers = Depends(obtener_iam_handlers),
 
 ):
 
@@ -60,8 +61,8 @@ async def listar_roles(
     """
 
     try:
-        resultado = await service.listar_roles(
-            empresa_id=ctx.empresa_usuario_id,
+        resultado = await handlers.listar_roles.handle(
+            ctx.empresa_usuario_id,
             pagina=pagina,
             por_pagina=por_pagina,
             buscar=buscar,
@@ -91,7 +92,7 @@ async def obtener_rol(
     id: int,
     usuario_autenticado: dict = Depends(requiere_permiso("roles.leer")),
     es_admin: bool = Depends(es_super_admin),
-    service: RolService = Depends(obtener_rol_service),
+    handlers: IamHandlers = Depends(obtener_iam_handlers),,
 ):
     """
     Obtiene los datos de un rol específico.
@@ -114,7 +115,7 @@ async def obtener_rol(
         
         # Si es super admin, obtener sin filtro de empresa
         rol_empresa_id = None if es_admin else empresa_id
-        rol = await service.obtener_rol(id, rol_empresa_id)
+        rol = await handlers.obtener_rol.handle(id, rol_empresa_id)
         
         # Validar permisos si no es super admin
         if not es_admin and rol["empresa_id"] != empresa_id:
@@ -153,7 +154,7 @@ async def crear_rol(
     rol_dto: RolCrearDTO,
     usuario_autenticado: dict = Depends(obtener_usuario_autenticado),
     session: AsyncSession = Depends(get_db_session),
-    service: RolService = Depends(obtener_rol_service)
+    handlers: IamHandlers = Depends(obtener_iam_handlers),
 
 ):
     """
@@ -183,11 +184,13 @@ async def crear_rol(
             usuario_autenticado, rol_dto.empresa_id, session
         )
         
-        nuevo_rol = await service.crear_rol(
-            empresa_id=empresa_id,
-            nombre=rol_dto.nombre,
-            descripcion=rol_dto.descripcion,
-            activo=bool(rol_dto.activo) if rol_dto.activo is not None else True
+        nuevo_rol = await handlers.crear_rol.handle(
+            CrearRolCommand(
+                empresa_id=empresa_id,
+                nombre=rol_dto.nombre,
+                descripcion=rol_dto.descripcion,
+                activo=bool(rol_dto.activo) if rol_dto.activo is not None else True,
+            )
         )
         
         return RespuestaAPIDTO(
@@ -225,7 +228,7 @@ async def actualizar_rol(
     actualizar_dto: RolActualizarDTO,
     usuario_autenticado: dict = Depends(requiere_permiso("roles.editar")),
     es_admin: bool = Depends(es_super_admin),
-    service: RolService = Depends(obtener_rol_service),
+    handlers: IamHandlers = Depends(obtener_iam_handlers),,
 ):
     """
     Actualiza los datos de un rol existente.
@@ -258,12 +261,14 @@ async def actualizar_rol(
         # Si es super admin, obtener sin filtro de empresa para verificar existencia
         rol_empresa_id = None if es_admin else empresa_id
         
-        rol_actualizado = await service.actualizar_rol(
-            rol_id=id,
-            empresa_id=empresa_id,
-            nombre=actualizar_dto.nombre,
-            descripcion=actualizar_dto.descripcion,
-            activo=actualizar_dto.activo,
+        rol_actualizado = await handlers.actualizar_rol.handle(
+            ActualizarRolCommand(
+                rol_id=id,
+                empresa_id=empresa_id,
+                nombre=actualizar_dto.nombre,
+                descripcion=actualizar_dto.descripcion,
+                activo=actualizar_dto.activo,
+            )
         )
         
         return RespuestaAPIDTO(
@@ -305,7 +310,7 @@ async def eliminar_rol(
     id: int,
     usuario_autenticado: dict = Depends(requiere_permiso("roles.eliminar")),
     es_admin: bool = Depends(es_super_admin),
-    service: RolService = Depends(obtener_rol_service),
+    handlers: IamHandlers = Depends(obtener_iam_handlers),,
 ):
     """
     Elimina un rol.
@@ -331,7 +336,7 @@ async def eliminar_rol(
     try:
         empresa_id = usuario_autenticado.get("empresa_id")
         
-        resultado = await service.eliminar_rol(id, empresa_id)
+        resultado = await handlers.eliminar_rol.handle(id, empresa_id)
         
         return RespuestaAPIDTO(
             exito=True,
