@@ -46,10 +46,16 @@ railway run python scripts/apply_railway_migrations.py --diagnose
 | 7 | `09_grant_superadmin_usuario_1.sql` | Superadmin por email (bloques 1–10) |
 | 8 | `12_inventario_operativo.sql` | Stock por zona, movimientos, config bodega, permisos `inventario.*` |
 | 9 | `13_fix_permiso_inventario_codigos.sql` | Desactiva alias `recepcion.*` / `reportes.*` y asegura `inventario.*` |
-| 10 | `14_auth_security.sql` | Seguridad login (intentos fallidos, bloqueos, reset password) |
-| 11 | `17_presentacion_codigo_barras.sql` | Código de barras por presentación (escaneo caja/display) |
-| 12 | `18_serie_producto.sql` | Inventario serializado (`producto.serializado`, `serie_producto`) |
-| 13 | `19_locale_currency.sql` | Locale/timezone/moneda por empresa, catálogo `moneda`, `tipo_cambio_historico` |
+| 10 | `14_auth_security.sql` | Seguridad login (intentos fallidos, bloqueos) |
+| 11 | `15_geografia_chile.sql` | Regiones, ciudades, comunas + FKs en empresa/perfil/bodega |
+| 12 | `16_empresa_campos.sql` | `razon_social`, nombre fantasía, contacto |
+| 13 | `17_presentacion_codigo_barras.sql` | Código de barras por presentación (escaneo caja/display) |
+| 14 | `18_serie_producto.sql` | Inventario serializado (`producto.serializado`, `serie_producto`) |
+| 15 | `19_locale_currency.sql` | Locale/timezone/moneda por empresa, catálogo `moneda`, `tipo_cambio_historico` |
+| 16 | `21_producto_stock_minimo.sql` | Umbral `producto.stock_minimo` |
+| 17 | `23_schema_cleanup.sql` | Elimina notificacion, password_reset, inventario legacy; índice SKU único |
+
+**Manual Railway Query:** pasos sueltos en `mysql-init/railway_14_auth/`, `railway_19_locale/`, `railway_23_cleanup/`.
 
 **No usar** en Railway con datos: `01_setup.sql`, `03_rbac_hierarchy.sql`, `schema_completo.sql` (recrea todo desde cero).
 

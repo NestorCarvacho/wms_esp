@@ -28,5 +28,5 @@ FROM empresa e
 WHERE COALESCE(e.esta_activa, 1) = 1
   AND COALESCE(e.activo, 1) = 1;
 
--- 5) Verificar
-SELECT id, nombre, es_empresa_maestra FROM empresa;
+-- 5) Verificar (solo consola Railway; el script Python omite SELECT)
+-- SELECT id, razon_social, es_empresa_maestra FROM empresa;

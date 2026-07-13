@@ -1,14 +1,3 @@
--- Railway Query: copiar y ejecutar SOLO el CREATE TABLE (sin comentarios).
-
-CREATE TABLE IF NOT EXISTS password_reset_token (
-  id BIGINT AUTO_INCREMENT PRIMARY KEY,
-  usuario_id BIGINT NOT NULL,
-  token_hash VARCHAR(64) NOT NULL,
-  expira_at DATETIME NOT NULL,
-  usado_at DATETIME NULL,
-  creado_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  INDEX idx_password_reset_token_hash (token_hash),
-  INDEX idx_password_reset_usuario (usuario_id),
-  CONSTRAINT fk_password_reset_usuario
-    FOREIGN KEY (usuario_id) REFERENCES usuario(id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+-- Obsoleto: recuperación de contraseña por email fuera de alcance.
+-- Si la tabla existe, eliminarla con mysql-init/railway_23_cleanup/01_drop_password_reset_token.sql
+-- o ejecutar: railway run python scripts/apply_railway_migrations.py --file 23_schema_cleanup.sql

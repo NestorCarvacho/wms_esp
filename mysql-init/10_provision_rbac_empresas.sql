@@ -8,14 +8,10 @@
 -- ============================================================================
 
 -- === BLOQUE 0a: verificar plantilla (debe ser > 0) ===
-SELECT COUNT(*) AS permisos_empresa_1
-FROM permiso
-WHERE empresa_id = 1 AND activo = 1;
+-- SELECT COUNT(*) AS permisos_empresa_1 FROM permiso WHERE empresa_id = 1 AND activo = 1;
 
 -- === BLOQUE 0b: empresas que recibiran la copia ===
-SELECT id, nombre, esta_activa
-FROM empresa
-WHERE id <> 1 AND COALESCE(esta_activa, 1) = 1;
+-- SELECT id, razon_social, esta_activa FROM empresa WHERE id <> 1 AND COALESCE(esta_activa, 1) = 1;
 
 -- === BLOQUE 1: copiar permisos de empresa 1 a cada empresa hija ===
 INSERT INTO permiso (empresa_id, codigo, descripcion, activo)
@@ -54,16 +50,7 @@ INNER JOIN permiso pd ON pd.empresa_id = rd.empresa_id AND pd.codigo = pp.codigo
 WHERE rp.empresa_id = 1 AND rp.activo = 1;
 
 -- === BLOQUE 5: verificar permisos por empresa ===
-SELECT e.id, e.nombre, COUNT(p.id) AS total_permisos
-FROM empresa e
-LEFT JOIN permiso p ON p.empresa_id = e.id AND p.activo = 1
-GROUP BY e.id, e.nombre
-ORDER BY e.id;
+-- SELECT e.id, e.razon_social, COUNT(p.id) AS total_permisos FROM empresa e ...
 
 -- === BLOQUE 6: verificar roles y permisos por rol (opcional) ===
-SELECT e.id AS empresa_id, e.nombre AS empresa, r.nombre AS rol, COUNT(rp.permiso_id) AS permisos_rol
-FROM empresa e
-INNER JOIN rol r ON r.empresa_id = e.id AND r.activo = 1
-LEFT JOIN rol_permiso rp ON rp.rol_id = r.id AND rp.activo = 1
-GROUP BY e.id, e.nombre, r.nombre
-ORDER BY e.id, r.nombre;
+-- SELECT e.id AS empresa_id, e.razon_social AS empresa, r.nombre AS rol ...
