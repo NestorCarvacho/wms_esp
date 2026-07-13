@@ -4,12 +4,12 @@ CRUD con filtrado automático por empresa_id.
 """
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update, and_, func
-from sqlalchemy.orm import selectinload
 from sqlalchemy.exc import SQLAlchemyError
 from datetime import datetime
 from app.infrastructure.models.usuario import Usuario
 from app.core.security import hash_password
 from app.infrastructure.repositories.listado_helpers import aplicar_orden, condicion_buscar, filtro_empresa
+from app.modules.iam.infrastructure.load_options import USUARIO_CON_PERFIL_GEO_LOAD
 
 
 class UsuarioCRUDRepository:
@@ -47,11 +47,7 @@ class UsuarioCRUDRepository:
         """
         try:
             # Construir statement base con carga ansiosa del perfil
-            stmt_base = select(Usuario).options(
-                selectinload(Usuario.perfil),
-                selectinload(Usuario.empresa),
-                selectinload(Usuario.cargo),
-            )
+            stmt_base = select(Usuario).options(*USUARIO_CON_PERFIL_GEO_LOAD)
             
             empresa_cond = filtro_empresa(Usuario, empresa_id, es_super_admin, empresa_id_filtro, empresas_scope_ids)
             if empresa_cond is not None:
@@ -107,11 +103,7 @@ class UsuarioCRUDRepository:
         Obtiene un usuario por ID, filtrando por empresa.
         Si empresa_id es None, obtiene el usuario sin filtrar por empresa (super admin).
         """
-        stmt = select(Usuario).options(
-            selectinload(Usuario.perfil),
-            selectinload(Usuario.empresa),
-            selectinload(Usuario.cargo),
-        ).where(Usuario.id == id)
+        stmt = select(Usuario).options(*USUARIO_CON_PERFIL_GEO_LOAD).where(Usuario.id == id)
         
         # Agregar filtro de empresa si se proporciona
         if empresa_id is not None:
@@ -124,7 +116,7 @@ class UsuarioCRUDRepository:
         """
         Obtiene un usuario por email, filtrando por empresa.
         """
-        stmt = select(Usuario).options(selectinload(Usuario.perfil)).where(
+        stmt = select(Usuario).options(*USUARIO_CON_PERFIL_GEO_LOAD).where(
             Usuario.email == email,
             Usuario.empresa_id == empresa_id
         )

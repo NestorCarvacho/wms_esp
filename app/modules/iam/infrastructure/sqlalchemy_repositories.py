@@ -6,17 +6,13 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from app.infrastructure.models.usuario import Permiso, Rol, RolPermiso, Usuario, UsuarioRol
 from app.modules.iam.domain.entities import UsuarioAuth
+from app.modules.iam.infrastructure.load_options import USUARIO_CON_PERFIL_GEO_LOAD
 from app.modules.iam.infrastructure.orm_mappers import aplicar_auth_a_orm, usuario_auth_desde_orm
 
-_USUARIO_AUTH_LOAD = (
-    selectinload(Usuario.perfil),
-    selectinload(Usuario.empresa),
-    selectinload(Usuario.cargo),
-)
+_USUARIO_AUTH_LOAD = USUARIO_CON_PERFIL_GEO_LOAD
 
 
 class SqlAlchemyUsuarioAuthRepository:

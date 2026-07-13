@@ -3,8 +3,23 @@ from __future__ import annotations
 
 from typing import Any
 
+from sqlalchemy.orm import attributes
+
 from app.shared.formatting import format_empresa_nombre
 from app.modules.iam.domain.entities import PerfilUsuario, Usuario, UsuarioAuth
+
+
+def _relacion_cargada(parent: Any, nombre: str) -> Any | None:
+    if parent is None:
+        return None
+    if nombre in attributes.instance_state(parent).unloaded:
+        return None
+    return getattr(parent, nombre, None)
+
+
+def _nombre_relacion(parent: Any, nombre: str) -> str | None:
+    rel = _relacion_cargada(parent, nombre)
+    return rel.nombre if rel is not None else None
 
 
 def perfil_desde_orm(row: Any) -> PerfilUsuario:
@@ -21,9 +36,9 @@ def perfil_desde_orm(row: Any) -> PerfilUsuario:
         region_id=row.region_id,
         ciudad_id=row.ciudad_id,
         comuna_id=row.comuna_id,
-        region_nombre=row.region.nombre if getattr(row, "region", None) else None,
-        ciudad_nombre=row.ciudad.nombre if getattr(row, "ciudad", None) else None,
-        comuna_nombre=row.comuna.nombre if getattr(row, "comuna", None) else None,
+        region_nombre=_nombre_relacion(row, "region"),
+        ciudad_nombre=_nombre_relacion(row, "ciudad"),
+        comuna_nombre=_nombre_relacion(row, "comuna"),
         pais=row.pais,
         locale_override=getattr(row, "locale_override", None),
         timezone_override=getattr(row, "timezone_override", None),
@@ -33,7 +48,10 @@ def perfil_desde_orm(row: Any) -> PerfilUsuario:
 
 
 def usuario_desde_orm(row: Any) -> Usuario:
-    perfil = perfil_desde_orm(row.perfil) if getattr(row, "perfil", None) else None
+    perfil_orm = _relacion_cargada(row, "perfil")
+    perfil = perfil_desde_orm(perfil_orm) if perfil_orm else None
+    empresa = _relacion_cargada(row, "empresa")
+    cargo = _relacion_cargada(row, "cargo")
     return Usuario(
         id=row.id,
         empresa_id=row.empresa_id,
@@ -43,15 +61,16 @@ def usuario_desde_orm(row: Any) -> Usuario:
         ultimo_login=row.ultimo_login,
         fecha_creacion=row.fecha_creacion,
         fecha_actualizacion=row.fecha_actualizacion,
-        empresa_nombre=format_empresa_nombre(row.empresa) if getattr(row, "empresa", None) else None,
-        cargo_nombre=row.cargo.nombre if getattr(row, "cargo", None) else None,
+        empresa_nombre=format_empresa_nombre(empresa) if empresa else None,
+        cargo_nombre=cargo.nombre if cargo else None,
         perfil=perfil,
     )
 
 
 def usuario_auth_desde_orm(row: Any) -> UsuarioAuth:
-    empresa = getattr(row, "empresa", None)
-    perfil_orm = getattr(row, "perfil", None)
+    empresa = _relacion_cargada(row, "empresa")
+    perfil_orm = _relacion_cargada(row, "perfil")
+    cargo = _relacion_cargada(row, "cargo")
     return UsuarioAuth(
         id=row.id,
         empresa_id=row.empresa_id,
@@ -70,7 +89,7 @@ def usuario_auth_desde_orm(row: Any) -> UsuarioAuth:
         empresa_esta_activa=bool(getattr(empresa, "esta_activa", True)) if empresa else True,
         empresa_activo=bool(getattr(empresa, "activo", True)) if empresa else True,
         empresa_nombre=format_empresa_nombre(empresa) if empresa else None,
-        cargo_nombre=row.cargo.nombre if getattr(row, "cargo", None) else None,
+        cargo_nombre=cargo.nombre if cargo else None,
         empresa_locale=getattr(empresa, "locale", None) or "es-CL",
         empresa_timezone=getattr(empresa, "timezone", None) or "America/Santiago",
         empresa_moneda=getattr(empresa, "moneda_codigo", None) or "CLP",
