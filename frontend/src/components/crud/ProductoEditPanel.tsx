@@ -7,7 +7,7 @@ import { ApiError } from '@/api/client';
 import type { Producto, UnidadMedida } from '@/types/api';
 import { useProductoCatalogOptions } from '@/features/producto/hooks/useProductoCatalogOptions';
 import { useProductoMutations } from '@/features/producto/hooks/useProductoMutations';
-import { formatStockMinimo, parseStockMinimo } from '@/features/producto/lib/stockMinimo';
+import { formatStockMinimo, readStockMinimoInput } from '@/features/producto/lib/stockMinimo';
 import { preserveActivoNumber } from './preserveActivo';
 
 export interface ProductoEditPanelProps {
@@ -49,6 +49,11 @@ export function ProductoEditPanel({ producto, unidades, onSaved }: ProductoEditP
       showNotification({ type: 'error', message: 'Seleccione una unidad de medida válida' });
       return;
     }
+    const stockMinimoResult = readStockMinimoInput(stockMinimo);
+    if (!stockMinimoResult.ok) {
+      showNotification({ type: 'error', message: stockMinimoResult.error });
+      return;
+    }
     try {
       await actualizar.mutateAsync({
         id: producto.id,
@@ -59,7 +64,7 @@ export function ProductoEditPanel({ producto, unidades, onSaved }: ProductoEditP
           tipo_producto_id: tipoProductoId ? Number(tipoProductoId) : null,
           activo: preserveActivoNumber(producto.activo),
           serializado,
-          stock_minimo: parseStockMinimo(stockMinimo),
+          stock_minimo: stockMinimoResult.value,
         },
       });
       showNotification({ type: 'success', message: 'Producto actualizado correctamente' });
@@ -118,6 +123,7 @@ export function ProductoEditPanel({ producto, unidades, onSaved }: ProductoEditP
         label="Stock mínimo (alerta)"
         value={stockMinimo}
         onChange={setStockMinimo}
+        min={0}
         helperText="Opcional. Tras un despacho, se alerta si el stock en la zona origen queda en o bajo este valor."
       />
 

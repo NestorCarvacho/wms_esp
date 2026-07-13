@@ -19,6 +19,23 @@ async def test_crear_producto_nombre_duplicado():
 
 
 @pytest.mark.asyncio
+async def test_crear_producto_stock_minimo_negativo():
+    repo = AsyncMock()
+    repo.obtener_por_nombre.return_value = None
+    handler = CrearProductoHandler(repo)
+    with pytest.raises(ValueError, match="no puede ser negativo"):
+        await handler.handle(
+            CrearProductoCommand(
+                empresa_id=1,
+                nombre="Tornillo",
+                sku="SKU-1",
+                unidad_medida_id=1,
+                stock_minimo=-1,
+            )
+        )
+
+
+@pytest.mark.asyncio
 async def test_crear_producto_ok():
     repo = AsyncMock()
     repo.obtener_por_nombre.return_value = None

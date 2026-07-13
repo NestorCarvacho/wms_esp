@@ -7,7 +7,7 @@ import { ApiError } from '@/api/client';
 import { useEmpresaMaestraCreateForm } from '@/crud/useEmpresaMaestraCreateForm';
 import { useProductoCatalogOptions } from '@/features/producto/hooks/useProductoCatalogOptions';
 import { useProductoMutations } from '@/features/producto/hooks/useProductoMutations';
-import { parseStockMinimo } from '@/features/producto/lib/stockMinimo';
+import { readStockMinimoInput } from '@/features/producto/lib/stockMinimo';
 import { CrudPanelFooter } from './CrudPanelFooter';
 
 export interface ProductoCreatePanelProps {
@@ -51,6 +51,11 @@ export function ProductoCreatePanel({ onSaved }: ProductoCreatePanelProps) {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    const stockMinimoResult = readStockMinimoInput(stockMinimo);
+    if (!stockMinimoResult.ok) {
+      showNotification({ type: 'error', message: stockMinimoResult.error });
+      return;
+    }
     try {
       await crear.mutateAsync({
         nombre: nombre.trim(),
@@ -59,7 +64,7 @@ export function ProductoCreatePanel({ onSaved }: ProductoCreatePanelProps) {
         unidad_medida_id: Number(unidadMedidaId),
         serializado,
         ...(tipoProductoId ? { tipo_producto_id: Number(tipoProductoId) } : {}),
-        ...(parseStockMinimo(stockMinimo) != null ? { stock_minimo: parseStockMinimo(stockMinimo) } : {}),
+        ...(stockMinimoResult.value != null ? { stock_minimo: stockMinimoResult.value } : {}),
         ...(empresaCreate.empresaIdNumber != null ? { empresa_id: empresaCreate.empresaIdNumber } : {}),
       });
       showNotification({ type: 'success', message: 'Producto creado correctamente' });
@@ -129,6 +134,7 @@ export function ProductoCreatePanel({ onSaved }: ProductoCreatePanelProps) {
         label="Stock mínimo (alerta)"
         value={stockMinimo}
         onChange={setStockMinimo}
+        min={0}
         helperText="Opcional. Tras un despacho, se alerta si el stock en la zona origen queda en o bajo este valor."
       />
 

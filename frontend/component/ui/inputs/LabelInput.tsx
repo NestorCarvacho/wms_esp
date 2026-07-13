@@ -34,6 +34,9 @@ interface LabelInputProps {
   labelClassName?: string;
   maxLength?: number;
   minLength?: number;
+  min?: number | string;
+  max?: number | string;
+  step?: number | string;
   pattern?: string;
   'data-testid'?: string;
 }
@@ -66,6 +69,9 @@ export const LabelInput: React.FC<LabelInputProps> = ({
   labelClassName = '',
   maxLength,
   minLength,
+  min,
+  max,
+  step,
   pattern,
   'data-testid': dataTestId,
 }) => {
@@ -92,6 +98,9 @@ export const LabelInput: React.FC<LabelInputProps> = ({
       autoFocus={autoFocus}
       maxLength={maxLength}
       minLength={minLength}
+      min={min}
+      max={max}
+      step={step}
       pattern={pattern}
       onFocus={onFocus}
       onBlur={onBlur}
@@ -114,6 +123,9 @@ export const LabelInput: React.FC<LabelInputProps> = ({
       autoFocus={autoFocus}
       maxLength={maxLength}
       minLength={minLength}
+      min={min}
+      max={max}
+      step={step}
       pattern={pattern}
       onFocus={onFocus}
       onBlur={onBlur}

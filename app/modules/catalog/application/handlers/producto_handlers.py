@@ -11,6 +11,11 @@ from app.modules.catalog.application.producto_mappers import (
 from app.modules.catalog.domain.ports import IProductoRepository
 
 
+def _validar_stock_minimo(stock_minimo: float | None) -> None:
+    if stock_minimo is not None and stock_minimo < 0:
+        raise ValueError("El stock mínimo no puede ser negativo")
+
+
 class ListarProductosQueryHandler:
     def __init__(self, repo: IProductoRepository):
         self.repo = repo
@@ -54,6 +59,8 @@ class CrearProductoHandler:
         if await self.repo.obtener_por_nombre(nombre, cmd.empresa_id):
             raise ValueError(f"Ya existe una producto con el nombre '{nombre}' en esta empresa")
 
+        _validar_stock_minimo(cmd.stock_minimo)
+
         nuevo = await self.repo.crear(
             cmd.empresa_id,
             nombre,
@@ -91,6 +98,9 @@ class ActualizarProductoHandler:
             otro = await self.repo.obtener_por_nombre(nombre, cmd.empresa_id)
             if otro and otro.id != cmd.producto_id:
                 raise ValueError(f"Ya existe una producto con el nombre '{nombre}' en esta empresa")
+
+        if cmd.actualizar_stock_minimo or cmd.stock_minimo is not None:
+            _validar_stock_minimo(cmd.stock_minimo)
 
         activo_efectivo = existente.activo if cmd.activo is None else cmd.activo
         actualizado = await self.repo.actualizar(
