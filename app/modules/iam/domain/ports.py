@@ -117,8 +117,12 @@ class IPermisoCargoRepository(Protocol):
     ) -> list[int]: ...
 
 
-class ITenantAccessValidator(Protocol):
+class ITenantAccessPort(Protocol):
     async def validar_acceso(self, empresa_maestra_id: int, empresa_objetivo_id: int) -> None: ...
+
+
+class ITenantAccessValidator(ITenantAccessPort, Protocol):
+    """Alias de compatibilidad hacia ITenantAccessPort."""
 
 
 class IRolRepository(Protocol):
@@ -174,8 +178,12 @@ class ICargoRepository(Protocol):
     async def eliminar(self, cargo_id: int, empresa_id: int) -> bool: ...
 
 
-class IEmpresaReadRepository(Protocol):
+class IEmpresaLookupPort(Protocol):
     async def obtener_por_id(self, empresa_id: int) -> Any | None: ...
+
+
+class IEmpresaReadRepository(IEmpresaLookupPort, Protocol):
+    """Alias de compatibilidad hacia IEmpresaLookupPort."""
 
 
 class IRbacBootstrapRepository(Protocol):

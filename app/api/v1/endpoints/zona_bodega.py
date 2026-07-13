@@ -5,7 +5,7 @@ from app.bootstrap.warehouse_container import WarehouseHandlers
 from app.modules.warehouse.application.commands import ActualizarZonaBodegaCommand, CrearZonaBodegaCommand
 from app.modules.warehouse.presentation.http.dependencies import obtener_warehouse_handlers
 from app.api.v1.dependencies import requiere_permiso, es_super_admin
-from app.api.v1.empresa_contexto import ContextoEmpresa, kwargs_listado, obtener_contexto_empresa
+from app.api.v1.empresa_contexto import ContextoEmpresa, kwargs_listado, obtener_contexto_empresa, contexto_requiere_permiso
 from app.api.v1.listado_query import orden_listado
 from app.schemas.zona_bodega import ZonaBodegaCrearDTO, ZonaBodegaActualizarDTO, RespuestaAPIDTO
 
@@ -44,15 +44,15 @@ async def listar_zonas_bodega(
 @router.get("/{id}", response_model=RespuestaAPIDTO, status_code=status.HTTP_200_OK)
 async def obtener_zona_bodega(
     id: int,
-    usuario_autenticado: dict = Depends(requiere_permiso("zonas_bodega.leer")),
-    es_admin: bool = Depends(es_super_admin),
+    ctx: ContextoEmpresa = Depends(contexto_requiere_permiso("zonas_bodega.leer")),
     handlers: WarehouseHandlers = Depends(obtener_warehouse_handlers),
 ):
     try:
-        empresa_filtro = None if es_admin else usuario_autenticado.get("empresa_id")
+        empresa_filtro = None if ctx.es_empresa_maestra else ctx.empresa_usuario_id
         datos = await handlers.obtener_zona_bodega.handle(id, empresa_filtro)
-        if not es_admin and datos.get("empresa_id") != usuario_autenticado.get("empresa_id"):
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado")
+        empresa_recurso = datos.get("empresa_id")
+        if empresa_recurso is not None:
+            ctx.verificar_acceso_a_empresa(empresa_recurso, mensaje="Acceso denegado")
         return RespuestaAPIDTO(exito=True, datos=datos, mensaje="Zona de bodega recuperada").dict()
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))

@@ -88,8 +88,7 @@ async def listar_Productos(
 )
 async def obtener_UnidadMedida(
     id: int,
-    usuario_autenticado: dict = Depends(requiere_permiso("unidades_medida.leer")),
-    es_admin: bool = Depends(es_super_admin),
+    ctx: ContextoEmpresa = Depends(contexto_requiere_permiso("unidades_medida.leer")),
     handlers: CatalogHandlers = Depends(obtener_catalog_handlers),
 ):
     """
@@ -109,19 +108,13 @@ async def obtener_UnidadMedida(
     - Requiere autenticación JWT
     """
     try:
-        empresa_id = usuario_autenticado.get("empresa_id")
-        
-        # Si es super admin, obtener sin filtro de empresa
-        unidad_medida_empresa_id = None if es_admin else empresa_id
+        unidad_medida_empresa_id = None if ctx.es_empresa_maestra else ctx.empresa_usuario_id
         unidad_medida = await handlers.obtener_unidad_medida.handle(id, unidad_medida_empresa_id)
-        
-        # Validar permisos si no es super admin
-        if not es_admin and unidad_medida["empresa_id"] != empresa_id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="No tiene permiso para acceder a unidades de medida de otras empresas"
-            )
-        
+        ctx.verificar_acceso_a_empresa(
+            unidad_medida["empresa_id"],
+            mensaje="No tiene permiso para acceder a unidades de medida de otras empresas",
+        )
+
         return RespuestaAPIDTO(
             exito=True,
             datos=unidad_medida,

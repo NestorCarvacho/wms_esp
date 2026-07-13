@@ -1,5 +1,7 @@
 # Plan de corrección — violaciones de arquitectura y code smells
 
+> **Estado (2026-07-13): implementado.** Commits: `55089d7` (refactor principal), `70f26f8` (stock mínimo), pendiente commit de cierre de pendientes.
+
 Basado en el análisis de arquitectura hexagonal modular (ver `CLAUDE.md`). Objetivo: restaurar el aislamiento entre módulos (bounded contexts), reducir servicios sobredimensionados y eliminar duplicación de lógica de autorización.
 
 ## Protocolo de checkpoints
@@ -57,6 +59,8 @@ lint-imports                                                    # sin nuevas vio
 ```
 Criterio de aceptación: `ProductoConsultaService` compila sin importar nada de `inventory` fuera del adaptador nuevo, y `consultar_por_codigo` sigue devolviendo el mismo resultado que antes (validar manualmente con un producto de prueba si no hay test — ver nota de cobertura más abajo).
 
+**Estado: ✅** — `IStockConsultaPort`, adaptador, cableado y `tests/modules/catalog/test_producto_consulta_service.py`.
+
 ### 1.2 `catalog` (domain) → `inventory` (domain)
 - Archivo: `app/modules/catalog/domain/services/presentacion_stock_converter.py` (7 líneas, es solo un re-export: `InventarioPresentacionService = PresentacionConverter`)
 - Import: `from app.modules.inventory.domain.services.presentacion_converter import PresentacionConverter`
@@ -75,6 +79,8 @@ python -m pytest -q                              # suite completa en verde (no s
 lint-imports
 ```
 Criterio de aceptación: `presentacion_stock_converter.py` fue eliminado, o sus consumidores fueron migrados a importar `PresentacionConverter` directamente — en ambos casos, cero referencias a `InventarioPresentacionService` en el repo.
+
+**Estado: ✅** — archivo eliminado; `producto_presentacion_service.py` importa `PresentacionConverter` directamente.
 
 ### 1.3 `inventory` (infra) → `warehouse` (infra)
 - Archivo: `app/modules/inventory/infrastructure/sqlalchemy_repository.py:10`
@@ -101,6 +107,8 @@ lint-imports
 ```
 Criterio de aceptación: si `test_recepcionar_handler.py` no ejercita `bodega_existe`, agregar un test unitario mínimo del adaptador nuevo (mock del puerto, casos existe/no-existe) antes de marcar este paso como completo — no dejarlo sin cobertura.
 
+**Estado: ✅** — `IBodegaExistenciaPort`, adaptador, UoW cableado y `tests/modules/inventory/test_warehouse_bodega_existencia_adapter.py`.
+
 ### 1.4 `iam` (infra) → `tenant` (infra)
 - Archivo: `app/modules/iam/infrastructure/crud_repositories.py:8-9`
 - Imports: `EmpresaCRUDRepository` (tenant) y `TenantAccessAdapter` (tenant)
@@ -124,6 +132,8 @@ lint-imports
 ```
 Criterio de aceptación: login y validación de acceso multi-empresa (empresa maestra accediendo a empresa gestionada) siguen funcionando igual — si no hay test directo de `TenantAccessAdapter`, probar manualmente un login de empresa maestra con `?empresa_id=` antes de cerrar el paso.
 
+**Estado: ✅** — `IEmpresaLookupPort` / `ITenantAccessPort` en `iam/domain/ports.py` (con alias `IEmpresaReadRepository` / `ITenantAccessValidator`), adaptadores en `tenant_adapters.py`, `tests/modules/iam/test_tenant_adapters.py`.
+
 **Cableado común (los 4 casos):** actualizar el `build_*_handlers` correspondiente en `app/bootstrap/` para instanciar el adaptador nuevo (ej. `InventarioStockConsultaAdapter(InventarioCRUDRepository(session))`) e inyectarlo donde antes se pasaba el repo concreto.
 
 **Lint:** configurar `import-linter` (`setup.cfg` o `.importlinter`, verificar cuál usa el proyecto) con un contrato tipo `Layers` o `Independence` que prohíba imports de `domain/`/`infrastructure/` de un módulo hacia otro módulo salvo a través de `domain/ports.py` propio. Esto evita que el problema reaparezca sin depender de revisión manual en PR.
@@ -142,6 +152,8 @@ python -m pytest -q          # suite completa
 cd frontend && npm run build # por si algún tipo compartido de API cambió (poco probable, pero barato de verificar)
 ```
 Solo al llegar aquí en verde se considera cerrada la Sección 1 y se puede pasar a la Sección 2.
+
+**Estado: ✅** — contratos `import-linter` (6 nuevos), `pytest` y `npm run build` en verde.
 
 ---
 
@@ -192,6 +204,8 @@ lint-imports
 ```
 Criterio de aceptación: el test de caracterización pasa sin modificaciones (mismo input, mismo output que antes del split) — si hay que tocar ese test para que pase, es señal de que el split cambió comportamiento, no solo estructura.
 
+**Estado: ✅** — split en `parser` / `validador` / `service`; validador usa `IProductoRepository` (métodos `listar_skus_y_nombres_empresa`, `listar_codigos_barras_empresa`, `mapa_ids_por_skus`); tests de caracterización, parser y validador en verde.
+
 ---
 
 ## 3. Duplicación de autorización en endpoints (prioridad baja)
@@ -211,6 +225,8 @@ python -m pytest -k "producto and (permiso or empresa or 403)" -q   # tests de a
 curl -X GET localhost:8000/api/v1/productos/{id} -H "Authorization: Bearer <token_empresa_B>"  # smoke test manual: 403 esperado al acceder a producto de otra empresa
 ```
 Criterio de aceptación: mismo código de respuesta (403) y mismo mensaje de error que antes del cambio — es un refactor de forma, no de comportamiento.
+
+**Estado: ✅** — `verificar_acceso_a_empresa` en todos los endpoints GET detalle afectados (`productos`, `bodegas`, `roles`, `cargos`, `unidadesMedidas`, `tipos-producto`, `tipos-zona`, `zonas-bodega`); documentado en `CLAUDE.md`; `tests/api/test_empresa_contexto.py`.
 
 ---
 

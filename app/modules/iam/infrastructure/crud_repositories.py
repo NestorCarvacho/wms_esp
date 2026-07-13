@@ -5,6 +5,7 @@ from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.modules.iam.domain.ports import IEmpresaLookupPort, ITenantAccessPort
 from app.modules.iam.infrastructure.tenant_adapters import (
     TenantAccessPortAdapter,
     TenantEmpresaLookupAdapter,
@@ -142,7 +143,7 @@ class SqlAlchemyPermisoCargoRepository:
 
 
 class SqlAlchemyTenantAccessValidator:
-    def __init__(self, tenant_access: TenantAccessPortAdapter):
+    def __init__(self, tenant_access: ITenantAccessPort):
         self._adapter = tenant_access
 
     async def validar_acceso(self, empresa_maestra_id: int, empresa_objetivo_id: int) -> None:
@@ -229,7 +230,7 @@ class SqlAlchemyCargoRepository:
 
 
 class SqlAlchemyEmpresaReadRepository:
-    def __init__(self, empresa_lookup: TenantEmpresaLookupAdapter):
+    def __init__(self, empresa_lookup: IEmpresaLookupPort):
         self._repo = empresa_lookup
 
     async def obtener_por_id(self, empresa_id: int) -> Any | None:

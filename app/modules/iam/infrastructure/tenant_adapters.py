@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from app.modules.iam.domain.ports import IEmpresaLookupPort, ITenantAccessPort
 from app.modules.tenant.infrastructure.empresa_crud import EmpresaCRUDRepository
 from app.modules.tenant.infrastructure.tenant_access_adapter import TenantAccessAdapter
 

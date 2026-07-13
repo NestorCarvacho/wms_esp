@@ -50,15 +50,13 @@ async def listar_tipos_producto(
 @router.get("/{id}", response_model=RespuestaAPIDTO, status_code=status.HTTP_200_OK)
 async def obtener_tipo_producto(
     id: int,
-    usuario_autenticado: dict = Depends(requiere_permiso("tipos_producto.leer")),
-    es_admin: bool = Depends(es_super_admin),
+    ctx: ContextoEmpresa = Depends(contexto_requiere_permiso("tipos_producto.leer")),
     handlers: CatalogHandlers = Depends(obtener_catalog_handlers),
 ):
     try:
-        empresa_id = None if es_admin else usuario_autenticado.get("empresa_id")
+        empresa_id = None if ctx.es_empresa_maestra else ctx.empresa_usuario_id
         datos = await handlers.obtener_tipo_producto.handle(id, empresa_id)
-        if not es_admin and datos["empresa_id"] != usuario_autenticado.get("empresa_id"):
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado")
+        ctx.verificar_acceso_a_empresa(datos["empresa_id"], mensaje="Acceso denegado")
         return RespuestaAPIDTO(exito=True, datos=datos, mensaje="Tipo de producto recuperado").dict()
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))

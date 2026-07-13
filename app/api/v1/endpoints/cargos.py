@@ -89,8 +89,7 @@ async def listar_cargos(
 )
 async def obtener_cargo(
     id: int,
-    usuario_autenticado: dict = Depends(requiere_permiso("cargos.leer")),
-    es_admin: bool = Depends(es_super_admin),
+    ctx: ContextoEmpresa = Depends(contexto_requiere_permiso("cargos.leer")),
     handlers: IamHandlers = Depends(obtener_iam_handlers),
 ):
     """
@@ -110,19 +109,13 @@ async def obtener_cargo(
     - Requiere autenticación JWT
     """
     try:
-        empresa_id = usuario_autenticado.get("empresa_id")
-        
-        # Si es super admin, obtener sin filtro de empresa
-        cargo_empresa_id = None if es_admin else empresa_id
+        cargo_empresa_id = None if ctx.es_empresa_maestra else ctx.empresa_usuario_id
         cargo = await handlers.obtener_cargo.handle(id, cargo_empresa_id)
-        
-        # Validar permisos si no es super admin
-        if not es_admin and cargo["empresa_id"] != empresa_id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="No tiene permiso para acceder a cargos de otras empresas"
-            )
-        
+        ctx.verificar_acceso_a_empresa(
+            cargo["empresa_id"],
+            mensaje="No tiene permiso para acceder a cargos de otras empresas",
+        )
+
         return RespuestaAPIDTO(
             exito=True,
             datos=cargo,

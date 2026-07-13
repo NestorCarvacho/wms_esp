@@ -17,6 +17,7 @@ from app.modules.catalog.infrastructure.producto_importacion_validador import (
 from app.modules.catalog.infrastructure.producto_presentacion_crud import (
     ProductoPresentacionCRUDRepository,
 )
+from app.modules.catalog.infrastructure.producto_repository import SqlAlchemyProductoRepository
 from app.modules.catalog.infrastructure.tipo_producto_crud import TipoProductoCRUDRepository
 from app.modules.catalog.infrastructure.unidad_medida_crud import UnidadMedidaCRUDRepository
 
@@ -25,13 +26,13 @@ class ProductoImportacionService:
     def __init__(self, session: AsyncSession):
         self.session = session
         self.producto_repo = ProductoCRUDRepository(session)
+        self.producto_lectura = SqlAlchemyProductoRepository(session)
         self.presentacion_repo = ProductoPresentacionCRUDRepository(session)
         self.unidad_repo = UnidadMedidaCRUDRepository(session)
         self.tipo_producto_repo = TipoProductoCRUDRepository(session)
         self.parser = ProductoImportacionParser()
         self.validador = ProductoImportacionValidador(
-            session,
-            self.producto_repo,
+            self.producto_lectura,
             self.presentacion_repo,
             self.parser,
         )

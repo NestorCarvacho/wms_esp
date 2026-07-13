@@ -9,11 +9,23 @@ from app.modules.catalog.infrastructure.producto_importacion_validador import (
 
 
 @pytest.mark.asyncio
+async def test_cargar_existentes_delega_en_producto_repo():
+    producto_repo = AsyncMock()
+    producto_repo.listar_skus_y_nombres_empresa.return_value = ({"SKU-1"}, {"Prod"})
+    validador = ProductoImportacionValidador(producto_repo, MagicMock())
+
+    skus, nombres = await validador.cargar_existentes(empresa_id=3)
+
+    assert skus == {"SKU-1"}
+    assert nombres == {"Prod"}
+    producto_repo.listar_skus_y_nombres_empresa.assert_awaited_once_with(3)
+
+
+@pytest.mark.asyncio
 async def test_validar_filas_productos_detecta_sku_duplicado_en_bd():
-    session = AsyncMock()
-    producto_repo = MagicMock()
+    producto_repo = AsyncMock()
     presentacion_repo = MagicMock()
-    validador = ProductoImportacionValidador(session, producto_repo, presentacion_repo)
+    validador = ProductoImportacionValidador(producto_repo, presentacion_repo)
 
     filas = [
         {
@@ -44,10 +56,9 @@ async def test_validar_filas_productos_detecta_sku_duplicado_en_bd():
 
 @pytest.mark.asyncio
 async def test_validar_filas_productos_acepta_fila_valida():
-    session = AsyncMock()
-    producto_repo = MagicMock()
+    producto_repo = AsyncMock()
     presentacion_repo = MagicMock()
-    validador = ProductoImportacionValidador(session, producto_repo, presentacion_repo)
+    validador = ProductoImportacionValidador(producto_repo, presentacion_repo)
 
     filas = [
         {

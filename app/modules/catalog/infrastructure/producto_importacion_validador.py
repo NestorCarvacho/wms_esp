@@ -4,11 +4,7 @@ from __future__ import annotations
 from decimal import Decimal, InvalidOperation
 from typing import Any
 
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.infrastructure.models.usuario import Producto, ProductoPresentacion
-from app.modules.catalog.infrastructure.producto_crud import ProductoCRUDRepository
+from app.modules.catalog.domain.ports import IProductoRepository
 from app.modules.catalog.infrastructure.producto_importacion_parser import ProductoImportacionParser
 from app.modules.catalog.infrastructure.producto_presentacion_crud import (
     ProductoPresentacionCRUDRepository,
@@ -21,44 +17,22 @@ MAX_PRESENTACIONES = 5000
 class ProductoImportacionValidador:
     def __init__(
         self,
-        session: AsyncSession,
-        producto_repo: ProductoCRUDRepository,
+        producto_repo: IProductoRepository,
         presentacion_repo: ProductoPresentacionCRUDRepository,
         parser: ProductoImportacionParser | None = None,
     ):
-        self.session = session
         self.producto_repo = producto_repo
         self.presentacion_repo = presentacion_repo
         self.parser = parser or ProductoImportacionParser()
 
     async def cargar_existentes(self, empresa_id: int) -> tuple[set[str], set[str]]:
-        stmt = select(Producto.sku, Producto.nombre).where(Producto.empresa_id == empresa_id)
-        result = await self.session.execute(stmt)
-        rows = result.all()
-        return {r[0] for r in rows if r[0]}, {r[1] for r in rows if r[1]}
+        return await self.producto_repo.listar_skus_y_nombres_empresa(empresa_id)
 
     async def cargar_barcodes_existentes(self, empresa_id: int) -> set[str]:
-        stmt = (
-            select(ProductoPresentacion.codigo_barras)
-            .join(Producto, ProductoPresentacion.producto_id == Producto.id)
-            .where(
-                Producto.empresa_id == empresa_id,
-                ProductoPresentacion.activo == True,
-                ProductoPresentacion.codigo_barras.isnot(None),
-            )
-        )
-        result = await self.session.execute(stmt)
-        return {r[0] for r in result.all() if r[0]}
+        return await self.producto_repo.listar_codigos_barras_empresa(empresa_id)
 
     async def mapa_skus_empresa(self, empresa_id: int, skus: set[str]) -> dict[str, int]:
-        if not skus:
-            return {}
-        stmt = select(Producto.sku, Producto.id).where(
-            Producto.empresa_id == empresa_id,
-            Producto.sku.in_(list(skus)),
-        )
-        result = await self.session.execute(stmt)
-        return {row[0]: int(row[1]) for row in result.all()}
+        return await self.producto_repo.mapa_ids_por_skus(empresa_id, skus)
 
     def validar_filas_productos(
         self,

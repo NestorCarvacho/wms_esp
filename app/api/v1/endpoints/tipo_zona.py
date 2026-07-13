@@ -5,7 +5,7 @@ from app.bootstrap.warehouse_container import WarehouseHandlers
 from app.modules.warehouse.application.commands import ActualizarTipoZonaCommand, CrearTipoZonaCommand
 from app.modules.warehouse.presentation.http.dependencies import obtener_warehouse_handlers
 from app.api.v1.dependencies import requiere_permiso, es_super_admin
-from app.api.v1.empresa_contexto import ContextoEmpresa, kwargs_listado, obtener_contexto_empresa
+from app.api.v1.empresa_contexto import ContextoEmpresa, kwargs_listado, obtener_contexto_empresa, contexto_requiere_permiso
 from app.api.v1.listado_query import orden_listado
 from app.schemas.tipo_zona import TipoZonaCrearDTO, TipoZonaActualizarDTO, RespuestaAPIDTO
 
@@ -42,15 +42,13 @@ async def listar_tipos_zona(
 @router.get("/{id}", response_model=RespuestaAPIDTO, status_code=status.HTTP_200_OK)
 async def obtener_tipo_zona(
     id: int,
-    usuario_autenticado: dict = Depends(requiere_permiso("tipos_zona.leer")),
-    es_admin: bool = Depends(es_super_admin),
+    ctx: ContextoEmpresa = Depends(contexto_requiere_permiso("tipos_zona.leer")),
     handlers: WarehouseHandlers = Depends(obtener_warehouse_handlers),
 ):
     try:
-        empresa_id = None if es_admin else usuario_autenticado.get("empresa_id")
+        empresa_id = None if ctx.es_empresa_maestra else ctx.empresa_usuario_id
         datos = await handlers.obtener_tipo_zona.handle(id, empresa_id)
-        if not es_admin and datos["empresa_id"] != usuario_autenticado.get("empresa_id"):
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado")
+        ctx.verificar_acceso_a_empresa(datos["empresa_id"], mensaje="Acceso denegado")
         return RespuestaAPIDTO(exito=True, datos=datos, mensaje="Tipo de zona recuperado").dict()
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))

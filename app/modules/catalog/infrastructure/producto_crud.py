@@ -300,3 +300,34 @@ class ProductoCRUDRepository:
         except SQLAlchemyError as e:
             await self.session.rollback()
             raise Exception(f"Error al eliminar producto: {str(e)}")
+
+    async def listar_skus_y_nombres_empresa(self, empresa_id: int) -> tuple[set[str], set[str]]:
+        stmt = select(Producto.sku, Producto.nombre).where(Producto.empresa_id == empresa_id)
+        result = await self.session.execute(stmt)
+        rows = result.all()
+        return {r[0] for r in rows if r[0]}, {r[1] for r in rows if r[1]}
+
+    async def listar_codigos_barras_empresa(self, empresa_id: int) -> set[str]:
+        from app.infrastructure.models.usuario import ProductoPresentacion
+
+        stmt = (
+            select(ProductoPresentacion.codigo_barras)
+            .join(Producto, ProductoPresentacion.producto_id == Producto.id)
+            .where(
+                Producto.empresa_id == empresa_id,
+                ProductoPresentacion.activo == True,
+                ProductoPresentacion.codigo_barras.isnot(None),
+            )
+        )
+        result = await self.session.execute(stmt)
+        return {r[0] for r in result.all() if r[0]}
+
+    async def mapa_ids_por_skus(self, empresa_id: int, skus: set[str]) -> dict[str, int]:
+        if not skus:
+            return {}
+        stmt = select(Producto.sku, Producto.id).where(
+            Producto.empresa_id == empresa_id,
+            Producto.sku.in_(list(skus)),
+        )
+        result = await self.session.execute(stmt)
+        return {row[0]: int(row[1]) for row in result.all()}

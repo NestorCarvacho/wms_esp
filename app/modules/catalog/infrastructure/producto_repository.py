@@ -89,3 +89,12 @@ class SqlAlchemyProductoRepository:
 
     async def eliminar(self, producto_id: int, empresa_id: int) -> bool:
         return await self._repo.eliminar(producto_id, empresa_id)
+
+    async def listar_skus_y_nombres_empresa(self, empresa_id: int) -> tuple[set[str], set[str]]:
+        return await self._repo.listar_skus_y_nombres_empresa(empresa_id)
+
+    async def listar_codigos_barras_empresa(self, empresa_id: int) -> set[str]:
+        return await self._repo.listar_codigos_barras_empresa(empresa_id)
+
+    async def mapa_ids_por_skus(self, empresa_id: int, skus: set[str]) -> dict[str, int]:
+        return await self._repo.mapa_ids_por_skus(empresa_id, skus)
