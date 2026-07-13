@@ -1,6 +1,6 @@
 # Plan de corrección — violaciones de arquitectura y code smells
 
-> **Estado (2026-07-13): implementado.** Commits: `55089d7` (refactor principal), `70f26f8` (stock mínimo), pendiente commit de cierre de pendientes.
+> **Estado (2026-07-13): implementado.** Commits: `55089d7` (refactor principal), `70f26f8` (stock mínimo), `1186c94` (cierre de pendientes).
 
 Basado en el análisis de arquitectura hexagonal modular (ver `CLAUDE.md`). Objetivo: restaurar el aislamiento entre módulos (bounded contexts), reducir servicios sobredimensionados y eliminar duplicación de lógica de autorización.
 
