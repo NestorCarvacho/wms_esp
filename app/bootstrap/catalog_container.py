@@ -6,6 +6,9 @@ from dataclasses import dataclass
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.inventory.infrastructure.inventario_crud import InventarioCRUDRepository
+from app.modules.catalog.infrastructure.inventario_stock_consulta_adapter import (
+    InventarioStockConsultaAdapter,
+)
 from app.modules.catalog.infrastructure.producto_crud import ProductoCRUDRepository
 from app.modules.catalog.infrastructure.producto_presentacion_crud import (
     ProductoPresentacionCRUDRepository,
@@ -83,7 +86,7 @@ def build_catalog_handlers(session: AsyncSession) -> CatalogHandlers:
     consulta_service = ProductoConsultaService(
         ProductoCRUDRepository(session),
         ProductoPresentacionCRUDRepository(session),
-        InventarioCRUDRepository(session),
+        InventarioStockConsultaAdapter(InventarioCRUDRepository(session)),
     )
 
     return CatalogHandlers(

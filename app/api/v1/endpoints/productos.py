@@ -11,7 +11,7 @@ from app.infrastructure.database import get_db_session
 from app.modules.catalog.application.commands import ActualizarProductoCommand, CrearProductoCommand
 from app.modules.catalog.presentation.http.dependencies import obtener_catalog_handlers
 from app.bootstrap.catalog_container import CatalogHandlers
-from app.api.v1.dependencies import obtener_usuario_autenticado, requiere_permiso, es_super_admin
+from app.api.v1.dependencies import obtener_usuario_autenticado, requiere_permiso
 from app.api.v1.empresa_contexto import ContextoEmpresa, kwargs_listado, obtener_contexto_empresa, resolver_empresa_creacion, contexto_requiere_permiso
 from app.api.v1.listado_query import orden_listado
 from app.schemas.producto import (
@@ -213,8 +213,7 @@ async def consultar_producto_por_codigo(
 )
 async def obtener_producto(
     id: int,
-    usuario_autenticado: dict = Depends(requiere_permiso("productos.leer")),
-    es_admin: bool = Depends(es_super_admin),
+    ctx: ContextoEmpresa = Depends(contexto_requiere_permiso("productos.leer")),
     handlers: CatalogHandlers = Depends(obtener_catalog_handlers),
 ):
     """
@@ -234,19 +233,14 @@ async def obtener_producto(
     - Requiere autenticación JWT
     """
     try:
-        empresa_id = usuario_autenticado.get("empresa_id")
-        
-        # Si es super admin, obtener sin filtro de empresa
-        producto_empresa_id = None if es_admin else empresa_id
+        producto_empresa_id = None if ctx.es_empresa_maestra else ctx.empresa_usuario_id
         producto = await handlers.obtener_producto.handle(id, producto_empresa_id)
-        
-        # Validar permisos si no es super admin
-        if not es_admin and producto["empresa_id"] != empresa_id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="No tiene permiso para acceder a productos de otras empresas"
-            )
-        
+
+        ctx.verificar_acceso_a_empresa(
+            producto["empresa_id"],
+            mensaje="No tiene permiso para acceder a productos de otras empresas",
+        )
+
         return RespuestaAPIDTO(
             exito=True,
             datos=producto,
@@ -355,8 +349,7 @@ async def crear_producto(
 async def actualizar_producto(
     id: int,
     actualizar_dto: ProductoActualizarDTO,
-    usuario_autenticado: dict = Depends(requiere_permiso("productos.editar")),
-    es_admin: bool = Depends(es_super_admin),
+    ctx: ContextoEmpresa = Depends(contexto_requiere_permiso("productos.editar")),
     handlers: CatalogHandlers = Depends(obtener_catalog_handlers),
 ):
     """
@@ -387,15 +380,12 @@ async def actualizar_producto(
     - Producto debe existir
     """
     try:
-        empresa_id = usuario_autenticado.get("empresa_id")
-
-        producto_empresa_id = None if es_admin else empresa_id
+        producto_empresa_id = None if ctx.es_empresa_maestra else ctx.empresa_usuario_id
         producto_ref = await handlers.obtener_producto.handle(id, producto_empresa_id)
-        if not es_admin and producto_ref["empresa_id"] != empresa_id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="No tiene permiso para editar productos de otras empresas",
-            )
+        ctx.verificar_acceso_a_empresa(
+            producto_ref["empresa_id"],
+            mensaje="No tiene permiso para editar productos de otras empresas",
+        )
         empresa_id_operacion = producto_ref["empresa_id"]
 
         campos_enviados = getattr(actualizar_dto, "model_fields_set", None) or getattr(
@@ -458,8 +448,7 @@ async def actualizar_producto(
 )
 async def eliminar_producto(
     id: int,
-    usuario_autenticado: dict = Depends(requiere_permiso("productos.eliminar")),
-    es_admin: bool = Depends(es_super_admin),
+    ctx: ContextoEmpresa = Depends(contexto_requiere_permiso("productos.eliminar")),
     handlers: CatalogHandlers = Depends(obtener_catalog_handlers),
 ):
     """
@@ -484,14 +473,12 @@ async def eliminar_producto(
     - Producto debe existir
     """
     try:
-        empresa_id = usuario_autenticado.get("empresa_id")
-        producto_empresa_id = None if es_admin else empresa_id
+        producto_empresa_id = None if ctx.es_empresa_maestra else ctx.empresa_usuario_id
         producto_ref = await handlers.obtener_producto.handle(id, producto_empresa_id)
-        if not es_admin and producto_ref["empresa_id"] != empresa_id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="No tiene permiso para eliminar productos de otras empresas",
-            )
+        ctx.verificar_acceso_a_empresa(
+            producto_ref["empresa_id"],
+            mensaje="No tiene permiso para eliminar productos de otras empresas",
+        )
 
         resultado = await handlers.eliminar_producto.handle(id, producto_ref["empresa_id"])
         

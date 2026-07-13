@@ -133,3 +133,51 @@ forbidden_modules =
     app.api
     app.infrastructure
     sqlalchemy
+
+[importlinter:contract:catalog-no-inventory-domain]
+name = Catalog domain no importa inventory
+type = forbidden
+source_modules =
+    app.modules.catalog.domain
+forbidden_modules =
+    app.modules.inventory
+
+[importlinter:contract:catalog-no-inventory-application]
+name = Catalog application no importa inventory
+type = forbidden
+source_modules =
+    app.modules.catalog.application
+forbidden_modules =
+    app.modules.inventory
+
+[importlinter:contract:inventory-no-warehouse-domain]
+name = Inventory domain no importa warehouse
+type = forbidden
+source_modules =
+    app.modules.inventory.domain
+forbidden_modules =
+    app.modules.warehouse
+
+[importlinter:contract:inventory-no-warehouse-application]
+name = Inventory application no importa warehouse
+type = forbidden
+source_modules =
+    app.modules.inventory.application
+forbidden_modules =
+    app.modules.warehouse
+
+[importlinter:contract:iam-no-tenant-domain]
+name = IAM domain no importa tenant
+type = forbidden
+source_modules =
+    app.modules.iam.domain
+forbidden_modules =
+    app.modules.tenant
+
+[importlinter:contract:iam-no-tenant-application]
+name = IAM application no importa tenant
+type = forbidden
+source_modules =
+    app.modules.iam.application
+forbidden_modules =
+    app.modules.tenant

@@ -5,6 +5,10 @@ from decimal import Decimal
 from typing import Any, Protocol
 
 
+class IBodegaExistenciaPort(Protocol):
+    async def existe(self, bodega_id: int, empresa_id: int) -> bool: ...
+
+
 class IInventarioRepository(Protocol):
     async def obtener_zona(self, zona_id: int, empresa_id: int | None = None) -> Any | None: ...
 

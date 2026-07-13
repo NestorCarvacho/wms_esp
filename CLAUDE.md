@@ -90,6 +90,7 @@ curl http://localhost:8000/health
 ```python
 # app/api/v1/empresa_contexto.py
 ContextoEmpresa          # ctx.empresa_operacion(), ctx.empresas_scope_ids()
+ctx.verificar_acceso_a_empresa(empresa_id_recurso)  # 403 si no es maestra y recurso es de otra empresa
 kwargs_listado(ctx)      # pasa es_super_admin, empresa_id_filtro, empresas_scope_ids
 contexto_requiere_permiso("productos.leer")  # auth + tenant + permiso
 

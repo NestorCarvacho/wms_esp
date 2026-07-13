@@ -5,8 +5,10 @@ from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.modules.tenant.infrastructure.empresa_crud import EmpresaCRUDRepository
-from app.modules.tenant.infrastructure.tenant_access_adapter import TenantAccessAdapter
+from app.modules.iam.infrastructure.tenant_adapters import (
+    TenantAccessPortAdapter,
+    TenantEmpresaLookupAdapter,
+)
 from app.modules.iam.domain.entities import Usuario
 from app.modules.iam.infrastructure.cargo_crud import CargoCRUDRepository
 from app.modules.iam.infrastructure.orm_mappers import usuario_desde_orm
@@ -140,8 +142,8 @@ class SqlAlchemyPermisoCargoRepository:
 
 
 class SqlAlchemyTenantAccessValidator:
-    def __init__(self, session: AsyncSession):
-        self._adapter = TenantAccessAdapter(session)
+    def __init__(self, tenant_access: TenantAccessPortAdapter):
+        self._adapter = tenant_access
 
     async def validar_acceso(self, empresa_maestra_id: int, empresa_objetivo_id: int) -> None:
         await self._adapter.validar_acceso(empresa_maestra_id, empresa_objetivo_id)
@@ -227,8 +229,8 @@ class SqlAlchemyCargoRepository:
 
 
 class SqlAlchemyEmpresaReadRepository:
-    def __init__(self, session: AsyncSession):
-        self._repo = EmpresaCRUDRepository(session)
+    def __init__(self, empresa_lookup: TenantEmpresaLookupAdapter):
+        self._repo = empresa_lookup
 
     async def obtener_por_id(self, empresa_id: int) -> Any | None:
         return await self._repo.obtener_por_id(empresa_id)

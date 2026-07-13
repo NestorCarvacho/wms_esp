@@ -6,7 +6,7 @@ from app.modules.catalog.infrastructure.producto_presentacion_crud import (
 )
 from app.modules.catalog.infrastructure.producto_crud import ProductoCRUDRepository
 from app.modules.catalog.infrastructure.unidad_medida_crud import UnidadMedidaCRUDRepository
-from app.modules.catalog.domain.services.presentacion_stock_converter import InventarioPresentacionService
+from app.modules.inventory.domain.services.presentacion_converter import PresentacionConverter
 
 
 def _serializar_presentacion(p) -> dict:
@@ -36,7 +36,7 @@ class ProductoPresentacionService:
         self.repository = repository
         self.producto_repository = producto_repository
         self.unidad_repository = unidad_repository
-        self.conversion = InventarioPresentacionService()
+        self.conversion = PresentacionConverter()
 
     async def resolver_empresa_para_producto(
         self,

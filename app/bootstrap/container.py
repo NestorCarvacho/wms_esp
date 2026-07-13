@@ -69,6 +69,10 @@ from app.modules.iam.infrastructure.crud_repositories import (
     SqlAlchemyUsuarioCrudRepository,
     SqlAlchemyUsuarioRolRepository,
 )
+from app.modules.iam.infrastructure.tenant_adapters import (
+    TenantAccessPortAdapter,
+    TenantEmpresaLookupAdapter,
+)
 from app.modules.iam.infrastructure.perfil_repository import SqlAlchemyPerfilUsuarioRepository
 from app.modules.iam.infrastructure.sqlalchemy_repositories import (
     SqlAlchemyAutorizacionRepository,
@@ -94,7 +98,7 @@ from app.modules.inventory.application.handlers.serie_handlers import (
 )
 from app.modules.inventory.application.handlers.trasladar_handler import TrasladarHandler
 from app.modules.inventory.domain.services.presentacion_converter import PresentacionConverter
-from app.modules.inventory.infrastructure.sqlalchemy_repository import SqlAlchemyInventarioRepository
+from app.modules.inventory.infrastructure.unit_of_work import _crear_inventario_repository
 from app.modules.inventory.infrastructure.serie_producto_service import SerieProductoService
 from app.modules.inventory.infrastructure.unit_of_work import SqlAlchemyInventoryUnitOfWork
 from app.modules.inventory.infrastructure.inventario_crud import InventarioCRUDRepository
@@ -152,8 +156,8 @@ def build_iam_handlers(session: AsyncSession) -> IamHandlers:
     rol = SqlAlchemyRolRepository(session)
     cargo = SqlAlchemyCargoRepository(session)
     bootstrap = SqlAlchemyRbacBootstrapRepository(session)
-    empresas = SqlAlchemyEmpresaReadRepository(session)
-    tenant = SqlAlchemyTenantAccessValidator(session)
+    empresas = SqlAlchemyEmpresaReadRepository(TenantEmpresaLookupAdapter(session))
+    tenant = SqlAlchemyTenantAccessValidator(TenantAccessPortAdapter(session))
     autorizacion = SqlAlchemyAutorizacionRepository(session)
     token_issuer = JwtTokenIssuer()
     password_hasher = BcryptPasswordHasher()
@@ -221,7 +225,7 @@ class InventoryHandlers:
 def build_inventory_handlers(session: AsyncSession) -> InventoryHandlers:
     """Factory por request (scoped a la sesión DB)."""
     uow = SqlAlchemyInventoryUnitOfWork(session)
-    repo = SqlAlchemyInventarioRepository(session)
+    repo = _crear_inventario_repository(session)
     conversion = PresentacionConverter()
     series = SerieProductoService(
         SerieProductoCRUDRepository(session),

@@ -152,3 +152,9 @@ class IProductoConsultaService(Protocol):
     async def consultar_por_codigo(
         self, codigo: str, empresas_ids: list[int]
     ) -> dict[str, Any]: ...
+
+
+class IStockConsultaPort(Protocol):
+    async def listar_stock_producto(
+        self, empresa_id: int, producto_id: int
+    ) -> list[dict[str, Any]]: ...

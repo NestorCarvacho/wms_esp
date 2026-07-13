@@ -32,6 +32,18 @@ class ContextoEmpresa:
             return None
         return self.empresas_administradas_ids
 
+    def verificar_acceso_a_empresa(
+        self,
+        empresa_id_recurso: int,
+        mensaje: str = "No tiene permiso para acceder a recursos de otras empresas",
+    ) -> None:
+        """Lanza 403 si el usuario no es empresa maestra y el recurso es de otra empresa."""
+        if not self.es_empresa_maestra and empresa_id_recurso != self.empresa_usuario_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=mensaje,
+            )
+
 
 def kwargs_listado(ctx: ContextoEmpresa) -> dict:
     """Parámetros comunes para servicios de listado."""

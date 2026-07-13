@@ -6,9 +6,9 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
+from app.modules.catalog.domain.ports import IStockConsultaPort
 from app.modules.catalog.infrastructure.producto_presentacion_service import _serializar_presentacion
 from app.infrastructure.models.usuario import Producto, SerieProducto
-from app.modules.inventory.infrastructure.inventario_crud import InventarioCRUDRepository
 from app.modules.catalog.infrastructure.producto_crud import ProductoCRUDRepository
 from app.modules.catalog.infrastructure.producto_presentacion_crud import (
     ProductoPresentacionCRUDRepository,
@@ -21,7 +21,7 @@ class ProductoConsultaService:
         self,
         producto_repo: ProductoCRUDRepository,
         presentacion_repo: ProductoPresentacionCRUDRepository,
-        inventario_repo: InventarioCRUDRepository,
+        inventario_repo: IStockConsultaPort,
     ):
         self.producto_repo = producto_repo
         self.presentacion_repo = presentacion_repo
@@ -80,12 +80,9 @@ class ProductoConsultaService:
         )
         presentaciones = [_serializar_presentacion(p) for p in presentaciones_data[0]]
 
-        stock_items, _ = await self.inventario_repo.listar_stock(
+        stock_items = await self.inventario_repo.listar_stock_producto(
             empresa_id=empresa_id,
             producto_id=producto.id,
-            pagina=1,
-            por_pagina=500,
-            es_super_admin=False,
         )
         stock_total = sum(float(s["cantidad"]) for s in stock_items)
 

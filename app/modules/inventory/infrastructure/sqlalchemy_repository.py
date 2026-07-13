@@ -6,17 +6,21 @@ from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.modules.inventory.domain.ports import IBodegaExistenciaPort
 from app.modules.inventory.infrastructure.inventario_crud import InventarioCRUDRepository
-from app.modules.warehouse.infrastructure.bodega_crud import BodegaCRUDRepository
 
 
 class SqlAlchemyInventarioRepository:
     """Wrapper del repositorio legacy hacia el puerto del módulo."""
 
-    def __init__(self, session: AsyncSession):
+    def __init__(
+        self,
+        session: AsyncSession,
+        bodega_existencia: IBodegaExistenciaPort | None = None,
+    ):
         self._session = session
         self._crud = InventarioCRUDRepository(session)
-        self._bodega = BodegaCRUDRepository(session)
+        self._bodega_existencia = bodega_existencia
 
     async def obtener_zona(self, zona_id: int, empresa_id: int | None = None) -> Any | None:
         return await self._crud.obtener_zona(zona_id, empresa_id)
@@ -30,8 +34,9 @@ class SqlAlchemyInventarioRepository:
         return await self._crud.obtener_presentacion(presentacion_id, producto_id)
 
     async def bodega_existe(self, bodega_id: int, empresa_id: int) -> bool:
-        bodega = await self._bodega.obtener_por_id(bodega_id, empresa_id)
-        return bodega is not None
+        if self._bodega_existencia is None:
+            raise RuntimeError("IBodegaExistenciaPort no configurado")
+        return await self._bodega_existencia.existe(bodega_id, empresa_id)
 
     async def get_bodega_config(self, bodega_id: int) -> Any | None:
         return await self._crud.get_bodega_config(bodega_id)
