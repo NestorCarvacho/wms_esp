@@ -1,0 +1,290 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Khepri Design System Mockup</title>
+<style>
+:root{
+ --primary:#2563EB;
+ --secondary:#06B6D4;
+ --accent:#8B5CF6;
+ --success:#10B981;
+ --warning:#F59E0B;
+ --danger:#EF4444;
+
+ --bg:#F8FAFC;
+ --surface:#FFFFFF;
+ --surface2:#F1F5F9;
+ --border:#E2E8F0;
+ --text:#0F172A;
+ --muted:#64748B;
+}
+
+.dark{
+ --bg:#0B1220;
+ --surface:#111827;
+ --surface2:#1E293B;
+ --border:#334155;
+ --text:#F8FAFC;
+ --muted:#CBD5E1;
+}
+
+*{box-sizing:border-box}
+body{
+ margin:0;
+ font-family:Inter,Segoe UI,Arial,sans-serif;
+ background:var(--bg);
+ color:var(--text);
+}
+.demo{
+ display:grid;
+ grid-template-columns:260px 1fr;
+ height:100vh;
+ border-bottom:40px solid transparent;
+}
+.sidebar{
+ background:var(--surface);
+ border-right:1px solid var(--border);
+ padding:20px;
+}
+.logo{
+ font-size:24px;
+ font-weight:700;
+ color:var(--primary);
+ margin-bottom:25px;
+}
+.menu div{
+ padding:12px 14px;
+ border-radius:10px;
+ margin-bottom:8px;
+ color:var(--muted);
+}
+.menu .active{
+ background:rgba(37,99,235,.12);
+ color:var(--primary);
+ font-weight:600;
+}
+.content{
+ display:flex;
+ flex-direction:column;
+}
+.navbar{
+ height:70px;
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+ padding:0 24px;
+ background:var(--surface);
+ border-bottom:1px solid var(--border);
+}
+.search{
+ background:var(--surface2);
+ border:1px solid var(--border);
+ padding:10px 14px;
+ border-radius:10px;
+ width:320px;
+ color:var(--muted);
+}
+.main{padding:24px}
+.cards{
+ display:grid;
+ grid-template-columns:repeat(4,1fr);
+ gap:18px;
+}
+.card{
+ background:var(--surface);
+ border:1px solid var(--border);
+ border-radius:16px;
+ padding:18px;
+}
+.kpi{font-size:30px;font-weight:700;margin:10px 0}
+.table{
+ margin-top:24px;
+ background:var(--surface);
+ border:1px solid var(--border);
+ border-radius:16px;
+ overflow:hidden;
+}
+table{width:100%;border-collapse:collapse}
+th,td{padding:14px;border-bottom:1px solid var(--border);text-align:left}
+th{background:var(--surface2)}
+.badge{
+ padding:5px 10px;
+ border-radius:999px;
+ font-size:12px;
+ font-weight:600;
+}
+.success{background:#DCFCE7;color:#166534}
+.warning{background:#FEF3C7;color:#92400E}
+.danger{background:#FEE2E2;color:#B91C1C}
+.buttons{margin-top:24px;display:flex;gap:10px;flex-wrap:wrap}
+button{
+ border:none;
+ border-radius:10px;
+ padding:11px 18px;
+ color:#fff;
+ cursor:pointer;
+ font-weight:600;
+}
+.p{background:var(--primary)}
+.s{background:var(--secondary)}
+.a{background:var(--accent)}
+.g{background:var(--success)}
+.w{background:var(--warning)}
+.d{background:var(--danger)}
+.out{
+ background:transparent;
+ color:var(--text);
+ border:1px solid var(--border);
+}
+.footer{
+ margin-top:24px;
+ display:grid;
+ grid-template-columns:1fr 1fr;
+ gap:18px;
+}
+.alert{
+ padding:16px;
+ border-left:5px solid var(--primary);
+ background:var(--surface);
+ border-radius:12px;
+}
+.palette{
+ display:grid;
+ grid-template-columns:repeat(6,1fr);
+ gap:10px;
+ margin-top:15px;
+}
+.swatch{
+ height:70px;
+ border-radius:10px;
+ color:#fff;
+ display:flex;
+ align-items:end;
+ justify-content:center;
+ padding:8px;
+ font-size:12px;
+}
+</style>
+</head>
+<body>
+
+<div class="demo">
+
+<aside class="sidebar">
+<div class="logo">Khepri</div>
+<div class="menu">
+<div class="active">Dashboard</div>
+<div>Inventario</div>
+<div>Logística</div>
+<div>Compras</div>
+<div>Ventas</div>
+<div>RRHH</div>
+<div>Reportes</div>
+<div>Configuración</div>
+</div>
+</aside>
+
+<section class="content">
+
+<div class="navbar">
+<h3>Warehouse Management System</h3>
+<div class="search">Buscar productos...</div>
+</div>
+
+<div class="main">
+
+<h2>Dashboard</h2>
+
+<div class="cards">
+<div class="card"><small>Inventario</small><div class="kpi">12.450</div></div>
+<div class="card"><small>Pedidos</small><div class="kpi">182</div></div>
+<div class="card"><small>Ventas</small><div class="kpi">$48.200</div></div>
+<div class="card"><small>Alertas</small><div class="kpi">8</div></div>
+</div>
+
+<div class="buttons">
+<button class="p">Nuevo Producto</button>
+<button class="s">Sincronizar</button>
+<button class="a">IA</button>
+<button class="g">Guardar</button>
+<button class="w">Pendiente</button>
+<button class="d">Eliminar</button>
+<button class="out">Cancelar</button>
+</div>
+
+<div class="table">
+<table>
+<tr>
+<th>SKU</th>
+<th>Producto</th>
+<th>Stock</th>
+<th>Estado</th>
+</tr>
+
+<tr>
+<td>PRD-001</td>
+<td>Monitor 27"</td>
+<td>58</td>
+<td><span class="badge success">Disponible</span></td>
+</tr>
+
+<tr>
+<td>PRD-002</td>
+<td>Scanner Zebra</td>
+<td>6</td>
+<td><span class="badge warning">Bajo</span></td>
+</tr>
+
+<tr>
+<td>PRD-003</td>
+<td>Notebook</td>
+<td>0</td>
+<td><span class="badge danger">Agotado</span></td>
+</tr>
+</table>
+</div>
+
+<div class="footer">
+
+<div class="card">
+<h3>Paleta</h3>
+
+<div class="palette">
+<div class="swatch" style="background:#2563EB">Primary</div>
+<div class="swatch" style="background:#06B6D4">Cyan</div>
+<div class="swatch" style="background:#8B5CF6">Purple</div>
+<div class="swatch" style="background:#10B981">Success</div>
+<div class="swatch" style="background:#F59E0B">Warning</div>
+<div class="swatch" style="background:#EF4444">Danger</div>
+</div>
+
+</div>
+
+<div class="alert">
+<b>Design System</b><br><br>
+La misma estructura y componentes se utilizan para el tema claro y el oscuro. Solo cambian las variables CSS (tokens).
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+</div>
+
+<hr>
+
+<body class="dark"></body>
+
+<script>
+document.body.insertAdjacentHTML("beforeend",
+document.querySelector(".demo").outerHTML);
+document.querySelectorAll(".demo")[1].classList.add("dark");
+</script>
+
+</body>
+</html>

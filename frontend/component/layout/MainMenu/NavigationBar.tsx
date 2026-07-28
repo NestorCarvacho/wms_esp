@@ -104,8 +104,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
   return (
     <div
       className={cn(
-        'desktop-options-bar border-t border-slate-200 bg-slate-50',
-        'dark:border-slate-800 dark:bg-slate-800/50',
+        'desktop-options-bar border-t border-border bg-muted',
       )}
     >
       <div className="max-w-full px-4">
@@ -134,7 +133,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
                 onClose={handleConfigMenuLeave}
                 clearTimer={clearConfigTimer}
                 icon={
-                  <span className="inline-flex items-center gap-0.5 text-slate-700 dark:text-slate-200">
+                  <span className="inline-flex items-center gap-0.5 text-muted-foreground">
                     <Settings className="h-4 w-4" />
                     <ChevronDown className="h-4 w-4" />
                   </span>

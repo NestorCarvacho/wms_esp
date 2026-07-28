@@ -18,6 +18,7 @@ import { appPath } from '@/routes/paths';
 import { LandingPage } from '@/pages/LandingPage';
 import { LoginPage } from '@/pages/LoginPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
+import { HomePage } from '@/pages/HomePage';
 
 import { ProductosPage } from '@/pages/ProductosPage';
 import { ConsultaProductoPage } from '@/pages/ConsultaProductoPage';
@@ -81,7 +82,7 @@ export default function App() {
             }
           >
 
-            <Route index element={<Navigate to={appPath('/productos')} replace />} />
+            <Route index element={<HomePage />} />
 
             <Route path="productos" element={guarded(appPath('/productos'), <ProductosPage />)} />
             <Route path="productos/consulta" element={guarded(appPath('/productos/consulta'), <ConsultaProductoPage />)} />

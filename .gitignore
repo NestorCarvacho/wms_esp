@@ -34,3 +34,8 @@ frontend/@/
 #docs/
 #docs/documentacion ejemplo/
 #docs/proyecto/
+*.dist-info
+dist-info/
+# Dumps locales Railway (no commitear)
+.local-dumps/
+

@@ -51,7 +51,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
       </div>
 
       <div className="my-4 md:my-6 px-4 md:px-8 lg:px-16">
-        <Card elevation={2} padding="" className="p-4 md:p-6 lg:p-8">
+        <Card elevation={1} padding="" className="p-4 md:p-6 lg:p-8">
           {children}
         </Card>
       </div>

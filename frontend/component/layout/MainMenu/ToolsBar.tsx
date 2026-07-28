@@ -35,7 +35,7 @@ const ToolsBar: React.FC<ToolsBarProps> = ({
   navigate,
   userName = 'Usuario',
 }) => (
-  <div className="max-w-full px-4">
+  <div className="max-w-full bg-card px-4">
     <div className="flex items-center justify-between top-nav-height gap-3">
       <div className="flex items-center gap-3 shrink-0">
         <NavIcon
@@ -45,13 +45,13 @@ const ToolsBar: React.FC<ToolsBarProps> = ({
         />
 
         <div
-          className="hidden lg:block w-px h-6 bg-slate-300 dark:bg-slate-700"
+          className="hidden lg:block w-px h-6 bg-border"
           aria-hidden
         />
 
         <Link to={appPath()} className="flex items-center gap-2 hover:opacity-90 transition-opacity">
           <LogoWms variant="solo" className="h-7 w-auto" alt={APP_NAME} />
-          <span className="hidden sm:block text-sm font-semibold text-slate-900 dark:text-white">
+          <span className="hidden sm:block text-sm font-semibold text-foreground">
             {APP_NAME}
           </span>
         </Link>
@@ -66,11 +66,10 @@ const ToolsBar: React.FC<ToolsBarProps> = ({
           <button
             type="button"
             className={cn(
-              'inline-flex items-center justify-center gap-1 rounded-lg p-2 transition-colors',
-              'text-slate-700 hover:bg-slate-100 hover:text-slate-900',
-              'dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-white',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400',
-              'focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-900',
+              'inline-flex items-center justify-center gap-1 rounded-[10px] p-2 transition-colors',
+              'text-muted-foreground hover:bg-muted hover:text-foreground',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+              'focus-visible:ring-offset-2 focus-visible:ring-offset-background',
             )}
             data-testid="user-menu-trigger"
           >

@@ -6,7 +6,8 @@ import { cn } from '@/lib/utils';
 type ButtonVariant = 'primary' | 'outline' | 'ghost';
 type ButtonSize = 'sm' | 'md' | 'lg';
 type TextAlign = 'left' | 'center' | 'right';
-type ButtonColor = 'primary' | 'alert' | 'error' | 'important' | 'success';
+/** Roles de color Khepri (mockup docs/index.html). */
+type ButtonColor = 'primary' | 'alert' | 'error' | 'important' | 'success' | 'secondary' | 'accent';
 
 interface PrimaryButtonProps {
   children: React.ReactNode;
@@ -30,11 +31,13 @@ interface PrimaryButtonProps {
 }
 
 function mapVariant(variant: ButtonVariant, color: ButtonColor): ButtonProps['variant'] {
-  if (color === 'error') return 'destructive';
-  if (color === 'success') return 'success';
   if (variant === 'outline') return 'outline';
   if (variant === 'ghost') return 'ghost';
-  if (color === 'alert') return 'secondary';
+  if (color === 'error') return 'destructive';
+  if (color === 'success') return 'success';
+  if (color === 'alert') return 'warning';
+  if (color === 'important' || color === 'accent') return 'accent';
+  if (color === 'secondary') return 'secondary';
   return 'default';
 }
 
@@ -71,7 +74,7 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
       variant={mapVariant(variant, colorVariant)}
       size={mapSize(size)}
       data-testid={dataTestId}
-      className={cn('rounded-full font-medium', fullWidth && 'w-full', alignClass, className)}
+      className={cn(fullWidth && 'w-full', alignClass, className)}
     >
       {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : iconLeft}
       {children}

@@ -17,9 +17,9 @@ interface CardProps {
 }
 
 const elevationClass: Record<CardElevation, string> = {
-  1: 'shadow-sm',
-  2: 'shadow-md',
-  3: 'shadow-lg',
+  1: 'shadow-none',
+  2: 'shadow-sm',
+  3: 'shadow-md',
 };
 
 export const Card: React.FC<CardProps> = ({

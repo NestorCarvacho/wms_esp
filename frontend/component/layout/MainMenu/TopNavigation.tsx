@@ -32,8 +32,8 @@ const TopNavigation: React.FC = () => {
     <header
       className={cn(
         'fixed top-0 left-0 right-0 z-50',
-        'bg-white text-slate-900 shadow-md border-b border-slate-200',
-        'dark:bg-slate-900 dark:text-slate-100 dark:border-slate-800',
+        'bg-card text-foreground border-b border-border',
+        'isolate',
       )}
       data-testid="top-navigation"
     >

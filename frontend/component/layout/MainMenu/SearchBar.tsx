@@ -47,7 +47,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
       <div className="desktop-search-bar relative flex-1 max-w-[360px] mx-4 lg:mx-8">
         <div className="relative">
           <Search
-            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
             aria-hidden
           />
           <input
@@ -67,20 +67,16 @@ const SearchBar: React.FC<SearchBarProps> = ({
               }
             }}
             className={cn(
-              'h-9 w-full rounded-lg border pl-10 pr-3 text-sm',
-              'border-slate-200 bg-slate-100 text-slate-900 placeholder:text-slate-500',
-              'focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-400',
-              'dark:border-0 dark:bg-slate-800/80 dark:text-white dark:placeholder:text-slate-400',
-              'dark:focus:bg-slate-800 dark:focus:ring-slate-500',
+              'h-9 w-full rounded-[10px] border border-border bg-muted pl-10 pr-3 text-sm',
+              'text-foreground placeholder:text-muted-foreground',
+              'focus:bg-card focus:outline-none focus:ring-2 focus:ring-ring/40',
             )}
             data-testid="desktop-selector"
           />
           {open && filtered.length > 0 && (
             <ul
               className={cn(
-                'absolute left-0 right-0 top-full z-50 mt-1 max-h-64 overflow-auto rounded-lg border py-1 shadow-lg',
-                'border-slate-200 bg-white',
-                'dark:border-slate-700 dark:bg-slate-800',
+                'absolute left-0 right-0 top-full z-50 mt-1 max-h-64 overflow-auto rounded-[10px] border border-border bg-card py-1 shadow-lg',
               )}
               role="listbox"
             >
@@ -89,8 +85,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
                   <button
                     type="button"
                     className={cn(
-                      'w-full px-3 py-2 text-left text-sm',
-                      'text-slate-800 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-700',
+                      'w-full px-3 py-2 text-left text-sm text-foreground hover:bg-muted',
                     )}
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={() => handleSelect(opt.value)}
@@ -109,7 +104,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   return (
     <div className="relative w-full">
       <Search
-        className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+        className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
         aria-hidden
       />
       <input
@@ -129,19 +124,16 @@ const SearchBar: React.FC<SearchBarProps> = ({
           }
         }}
         className={cn(
-          'h-9 w-full rounded-lg border pl-10 pr-3 text-sm',
-          'border-slate-200 bg-slate-100 text-slate-900 placeholder:text-slate-500',
-          'focus:outline-none focus:ring-2 focus:ring-slate-400',
-          'dark:border-slate-700 dark:bg-slate-800/50 dark:text-white dark:placeholder:text-slate-500',
-          'dark:focus:ring-slate-600',
+          'h-9 w-full rounded-[10px] border border-border bg-muted pl-10 pr-3 text-sm',
+          'text-foreground placeholder:text-muted-foreground',
+          'focus:outline-none focus:ring-2 focus:ring-ring/40',
         )}
         data-testid="sidebar-selector"
       />
       {open && filtered.length > 0 && (
         <ul
           className={cn(
-            'absolute left-0 right-0 top-full z-50 mt-1 max-h-48 overflow-auto rounded-lg border py-1 shadow-lg',
-            'border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800',
+            'absolute left-0 right-0 top-full z-50 mt-1 max-h-48 overflow-auto rounded-[10px] border border-border bg-card py-1 shadow-lg',
           )}
         >
           {filtered.map((opt) => (
@@ -149,8 +141,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
               <button
                 type="button"
                 className={cn(
-                  'w-full px-3 py-2 text-left text-sm',
-                  'text-slate-800 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-700',
+                  'w-full px-3 py-2 text-left text-sm text-foreground hover:bg-muted',
                 )}
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => handleSelect(opt.value)}
