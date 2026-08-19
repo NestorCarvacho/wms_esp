@@ -1,8 +1,7 @@
 import { APP_NAME, APP_TAGLINE } from '@/config/appBrand';
 
 export const SITE_URL = import.meta.env.VITE_SITE_URL ?? 'https://kheprisoftware.com';
-export const CONTACT_EMAIL = 'contacto@kheprisoftware.com';
-export const WHATSAPP_URL = 'https://wa.me/56900000000?text=Hola%2C%20quiero%20informaci%C3%B3n%20sobre%20Khepri%20WMS';
+export const CONTACT_EMAIL = 'nestor.carvacho@gmail.com';
 
 export interface SeoMeta {
   path: string;

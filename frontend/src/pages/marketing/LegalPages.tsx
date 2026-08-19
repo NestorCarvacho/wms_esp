@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { MarketingLayout } from '@/components/marketing/MarketingLayout';
 import { Card } from '@/components/ui/cards';
 import { SEO_ROUTES } from '@/config/seo';
+import { CONTACT_EMAIL } from '@/config/seo';
 import { APP_NAME, APP_TAGLINE } from '@/config/appBrand';
 import { PATHS } from '@/routes/paths';
 
@@ -74,8 +75,8 @@ export function PrivacidadPage() {
           <h2 className="text-lg font-semibold text-foreground">Contacto</h2>
           <p>
             Para ejercer derechos de acceso, rectificación o eliminación:{' '}
-            <a href="mailto:contacto@kheprisoftware.com" className="text-emerald-600">
-              contacto@kheprisoftware.com
+            <a href={`mailto:${CONTACT_EMAIL}`} className="text-emerald-600">
+              {CONTACT_EMAIL}
             </a>
           </p>
         </section>
@@ -108,7 +109,7 @@ export function TerminosPage() {
           <h2 className="text-lg font-semibold text-foreground">Propiedad de los datos</h2>
           <p>Los datos de inventario y catálogo son de tu empresa. Puedes exportarlos según las funciones del sistema.</p>
           <h2 className="text-lg font-semibold text-foreground">Contacto</h2>
-          <p>contacto@kheprisoftware.com</p>
+          <p>{CONTACT_EMAIL}</p>
         </section>
       </article>
     </MarketingLayout>

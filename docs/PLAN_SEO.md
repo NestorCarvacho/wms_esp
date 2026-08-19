@@ -399,4 +399,4 @@ Sitemap: https://kheprisoftware.com/sitemap.xml
 | 3 — Contenido | ✅ | 4 pilares + blog (6 artículos) |
 | 4 — Confianza | ✅ | `/nosotros`, testimonios, `/privacidad`, `/terminos` |
 
-**Pendiente manual:** registrar dominio en Google Search Console, configurar `VITE_GA_MEASUREMENT_ID` y actualizar número WhatsApp en `seo.ts`.
+**Pendiente manual:** registrar dominio en Google Search Console y configurar `VITE_GA_MEASUREMENT_ID`. Contacto: `nestor.carvacho@gmail.com`.

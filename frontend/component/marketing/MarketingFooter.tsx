@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { LogoWms } from '@/components/ui/images';
 import { APP_NAME, APP_TAGLINE } from '@/config/appBrand';
-import { CONTACT_EMAIL, WHATSAPP_URL } from '@/config/seo';
+import { CONTACT_EMAIL } from '@/config/seo';
 import { PATHS } from '@/routes/paths';
 
 const FOOTER_SECTIONS = [
@@ -51,14 +51,6 @@ export function MarketingFooter() {
                 {CONTACT_EMAIL}
               </a>
             </p>
-            <a
-              href={WHATSAPP_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-1 inline-block text-sm text-emerald-600 hover:underline dark:text-emerald-400"
-            >
-              WhatsApp
-            </a>
           </div>
 
           {FOOTER_SECTIONS.map((section) => (
