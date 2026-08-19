@@ -8,6 +8,8 @@ import { LocaleProvider } from '@/context/LocaleContext';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { UIProvider } from '@/context/UIContext';
 import { registerCrudPanels } from './components/crud/registerCrudPanels';
+import { registerAuthPanels } from '@/components/auth/registerAuthPanels';
+import { LoginPanelHost } from '@/components/auth/LoginPanelHost';
 
 import MainLayout from '@/components/layout/MainLayout';
 
@@ -61,6 +63,7 @@ import { ModalContainer } from '@/components/layout/ModalContainer';
 import { TooltipProvider } from '@/components/ui/shadcn/tooltip';
 
 registerCrudPanels();
+registerAuthPanels();
 
 function LegacyInventarioRedirect() {
   const { pathname } = useLocation();
@@ -84,6 +87,8 @@ export default function App() {
         <TooltipProvider delayDuration={200} skipDelayDuration={0}>
         <HelmetProvider>
         <BrowserRouter>
+
+        <LoginPanelHost />
 
         <Routes>
 

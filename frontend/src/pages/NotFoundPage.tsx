@@ -24,7 +24,7 @@ export function NotFoundPage() {
               Ir al inicio
             </PrimaryButton>
           </Link>
-          <Link to={PATHS.login}>
+          <Link to={`${PATHS.landing}?login=1`}>
             <PrimaryButton type="button" fullWidth>
               Iniciar sesión
             </PrimaryButton>

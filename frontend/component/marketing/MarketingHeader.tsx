@@ -4,6 +4,7 @@ import { LogoWms } from '@/components/ui/images';
 import { PrimaryButton } from '@/components/ui/buttons';
 import { APP_NAME } from '@/config/appBrand';
 import { PATHS } from '@/routes/paths';
+import { useLoginPanel } from '@/hooks/useLoginPanel';
 
 const NAV_LINKS = [
   { label: 'Software bodega', to: PATHS.softwareBodega },
@@ -15,6 +16,8 @@ const NAV_LINKS = [
 ] as const;
 
 export function MarketingHeader() {
+  const openLoginPanel = useLoginPanel();
+
   return (
     <header className="sticky top-0 z-20 border-b border-border/50 bg-background/85 backdrop-blur-md">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
@@ -35,12 +38,10 @@ export function MarketingHeader() {
           <Link to={PATHS.demo} className="hidden text-sm font-medium text-muted-foreground hover:text-foreground sm:inline">
             Demo
           </Link>
-          <Link to={PATHS.login}>
-            <PrimaryButton type="button" colorVariant="success" className="gap-2">
-              Ingresar
-              <ArrowRight className="h-4 w-4" />
-            </PrimaryButton>
-          </Link>
+          <PrimaryButton type="button" colorVariant="success" className="gap-2" onClick={openLoginPanel}>
+            Ingresar
+            <ArrowRight className="h-4 w-4" />
+          </PrimaryButton>
         </div>
       </div>
     </header>

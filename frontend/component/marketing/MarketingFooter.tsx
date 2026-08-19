@@ -3,6 +3,7 @@ import { LogoWms } from '@/components/ui/images';
 import { APP_NAME, APP_TAGLINE } from '@/config/appBrand';
 import { CONTACT_EMAIL } from '@/config/seo';
 import { PATHS } from '@/routes/paths';
+import { useLoginPanel } from '@/hooks/useLoginPanel';
 
 const FOOTER_SECTIONS = [
   {
@@ -30,12 +31,14 @@ const FOOTER_SECTIONS = [
       { label: 'Nosotros', to: PATHS.nosotros },
       { label: 'Privacidad', to: PATHS.privacidad },
       { label: 'Términos', to: PATHS.terminos },
-      { label: 'Ingresar', to: PATHS.login },
+      { label: 'Ingresar', to: `${PATHS.landing}?login=1`, isLogin: true as const },
     ],
   },
 ] as const;
 
 export function MarketingFooter() {
+  const openLoginPanel = useLoginPanel();
+
   return (
     <footer className="relative z-10 border-t border-border/60 bg-background py-12">
       <div className="mx-auto max-w-6xl px-4">
@@ -58,10 +61,20 @@ export function MarketingFooter() {
               <h3 className="text-sm font-semibold">{section.title}</h3>
               <ul className="mt-3 space-y-2">
                 {section.links.map((link) => (
-                  <li key={link.to}>
-                    <Link to={link.to} className="text-sm text-muted-foreground hover:text-foreground hover:underline">
-                      {link.label}
-                    </Link>
+                  <li key={link.label}>
+                    {'isLogin' in link && link.isLogin ? (
+                      <button
+                        type="button"
+                        onClick={openLoginPanel}
+                        className="text-sm text-muted-foreground hover:text-foreground hover:underline"
+                      >
+                        {link.label}
+                      </button>
+                    ) : (
+                      <Link to={link.to} className="text-sm text-muted-foreground hover:text-foreground hover:underline">
+                        {link.label}
+                      </Link>
+                    )}
                   </li>
                 ))}
               </ul>
