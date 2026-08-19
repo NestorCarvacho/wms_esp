@@ -9,6 +9,12 @@ Repositorio: [github.com/NestorCarvacho/wms_esp](https://github.com/NestorCarvac
 | [MANUAL_USUARIO.md](./MANUAL_USUARIO.md) | Manual completo: login, catálogo, inventario, RBAC, multi-empresa |
 | [CORE_WMS.md](./CORE_WMS.md) | Inventario operativo: API, permisos, exportaciones |
 
+## Marketing y posicionamiento web
+
+| Documento | Descripción |
+|-----------|-------------|
+| [PLAN_SEO.md](./PLAN_SEO.md) | Plan de SEO: keywords, fases, checklist técnico y calendario de contenido |
+
 ## Para desarrolladores
 
 | Documento | Descripción |

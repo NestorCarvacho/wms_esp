@@ -19,13 +19,20 @@ import {
   Warehouse,
   Zap,
 } from 'lucide-react';
-import { LogoWms } from '@/components/ui/images';
 import { LoginBackground } from '@/components/layout/LoginBackground';
 import { PrimaryButton } from '@/components/ui/buttons';
 import { Card } from '@/components/ui/cards';
+import { FaqSection } from '@/components/marketing/FaqSection';
+import { MarketingFooter } from '@/components/marketing/MarketingFooter';
+import { MarketingHeader } from '@/components/marketing/MarketingHeader';
+import { TestimonialsSection } from '@/components/marketing/TestimonialsSection';
+import { OrganizationJsonLd, SoftwareApplicationJsonLd } from '@/components/seo/JsonLd';
+import { SeoHead } from '@/components/seo/SeoHead';
 import { useAuthContext } from '@/context/AuthContext';
 import { PATHS } from '@/routes/paths';
 import { APP_NAME, APP_TAGLINE } from '@/config/appBrand';
+import { SEO_ROUTES } from '@/config/seo';
+import { MARKETING_FAQ } from '@/content/faq';
 import { cn } from '@/lib/utils';
 
 const BENEFITS = [
@@ -224,37 +231,12 @@ export function LandingPage() {
 
   return (
     <div className="relative min-h-screen text-foreground">
+      <SeoHead meta={SEO_ROUTES['/']} />
+      <OrganizationJsonLd />
+      <SoftwareApplicationJsonLd />
       <LoginBackground />
 
-      <header className="sticky top-0 z-20 border-b border-border/50 bg-background/85 backdrop-blur-md">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
-          <Link to={PATHS.landing} className="flex items-center gap-2 hover:opacity-90">
-            <LogoWms variant="solo" className="h-8 w-auto" alt={APP_NAME} />
-            <span className="hidden text-sm font-semibold sm:inline">{APP_NAME}</span>
-          </Link>
-
-          <nav className="hidden items-center gap-6 text-sm text-muted-foreground md:flex">
-            <button type="button" onClick={() => scrollTo('beneficios')} className="hover:text-foreground">
-              Beneficios
-            </button>
-            <button type="button" onClick={() => scrollTo('modulos')} className="hover:text-foreground">
-              Módulos
-            </button>
-            <button type="button" onClick={() => scrollTo('audiencia')} className="hover:text-foreground">
-              ¿Para quién?
-            </button>
-          </nav>
-
-          <div className="flex items-center gap-2">
-            <Link to={PATHS.login}>
-              <PrimaryButton type="button" colorVariant="success" className="gap-2">
-                Ingresar al sistema
-                <ArrowRight className="h-4 w-4" />
-              </PrimaryButton>
-            </Link>
-          </div>
-        </div>
-      </header>
+      <MarketingHeader />
 
       <main className="relative z-10">
         {/* Hero — estilo Flexy / Defontana */}
@@ -266,19 +248,24 @@ export function LandingPage() {
                 {APP_NAME} · {APP_TAGLINE}
               </p>
               <h1 className="text-3xl font-bold leading-tight tracking-tight md:text-4xl lg:text-[2.75rem]">
-                Trazabilidad total{' '}
-                <span className="text-emerald-600 dark:text-emerald-400">de tu bodega</span>
+                Software de gestión de bodega e{' '}
+                <span className="text-emerald-600 dark:text-emerald-400">inventario en la nube</span>
               </h1>
               <p className="mt-5 text-base leading-relaxed text-muted-foreground md:text-lg">
-                Controla cada flujo de mercadería — desde el ingreso hasta el despacho — con visibilidad en
-                tiempo real, escaneo en piso y permisos por rol. Más allá del inventario contable: quién hizo
-                qué, cuándo y dónde.
+                WMS para PYME en Chile: controla cada flujo de mercadería — recepción, traslado y despacho —
+                con stock por ubicación, escaneo en piso y trazabilidad por rol. Más allá del inventario
+                contable: quién hizo qué, cuándo y dónde.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
-                <Link to={PATHS.login}>
+                <Link to={PATHS.demo}>
                   <PrimaryButton type="button" colorVariant="success" className="gap-2 px-6">
-                    Ingresar al sistema
+                    Demo gratis
                     <ArrowRight className="h-4 w-4" />
+                  </PrimaryButton>
+                </Link>
+                <Link to={PATHS.precios}>
+                  <PrimaryButton type="button" variant="outline">
+                    Ver precios desde CLP 29.900
                   </PrimaryButton>
                 </Link>
                 <PrimaryButton type="button" variant="outline" onClick={() => scrollTo('ofrecemos')}>
@@ -478,6 +465,10 @@ export function LandingPage() {
           </div>
         </section>
 
+        <TestimonialsSection />
+
+        <FaqSection items={MARKETING_FAQ} />
+
         {/* CTA final — Defontana */}
         <section className="border-t border-border/60 bg-gradient-to-br from-emerald-700 to-emerald-900 py-16 text-white md:py-20">
           <div className="mx-auto max-w-3xl px-4 text-center">
@@ -487,56 +478,30 @@ export function LandingPage() {
               Visibilidad total desde el primer día.
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
-              <Link to={PATHS.login}>
+              <Link to={PATHS.demo}>
                 <PrimaryButton
                   type="button"
                   className="gap-2 bg-white text-emerald-800 hover:bg-emerald-50"
                 >
-                  Ingresar al sistema
+                  Agendar demo gratis
                   <ArrowRight className="h-4 w-4" />
                 </PrimaryButton>
               </Link>
-              <a href="mailto:contacto@kheprisoftware.com">
+              <Link to={PATHS.precios}>
                 <PrimaryButton
                   type="button"
                   variant="outline"
                   className="border-white/40 text-white hover:bg-white/10"
                 >
-                  Solicitar información
+                  Ver planes y precios
                 </PrimaryButton>
-              </a>
+              </Link>
             </div>
           </div>
         </section>
       </main>
 
-      <footer className="relative z-10 border-t border-border/60 bg-background py-10">
-        <div className="mx-auto max-w-6xl px-4">
-          <div className="flex flex-col items-center justify-between gap-6 sm:flex-row">
-            <div className="flex items-center gap-2">
-              <LogoWms variant="solo" className="h-7 w-auto opacity-80" alt={APP_NAME} />
-              <span className="text-sm font-medium">{APP_NAME}</span>
-            </div>
-            <div className="flex flex-wrap justify-center gap-6 text-sm text-muted-foreground">
-              <button type="button" onClick={() => scrollTo('beneficios')} className="hover:text-foreground">
-                Beneficios
-              </button>
-              <button type="button" onClick={() => scrollTo('modulos')} className="hover:text-foreground">
-                Módulos
-              </button>
-              <a href="mailto:contacto@wms.com" className="hover:text-foreground hover:underline">
-                contacto@kheprisoftware.com
-              </a>
-              <Link to={PATHS.login} className="hover:text-foreground hover:underline">
-                Ingresar
-              </Link>
-            </div>
-          </div>
-          <p className="mt-6 text-center text-xs text-muted-foreground sm:text-left">
-            © {new Date().getFullYear()} {APP_NAME} · {APP_TAGLINE}
-          </p>
-        </div>
-      </footer>
+      <MarketingFooter />
     </div>
   );
 }
