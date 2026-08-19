@@ -386,3 +386,17 @@ Sitemap: https://kheprisoftware.com/sitemap.xml
 ---
 
 *Plan SEO v1.0 — Khepri Software — agosto 2026*
+
+---
+
+## Estado de implementación (agosto 2026)
+
+| Fase | Estado | Notas |
+|------|--------|-------|
+| 0 — Fundamentos | ✅ | `robots.txt`, `sitemap.xml`, meta OG, `HelmetProvider`, GA4 opcional |
+| 1 — On-page | ✅ | Home optimizada, `/precios`, `/demo`, `/contacto`, FAQ + schema |
+| 2 — Técnico SPA | ✅ | `inject-seo-html.mjs` post-build (17 rutas), `noindex` en `/app` y `/login` |
+| 3 — Contenido | ✅ | 4 pilares + blog (6 artículos) |
+| 4 — Confianza | ✅ | `/nosotros`, testimonios, `/privacidad`, `/terminos` |
+
+**Pendiente manual:** registrar dominio en Google Search Console, configurar `VITE_GA_MEASUREMENT_ID` y actualizar número WhatsApp en `seo.ts`.

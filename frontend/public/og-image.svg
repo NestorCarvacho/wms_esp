@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#064e3b"/>
+      <stop offset="100%" style="stop-color:#022c22"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <text x="80" y="280" font-family="system-ui,sans-serif" font-size="64" font-weight="700" fill="#ffffff">Khepri Software</text>
+  <text x="80" y="360" font-family="system-ui,sans-serif" font-size="36" fill="#6ee7b7">Software WMS Chile · Gestión de bodega en la nube</text>
+  <text x="80" y="480" font-family="system-ui,sans-serif" font-size="28" fill="#a7f3d0">Desde CLP 29.900/mes · Tu WMS a tu medida</text>
+</svg>

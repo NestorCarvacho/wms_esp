@@ -1,5 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { Navigate } from 'react-router-dom';
+import { SeoHead } from '@/components/seo/SeoHead';
+import { SEO_ROUTES } from '@/config/seo';
 import { LoginLayout } from '@/components/layout/LoginLayout';
 import { LabelInput, Checkbox } from '@/components/ui/inputs';
 import { PrimaryButton } from '@/components/ui/buttons';
@@ -60,7 +62,9 @@ export function LoginPage() {
   }
 
   return (
-    <LoginLayout title={APP_NAME} description={APP_TAGLINE}>
+    <>
+      <SeoHead meta={SEO_ROUTES['/login']} />
+      <LoginLayout title={APP_NAME} description={APP_TAGLINE}>
       <form onSubmit={handleSubmit} className="space-y-6 mt-4">
         <LabelInput
           id="email"
@@ -111,5 +115,6 @@ export function LoginPage() {
         </PrimaryButton>
       </form>
     </LoginLayout>
+    </>
   );
 }

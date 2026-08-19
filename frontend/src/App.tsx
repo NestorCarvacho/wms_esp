@@ -1,3 +1,4 @@
+import { HelmetProvider } from 'react-helmet-async';
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import type { ReactNode } from 'react';
 
@@ -39,6 +40,21 @@ import { RolesPage } from '@/pages/RolesPage';
 import { AsignarPermisosPage } from '@/pages/AsignarPermisosPage';
 import { PermisosPage } from '@/pages/PermisosPage';
 import { PerfilPage } from '@/pages/PerfilPage';
+
+import { PreciosPage } from '@/pages/marketing/PreciosPage';
+import { ContactoPage, DemoPage } from '@/pages/marketing/ContactoPage';
+import {
+  CompararExcelPage,
+  ControlInventarioPage,
+  MultiEmpresaPage,
+  SoftwareBodegaPage,
+  WmsPymePage,
+} from '@/pages/marketing/PillarPages';
+import { NosotrosPage, PrivacidadPage, TerminosPage } from '@/pages/marketing/LegalPages';
+import { BlogIndexPage } from '@/pages/marketing/BlogIndexPage';
+import { BlogPostPage } from '@/pages/marketing/BlogPostPage';
+
+import { GoogleAnalytics } from '@/components/seo/GoogleAnalytics';
 import SidePanelContainer from '@/components/layout/SidePanelContainer';
 import NotificationContainer from '@/components/layout/NotificationContainer';
 import { ModalContainer } from '@/components/layout/ModalContainer';
@@ -66,11 +82,25 @@ export default function App() {
     <LocaleProvider>
       <UIProvider>
         <TooltipProvider delayDuration={200} skipDelayDuration={0}>
+        <HelmetProvider>
         <BrowserRouter>
 
         <Routes>
 
           <Route path="/" element={<LandingPage />} />
+          <Route path="/precios" element={<PreciosPage />} />
+          <Route path="/contacto" element={<ContactoPage />} />
+          <Route path="/demo" element={<DemoPage />} />
+          <Route path="/software-bodega" element={<SoftwareBodegaPage />} />
+          <Route path="/control-inventario" element={<ControlInventarioPage />} />
+          <Route path="/wms-pyme" element={<WmsPymePage />} />
+          <Route path="/multi-empresa" element={<MultiEmpresaPage />} />
+          <Route path="/comparar/excel" element={<CompararExcelPage />} />
+          <Route path="/nosotros" element={<NosotrosPage />} />
+          <Route path="/privacidad" element={<PrivacidadPage />} />
+          <Route path="/terminos" element={<TerminosPage />} />
+          <Route path="/blog" element={<BlogIndexPage />} />
+          <Route path="/blog/:slug" element={<BlogPostPage />} />
           <Route path="/login" element={<LoginPage />} />
 
           <Route
@@ -130,7 +160,9 @@ export default function App() {
         <ModalContainer />
         <SidePanelContainer />
         <NotificationContainer />
+        <GoogleAnalytics />
         </BrowserRouter>
+        </HelmetProvider>
         </TooltipProvider>
       </UIProvider>
     </LocaleProvider>
