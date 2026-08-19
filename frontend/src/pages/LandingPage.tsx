@@ -34,6 +34,7 @@ import { APP_NAME, APP_TAGLINE } from '@/config/appBrand';
 import { SEO_ROUTES } from '@/config/seo';
 import { MARKETING_FAQ } from '@/content/faq';
 import { cn } from '@/lib/utils';
+import { useLoginPanel } from '@/hooks/useLoginPanel';
 
 const BENEFITS = [
   { icon: Zap, title: 'Información en tiempo real', text: 'Stock y movimientos actualizados al instante.' },
@@ -210,6 +211,7 @@ function ModuleVisual({ icon: Icon, accent }: { icon: typeof Package; accent: st
 
 export function LandingPage() {
   const { isAuthenticated } = useAuthContext();
+  const openLoginPanel = useLoginPanel();
 
   useEffect(() => {
     const root = document.documentElement;
@@ -345,10 +347,14 @@ export function LandingPage() {
                   Pensado para demos, pilotos y despliegue productivo: permisos por página, empresa maestra y
                   visibilidad para administradores y operadores de piso.
                 </p>
-                <Link to={PATHS.login} className="mt-6 inline-flex items-center gap-1 text-sm font-semibold text-emerald-600 hover:underline dark:text-emerald-400">
+                <button
+                  type="button"
+                  onClick={openLoginPanel}
+                  className="mt-6 inline-flex items-center gap-1 text-sm font-semibold text-emerald-600 hover:underline dark:text-emerald-400"
+                >
                   Probar la plataforma
                   <ChevronRight className="h-4 w-4" />
-                </Link>
+                </button>
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 {[
