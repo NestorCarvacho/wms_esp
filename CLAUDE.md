@@ -2,7 +2,7 @@
 
 Documento de referencia rápida para colaboradores y asistentes de código. Para instalación detallada ver [README.md](README.md); para documentación completa ver [docs/INDEX.md](docs/INDEX.md).
 
----
+----
 
 ## Stack
 
