@@ -1,9 +1,10 @@
 import { Link } from 'react-router-dom';
 import { LogoWms } from '@/components/ui/images';
 import { APP_NAME, APP_TAGLINE } from '@/config/appBrand';
-import { CONTACT_EMAIL } from '@/config/seo';
+import { CONTACT_EMAILS } from '@/config/seo';
 import { PATHS } from '@/routes/paths';
 import { useLoginPanel } from '@/hooks/useLoginPanel';
+import { Reveal, Stagger, StaggerItem } from './motion';
 
 const FOOTER_SECTIONS = [
   {
@@ -41,23 +42,27 @@ export function MarketingFooter() {
 
   return (
     <footer className="relative z-10 border-t border-border/60 bg-background py-12">
-      <div className="mx-auto max-w-6xl px-4">
-        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
-          <div>
+      <Reveal className="mx-auto max-w-6xl px-4">
+        <Stagger className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4" stagger="tight">
+          <StaggerItem>
             <div className="flex items-center gap-2">
-              <LogoWms variant="solo" className="h-7 w-auto opacity-80" alt={APP_NAME} />
+              <LogoWms variant="solo" className="h-7 w-auto" alt={APP_NAME} />
               <span className="text-sm font-medium">{APP_NAME}</span>
             </div>
             <p className="mt-3 text-sm text-muted-foreground">{APP_TAGLINE}</p>
-            <p className="mt-2 text-sm">
-              <a href={`mailto:${CONTACT_EMAIL}`} className="text-emerald-600 hover:underline dark:text-emerald-400">
-                {CONTACT_EMAIL}
-              </a>
-            </p>
-          </div>
+            <ul className="mt-2 space-y-1 text-sm">
+              {CONTACT_EMAILS.map((email) => (
+                <li key={email}>
+                  <a href={`mailto:${email}`} className="text-emerald-600 hover:underline dark:text-emerald-400">
+                    {email}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </StaggerItem>
 
           {FOOTER_SECTIONS.map((section) => (
-            <div key={section.title}>
+            <StaggerItem key={section.title}>
               <h3 className="text-sm font-semibold">{section.title}</h3>
               <ul className="mt-3 space-y-2">
                 {section.links.map((link) => (
@@ -78,14 +83,14 @@ export function MarketingFooter() {
                   </li>
                 ))}
               </ul>
-            </div>
+            </StaggerItem>
           ))}
-        </div>
+        </Stagger>
 
         <p className="mt-10 border-t border-border/60 pt-6 text-center text-xs text-muted-foreground sm:text-left">
           © {new Date().getFullYear()} {APP_NAME} · Software WMS Chile · {APP_TAGLINE}
         </p>
-      </div>
+      </Reveal>
     </footer>
   );
 }

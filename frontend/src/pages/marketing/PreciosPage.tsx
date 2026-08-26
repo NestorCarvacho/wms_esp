@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { MarketingLayout } from '@/components/marketing/MarketingLayout';
 import { FaqSection } from '@/components/marketing/FaqSection';
 import { FoundingOfferBanner, PricingCards } from '@/components/marketing/PricingCards';
+import { Stagger, StaggerItem } from '@/components/marketing/motion';
 import { PRICING_EXTRAS, formatClp } from '@/config/pricing';
 import { SEO_ROUTES } from '@/config/seo';
 import { MARKETING_FAQ } from '@/content/faq';
@@ -33,20 +34,19 @@ export function PreciosPage() {
 
         <div className="mx-auto mt-16 max-w-2xl">
           <h2 className="text-center text-lg font-semibold">Extras opcionales</h2>
-          <ul className="mt-4 space-y-2">
+          <Stagger className="mt-4 space-y-2" stagger="tight">
             {PRICING_EXTRAS.map((extra) => (
-              <li
-                key={extra.label}
-                className="flex items-center justify-between rounded-lg border border-border/60 px-4 py-3 text-sm"
-              >
-                <span>{extra.label}</span>
-                <span className="font-semibold">
-                  {formatClp(extra.price)}
-                  {extra.unit}
-                </span>
-              </li>
+              <StaggerItem key={extra.label}>
+                <div className="flex items-center justify-between rounded-lg border border-border/60 px-4 py-3 text-sm">
+                  <span>{extra.label}</span>
+                  <span className="font-semibold">
+                    {formatClp(extra.price)}
+                    {extra.unit}
+                  </span>
+                </div>
+              </StaggerItem>
             ))}
-          </ul>
+          </Stagger>
         </div>
 
         <p className="mx-auto mt-8 max-w-xl text-center text-xs text-muted-foreground">

@@ -1,6 +1,6 @@
 import { Helmet } from 'react-helmet-async';
 import { APP_NAME, APP_TAGLINE } from '@/config/appBrand';
-import { CONTACT_EMAIL, SITE_URL } from '@/config/seo';
+import { CONTACT_EMAILS, SITE_URL } from '@/config/seo';
 import { PRICING_PLANS } from '@/config/pricing';
 
 interface JsonLdProps {
@@ -23,9 +23,9 @@ export function OrganizationJsonLd() {
         '@type': 'Organization',
         name: APP_NAME,
         url: SITE_URL,
-        logo: `${SITE_URL}/og-image.svg`,
+        logo: `${SITE_URL}/isotipo.png`,
         description: APP_TAGLINE,
-        email: CONTACT_EMAIL,
+        email: [...CONTACT_EMAILS],
         areaServed: { '@type': 'Country', name: 'Chile' },
         sameAs: [],
       }}

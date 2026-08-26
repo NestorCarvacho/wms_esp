@@ -50,7 +50,7 @@ const ToolsBar: React.FC<ToolsBarProps> = ({
         />
 
         <Link to={appPath()} className="flex items-center gap-2 hover:opacity-90 transition-opacity">
-          <LogoWms variant="solo" className="h-7 w-auto" alt={APP_NAME} />
+          <LogoWms variant="solo" className="h-8 w-auto" alt={APP_NAME} />
           <span className="hidden sm:block text-sm font-semibold text-foreground">
             {APP_NAME}
           </span>

@@ -25,7 +25,17 @@ import { Card } from '@/components/ui/cards';
 import { FaqSection } from '@/components/marketing/FaqSection';
 import { MarketingFooter } from '@/components/marketing/MarketingFooter';
 import { MarketingHeader } from '@/components/marketing/MarketingHeader';
+import {
+  HoverLift,
+  MarketingMotionRoot,
+  Reveal,
+  Stagger,
+  StaggerItem,
+  spring,
+  useMotionUITheme,
+} from '@/components/marketing/motion';
 import { TestimonialsSection } from '@/components/marketing/TestimonialsSection';
+import { motion, useReducedMotion } from 'motion/react';
 import { OrganizationJsonLd, SoftwareApplicationJsonLd } from '@/components/seo/JsonLd';
 import { SeoHead } from '@/components/seo/SeoHead';
 import { useAuthContext } from '@/context/AuthContext';
@@ -137,6 +147,8 @@ const MODULES = [
 ] as const;
 
 function DashboardMock() {
+  const theme = useMotionUITheme();
+  const reduce = useReducedMotion();
   const rows = [
     { sku: 'SKU-1042', zona: 'A-01-03', qty: '240 UN' },
     { sku: 'SKU-2088', zona: 'B-02-01', qty: '86 KG' },
@@ -144,7 +156,17 @@ function DashboardMock() {
   ];
 
   return (
-    <div className="relative">
+    <motion.div
+      className="relative"
+      initial={{ opacity: 0, x: reduce ? 0 : 32 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ ...spring(theme.transitions.gentle), delay: 0.15 }}
+    >
+      <motion.div
+        className="relative"
+        animate={reduce ? undefined : { y: [0, -8, 0] }}
+        transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
+      >
       <div className="absolute -inset-4 rounded-3xl bg-gradient-to-br from-emerald-500/20 via-transparent to-blue-500/15 blur-2xl" />
       <Card
         elevation={2}
@@ -190,7 +212,8 @@ function DashboardMock() {
           </div>
         </div>
       </Card>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
 
@@ -232,6 +255,7 @@ export function LandingPage() {
   };
 
   return (
+    <MarketingMotionRoot>
     <div className="relative min-h-screen text-foreground">
       <SeoHead meta={SEO_ROUTES['/']} />
       <OrganizationJsonLd />
@@ -241,93 +265,108 @@ export function LandingPage() {
       <MarketingHeader />
 
       <main className="relative z-10">
-        {/* Hero — estilo Flexy / Defontana */}
+        {/* Hero — editorial stagger (Motion UI) */}
         <section className="mx-auto max-w-6xl px-4 pb-20 pt-12 md:pt-16">
           <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
-            <div>
-              <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
-                <Cloud className="h-3.5 w-3.5" />
-                {APP_NAME} · {APP_TAGLINE}
-              </p>
-              <h1 className="text-3xl font-bold leading-tight tracking-tight md:text-4xl lg:text-[2.75rem]">
-                Software de gestión de bodega e{' '}
-                <span className="text-emerald-600 dark:text-emerald-400">inventario en la nube</span>
-              </h1>
-              <p className="mt-5 text-base leading-relaxed text-muted-foreground md:text-lg">
-                WMS para PYME en Chile: controla cada flujo de mercadería — recepción, traslado y despacho —
-                con stock por ubicación, escaneo en piso y trazabilidad por rol. Más allá del inventario
-                contable: quién hizo qué, cuándo y dónde.
-              </p>
-              <div className="mt-8 flex flex-wrap gap-3">
-                <Link to={PATHS.demo}>
-                  <PrimaryButton type="button" colorVariant="success" className="gap-2 px-6">
-                    Demo gratis
-                    <ArrowRight className="h-4 w-4" />
+            <Stagger mode="mount" stagger="base">
+              <StaggerItem>
+                <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
+                  <Cloud className="h-3.5 w-3.5" />
+                  {APP_NAME} · {APP_TAGLINE}
+                </p>
+              </StaggerItem>
+              <StaggerItem>
+                <h1 className="text-3xl font-bold leading-tight tracking-tight md:text-4xl lg:text-[2.75rem]">
+                  Software de gestión de bodega e{' '}
+                  <span className="text-emerald-600 dark:text-emerald-400">inventario en la nube</span>
+                </h1>
+              </StaggerItem>
+              <StaggerItem>
+                <p className="mt-5 text-base leading-relaxed text-muted-foreground md:text-lg">
+                  WMS para PYME en Chile: controla cada flujo de mercadería — recepción, traslado y despacho —
+                  con stock por ubicación, escaneo en piso y trazabilidad por rol. Más allá del inventario
+                  contable: quién hizo qué, cuándo y dónde.
+                </p>
+              </StaggerItem>
+              <StaggerItem>
+                <div className="mt-8 flex flex-wrap gap-3">
+                  <Link to={PATHS.demo}>
+                    <PrimaryButton type="button" colorVariant="success" className="gap-2 px-6">
+                      Demo gratis
+                      <ArrowRight className="h-4 w-4" />
+                    </PrimaryButton>
+                  </Link>
+                  <Link to={PATHS.precios}>
+                    <PrimaryButton type="button" variant="outline">
+                      Ver precios desde CLP 29.900
+                    </PrimaryButton>
+                  </Link>
+                  <PrimaryButton type="button" variant="outline" onClick={() => scrollTo('ofrecemos')}>
+                    Conocer la plataforma
                   </PrimaryButton>
-                </Link>
-                <Link to={PATHS.precios}>
-                  <PrimaryButton type="button" variant="outline">
-                    Ver precios desde CLP 29.900
-                  </PrimaryButton>
-                </Link>
-                <PrimaryButton type="button" variant="outline" onClick={() => scrollTo('ofrecemos')}>
-                  Conocer la plataforma
-                </PrimaryButton>
-              </div>
-              <ul className="mt-8 grid gap-2 sm:grid-cols-2">
-                {['Sin instalaciones complejas', 'Multi-tenant listo', 'Escaneo y pistola', 'Historial auditado'].map(
-                  (item) => (
-                    <li key={item} className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
-                      {item}
-                    </li>
-                  ),
-                )}
-              </ul>
-            </div>
+                </div>
+              </StaggerItem>
+              <StaggerItem>
+                <ul className="mt-8 grid gap-2 sm:grid-cols-2">
+                  {['Sin instalaciones complejas', 'Multi-tenant listo', 'Escaneo y pistola', 'Historial auditado'].map(
+                    (item) => (
+                      <li key={item} className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                        {item}
+                      </li>
+                    ),
+                  )}
+                </ul>
+              </StaggerItem>
+            </Stagger>
             <DashboardMock />
           </div>
         </section>
 
         {/* Stats — inspirado en Flexy "Nuestra evolución" */}
         <section className="border-y border-border/60 bg-emerald-950 text-emerald-50 dark:bg-emerald-950/90">
-          <div className="mx-auto grid max-w-6xl grid-cols-2 gap-6 px-4 py-10 md:grid-cols-4">
+          <Stagger className="mx-auto grid max-w-6xl grid-cols-2 gap-6 px-4 py-10 md:grid-cols-4" stagger="tight">
             {STATS.map(({ value, label }) => (
-              <div key={label} className="text-center">
-                <p className="text-2xl font-bold md:text-3xl">{value}</p>
-                <p className="mt-1 text-sm text-emerald-200/80">{label}</p>
-              </div>
+              <StaggerItem key={label}>
+                <div className="text-center">
+                  <p className="text-2xl font-bold md:text-3xl">{value}</p>
+                  <p className="mt-1 text-sm text-emerald-200/80">{label}</p>
+                </div>
+              </StaggerItem>
             ))}
-          </div>
+          </Stagger>
         </section>
 
         {/* Beneficios — tira Flexy */}
         <section id="beneficios" className="py-16 md:py-20">
           <div className="mx-auto max-w-6xl px-4">
-            <div className="mx-auto max-w-2xl text-center">
+            <Reveal className="mx-auto max-w-2xl text-center">
               <h2 className="text-2xl font-bold tracking-tight md:text-3xl">
                 Simplifica y convierte tu logística en resultados
               </h2>
               <p className="mt-3 text-muted-foreground">
                 Todo lo que un operador moderno necesita para ganar control, velocidad y confianza en piso.
               </p>
-            </div>
-            <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+            </Reveal>
+            <Stagger className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-5" stagger="tight">
               {BENEFITS.map(({ icon: Icon, title, text }) => (
-                <Card
-                  key={title}
-                  elevation={1}
-                  padding="20px"
-                  className="border-border/60 bg-card/95 text-center transition-transform hover:-translate-y-0.5 hover:shadow-md"
-                >
-                  <div className="mx-auto mb-3 inline-flex rounded-xl bg-emerald-500/10 p-3 text-emerald-600 dark:text-emerald-400">
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <h3 className="text-sm font-semibold">{title}</h3>
-                  <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{text}</p>
-                </Card>
+                <StaggerItem key={title}>
+                  <HoverLift>
+                    <Card
+                      elevation={1}
+                      padding="20px"
+                      className="border-border/60 bg-card/95 text-center"
+                    >
+                      <div className="mx-auto mb-3 inline-flex rounded-xl bg-emerald-500/10 p-3 text-emerald-600 dark:text-emerald-400">
+                        <Icon className="h-5 w-5" />
+                      </div>
+                      <h3 className="text-sm font-semibold">{title}</h3>
+                      <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{text}</p>
+                    </Card>
+                  </HoverLift>
+                </StaggerItem>
               ))}
-            </div>
+            </Stagger>
           </div>
         </section>
 
@@ -335,7 +374,7 @@ export function LandingPage() {
         <section id="ofrecemos" className="border-t border-border/60 bg-muted/30 py-16 dark:bg-muted/10 md:py-20">
           <div className="mx-auto max-w-6xl px-4">
             <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
-              <div>
+              <Reveal>
                 <h2 className="text-2xl font-bold tracking-tight md:text-3xl">¿Qué ofrecemos?</h2>
                 <p className="mt-4 leading-relaxed text-muted-foreground">
                   {APP_NAME} es una plataforma de inventario operativo en la nube, diseñada para
@@ -355,8 +394,8 @@ export function LandingPage() {
                   Probar la plataforma
                   <ChevronRight className="h-4 w-4" />
                 </button>
-              </div>
-              <div className="grid gap-3 sm:grid-cols-2">
+              </Reveal>
+              <Stagger className="grid gap-3 sm:grid-cols-2" stagger="tight">
                 {[
                   'Software 100% en la nube',
                   'Multi-empresa sin fricción',
@@ -367,15 +406,14 @@ export function LandingPage() {
                   'Panel de control',
                   'Listo para Railway',
                 ].map((item) => (
-                  <div
-                    key={item}
-                    className="flex items-center gap-2 rounded-lg border border-border/60 bg-card/80 px-3 py-2.5 text-sm"
-                  >
-                    <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
-                    {item}
-                  </div>
+                  <StaggerItem key={item}>
+                    <div className="flex items-center gap-2 rounded-lg border border-border/60 bg-card/80 px-3 py-2.5 text-sm">
+                      <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                      {item}
+                    </div>
+                  </StaggerItem>
                 ))}
-              </div>
+              </Stagger>
             </div>
           </div>
         </section>
@@ -383,19 +421,19 @@ export function LandingPage() {
         {/* Módulos — secciones alternadas estilo Defontana */}
         <section id="modulos" className="py-16 md:py-20">
           <div className="mx-auto max-w-6xl px-4">
-            <div className="mx-auto mb-14 max-w-2xl text-center">
+            <Reveal className="mx-auto mb-14 max-w-2xl text-center">
               <h2 className="text-2xl font-bold tracking-tight md:text-3xl">
                 Módulos que cubren toda la operación
               </h2>
               <p className="mt-3 text-muted-foreground">
                 Desde el catálogo hasta los reportes: cada proceso con trazabilidad y control.
               </p>
-            </div>
+            </Reveal>
             <div className="space-y-20">
               {MODULES.map((mod, index) => {
                 const reversed = index % 2 === 1;
                 return (
-                  <div
+                  <Reveal
                     key={mod.tag}
                     className={cn(
                       'grid items-center gap-10 lg:grid-cols-2',
@@ -417,7 +455,7 @@ export function LandingPage() {
                       </ul>
                     </div>
                     <ModuleVisual icon={mod.icon} accent={mod.accent} />
-                  </div>
+                  </Reveal>
                 );
               })}
             </div>
@@ -427,47 +465,55 @@ export function LandingPage() {
         {/* Para quién — Flexy */}
         <section id="audiencia" className="border-t border-border/60 bg-muted/30 py-16 dark:bg-muted/10 md:py-20">
           <div className="mx-auto max-w-6xl px-4">
-            <h2 className="text-center text-2xl font-bold tracking-tight md:text-3xl">¿Para quién es {APP_NAME}?</h2>
-            <p className="mx-auto mt-3 max-w-xl text-center text-muted-foreground">
-              Operaciones que necesitan visibilidad real, no solo saldos contables.
-            </p>
-            <div className="mt-12 grid gap-6 md:grid-cols-3">
+            <Reveal>
+              <h2 className="text-center text-2xl font-bold tracking-tight md:text-3xl">¿Para quién es {APP_NAME}?</h2>
+              <p className="mx-auto mt-3 max-w-xl text-center text-muted-foreground">
+                Operaciones que necesitan visibilidad real, no solo saldos contables.
+              </p>
+            </Reveal>
+            <Stagger className="mt-12 grid gap-6 md:grid-cols-3" stagger="base">
               {AUDIENCES.map(({ icon: Icon, title, text }) => (
-                <Card
-                  key={title}
-                  elevation={1}
-                  padding="24px"
-                  className="border-border/60 bg-card/95 transition-shadow hover:shadow-lg"
-                >
-                  <div className="mb-4 inline-flex rounded-xl bg-emerald-500/10 p-3 text-emerald-600 dark:text-emerald-400">
-                    <Icon className="h-6 w-6" />
-                  </div>
-                  <h3 className="text-lg font-semibold">{title}</h3>
-                  <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{text}</p>
-                </Card>
+                <StaggerItem key={title}>
+                  <HoverLift>
+                    <Card
+                      elevation={1}
+                      padding="24px"
+                      className="border-border/60 bg-card/95"
+                    >
+                      <div className="mb-4 inline-flex rounded-xl bg-emerald-500/10 p-3 text-emerald-600 dark:text-emerald-400">
+                        <Icon className="h-6 w-6" />
+                      </div>
+                      <h3 className="text-lg font-semibold">{title}</h3>
+                      <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{text}</p>
+                    </Card>
+                  </HoverLift>
+                </StaggerItem>
               ))}
-            </div>
+            </Stagger>
           </div>
         </section>
 
         {/* Ventajas — grid Flexy */}
         <section className="py-16 md:py-20">
           <div className="mx-auto max-w-6xl px-4">
-            <h2 className="text-center text-2xl font-bold tracking-tight md:text-3xl">
-              Ventajas de usar nuestra plataforma
-            </h2>
-            <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            <Reveal>
+              <h2 className="text-center text-2xl font-bold tracking-tight md:text-3xl">
+                Ventajas de usar nuestra plataforma
+              </h2>
+            </Reveal>
+            <Stagger className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3" stagger="tight">
               {ADVANTAGES.map(({ icon: Icon, title, text }) => (
-                <div
-                  key={title}
-                  className="rounded-xl border border-border/60 bg-card/80 p-6 transition-colors hover:border-emerald-500/30"
-                >
-                  <Icon className="h-7 w-7 text-emerald-600 dark:text-emerald-400" strokeWidth={1.5} />
-                  <h3 className="mt-4 font-semibold">{title}</h3>
-                  <p className="mt-2 text-sm text-muted-foreground">{text}</p>
-                </div>
+                <StaggerItem key={title}>
+                  <HoverLift>
+                    <div className="rounded-xl border border-border/60 bg-card/80 p-6 transition-colors hover:border-emerald-500/30">
+                      <Icon className="h-7 w-7 text-emerald-600 dark:text-emerald-400" strokeWidth={1.5} />
+                      <h3 className="mt-4 font-semibold">{title}</h3>
+                      <p className="mt-2 text-sm text-muted-foreground">{text}</p>
+                    </div>
+                  </HoverLift>
+                </StaggerItem>
               ))}
-            </div>
+            </Stagger>
           </div>
         </section>
 
@@ -477,7 +523,7 @@ export function LandingPage() {
 
         {/* CTA final — Defontana */}
         <section className="border-t border-border/60 bg-gradient-to-br from-emerald-700 to-emerald-900 py-16 text-white md:py-20">
-          <div className="mx-auto max-w-3xl px-4 text-center">
+          <Reveal className="mx-auto max-w-3xl px-4 text-center">
             <h2 className="text-2xl font-bold md:text-3xl">¿Listo para tomar el control de tu bodega?</h2>
             <p className="mx-auto mt-4 max-w-lg text-emerald-100/90">
               Sin migraciones traumáticas. Accede con tu cuenta o solicita una demo a tu administrador de {APP_NAME}.
@@ -503,11 +549,12 @@ export function LandingPage() {
                 </PrimaryButton>
               </Link>
             </div>
-          </div>
+          </Reveal>
         </section>
       </main>
 
       <MarketingFooter />
     </div>
+    </MarketingMotionRoot>
   );
 }

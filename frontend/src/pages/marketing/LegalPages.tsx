@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom';
 import { MarketingLayout } from '@/components/marketing/MarketingLayout';
+import { Reveal } from '@/components/marketing/motion';
 import { Card } from '@/components/ui/cards';
-import { SEO_ROUTES } from '@/config/seo';
-import { CONTACT_EMAIL } from '@/config/seo';
+import { SEO_ROUTES, CONTACT_EMAILS } from '@/config/seo';
 import { APP_NAME, APP_TAGLINE } from '@/config/appBrand';
 import { PATHS } from '@/routes/paths';
 
@@ -38,18 +38,20 @@ export function NosotrosPage() {
           </ul>
         </div>
 
-        <Card elevation={1} padding="24px" className="mt-12 border-border/60">
-          <h2 className="font-semibold">¿Hablamos?</h2>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Estamos incorporando clientes fundadores con precio especial.
-          </p>
-          <Link
-            to={PATHS.demo}
-            className="mt-4 inline-block text-sm font-semibold text-emerald-600 hover:underline dark:text-emerald-400"
-          >
-            Agendar demo →
-          </Link>
-        </Card>
+        <Reveal>
+          <Card elevation={1} padding="24px" className="mt-12 border-border/60">
+            <h2 className="font-semibold">¿Hablamos?</h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Estamos incorporando clientes fundadores con precio especial.
+            </p>
+            <Link
+              to={PATHS.demo}
+              className="mt-4 inline-block text-sm font-semibold text-emerald-600 hover:underline dark:text-emerald-400"
+            >
+              Agendar demo →
+            </Link>
+          </Card>
+        </Reveal>
       </section>
     </MarketingLayout>
   );
@@ -75,9 +77,15 @@ export function PrivacidadPage() {
           <h2 className="text-lg font-semibold text-foreground">Contacto</h2>
           <p>
             Para ejercer derechos de acceso, rectificación o eliminación:{' '}
-            <a href={`mailto:${CONTACT_EMAIL}`} className="text-emerald-600">
-              {CONTACT_EMAIL}
-            </a>
+            {CONTACT_EMAILS.map((email, index) => (
+              <span key={email}>
+                {index > 0 ? ', ' : ''}
+                <a href={`mailto:${email}`} className="text-emerald-600">
+                  {email}
+                </a>
+              </span>
+            ))}
+            .
           </p>
         </section>
       </article>
@@ -109,7 +117,16 @@ export function TerminosPage() {
           <h2 className="text-lg font-semibold text-foreground">Propiedad de los datos</h2>
           <p>Los datos de inventario y catálogo son de tu empresa. Puedes exportarlos según las funciones del sistema.</p>
           <h2 className="text-lg font-semibold text-foreground">Contacto</h2>
-          <p>{CONTACT_EMAIL}</p>
+          <p>
+            {CONTACT_EMAILS.map((email, index) => (
+              <span key={email}>
+                {index > 0 ? ', ' : ''}
+                <a href={`mailto:${email}`} className="text-emerald-600">
+                  {email}
+                </a>
+              </span>
+            ))}
+          </p>
         </section>
       </article>
     </MarketingLayout>

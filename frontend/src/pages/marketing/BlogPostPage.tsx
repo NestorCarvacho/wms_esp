@@ -1,6 +1,7 @@
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { MarketingLayout } from '@/components/marketing/MarketingLayout';
+import { Reveal, Stagger, StaggerItem } from '@/components/marketing/motion';
 import { PrimaryButton } from '@/components/ui/buttons';
 import { getBlogPost } from '@/content/blog/posts';
 import { APP_NAME } from '@/config/appBrand';
@@ -45,27 +46,29 @@ export function BlogPostPage() {
           <p className="mt-4 text-lg text-muted-foreground">{post.description}</p>
         </header>
 
-        <div className="mt-10 space-y-10">
+        <Stagger className="mt-10 space-y-10" stagger="relaxed">
           {post.sections.map((section) => (
-            <section key={section.heading ?? section.paragraphs?.[0]?.slice(0, 30) ?? 'section'}>
-              {section.heading && <h2 className="text-xl font-bold">{section.heading}</h2>}
-              {section.paragraphs?.map((p) => (
-                <p key={p.slice(0, 50)} className="mt-4 leading-relaxed text-muted-foreground">
-                  {p}
-                </p>
-              ))}
-              {section.bullets && (
-                <ul className="mt-4 list-inside list-disc space-y-2 text-muted-foreground">
-                  {section.bullets.map((b) => (
-                    <li key={b}>{b}</li>
-                  ))}
-                </ul>
-              )}
-            </section>
+            <StaggerItem key={section.heading ?? section.paragraphs?.[0]?.slice(0, 30) ?? 'section'}>
+              <section>
+                {section.heading && <h2 className="text-xl font-bold">{section.heading}</h2>}
+                {section.paragraphs?.map((p) => (
+                  <p key={p.slice(0, 50)} className="mt-4 leading-relaxed text-muted-foreground">
+                    {p}
+                  </p>
+                ))}
+                {section.bullets && (
+                  <ul className="mt-4 list-inside list-disc space-y-2 text-muted-foreground">
+                    {section.bullets.map((b) => (
+                      <li key={b}>{b}</li>
+                    ))}
+                  </ul>
+                )}
+              </section>
+            </StaggerItem>
           ))}
-        </div>
+        </Stagger>
 
-        <footer className="mt-16 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-6 text-center">
+        <Reveal className="mt-16 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-6 text-center">
           <p className="font-semibold">¿Quieres probar Khepri en tu bodega?</p>
           <p className="mt-2 text-sm text-muted-foreground">Planes desde CLP 29.900/mes — oferta fundadores</p>
           <Link to={PATHS.demo} className="mt-4 inline-block">
@@ -73,7 +76,7 @@ export function BlogPostPage() {
               Agendar demo gratis
             </PrimaryButton>
           </Link>
-        </footer>
+        </Reveal>
       </article>
     </MarketingLayout>
   );

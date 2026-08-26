@@ -3,7 +3,7 @@ import { Mail } from 'lucide-react';
 import { MarketingLayout } from '@/components/marketing/MarketingLayout';
 import { PrimaryButton } from '@/components/ui/buttons';
 import { Card } from '@/components/ui/cards';
-import { CONTACT_EMAIL, SEO_ROUTES } from '@/config/seo';
+import { CONTACT_EMAILS, CONTACT_MAILTO, SEO_ROUTES } from '@/config/seo';
 import { APP_NAME } from '@/config/appBrand';
 
 interface ContactoPageProps {
@@ -26,7 +26,7 @@ export function ContactoPage({ variant = 'contacto' }: ContactoPageProps) {
     const body = encodeURIComponent(
       `Nombre: ${nombre}\nEmpresa: ${empresa}\n\n${mensaje}`,
     );
-    window.location.href = `mailto:${CONTACT_EMAIL}?subject=${subject}&body=${body}`;
+    window.location.href = `mailto:${CONTACT_MAILTO}?subject=${subject}&body=${body}`;
     setSent(true);
   };
 
@@ -42,11 +42,15 @@ export function ContactoPage({ variant = 'contacto' }: ContactoPageProps) {
               ? 'Te mostramos recepción, traslado, despacho y control por ubicación en 30 minutos.'
               : 'Cuéntanos tu operación y te recomendamos el plan ideal para tu bodega.'}
           </p>
-          <p className="mt-3 text-sm">
-            <a href={`mailto:${CONTACT_EMAIL}`} className="font-medium text-emerald-600 hover:underline dark:text-emerald-400">
-              {CONTACT_EMAIL}
-            </a>
-          </p>
+          <div className="mt-3 space-y-1 text-sm">
+            {CONTACT_EMAILS.map((email) => (
+              <p key={email}>
+                <a href={`mailto:${email}`} className="font-medium text-emerald-600 hover:underline dark:text-emerald-400">
+                  {email}
+                </a>
+              </p>
+            ))}
+          </div>
         </div>
 
         <Card elevation={1} padding="24px" className="mt-10 border-border/60 bg-card/95">
@@ -54,9 +58,15 @@ export function ContactoPage({ variant = 'contacto' }: ContactoPageProps) {
           {sent ? (
             <p className="mt-4 text-sm text-muted-foreground">
               Se abrió tu cliente de correo. Si no aparece, escribe directamente a{' '}
-              <a href={`mailto:${CONTACT_EMAIL}`} className="text-emerald-600 hover:underline">
-                {CONTACT_EMAIL}
-              </a>
+              {CONTACT_EMAILS.map((email, index) => (
+                <span key={email}>
+                  {index > 0 ? ', ' : ''}
+                  <a href={`mailto:${email}`} className="text-emerald-600 hover:underline">
+                    {email}
+                  </a>
+                </span>
+              ))}
+              .
             </p>
           ) : (
             <form onSubmit={handleSubmit} className="mt-4 space-y-4">
@@ -97,7 +107,7 @@ export function ContactoPage({ variant = 'contacto' }: ContactoPageProps) {
               </div>
               <PrimaryButton type="submit" colorVariant="success" className="w-full gap-2">
                 <Mail className="h-4 w-4" />
-                Enviar a {CONTACT_EMAIL}
+                Enviar a los correos de contacto
               </PrimaryButton>
             </form>
           )}
