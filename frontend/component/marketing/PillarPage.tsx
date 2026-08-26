@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, CheckCircle2 } from 'lucide-react';
 import { PrimaryButton } from '@/components/ui/buttons';
 import { MarketingLayout } from '@/components/marketing/MarketingLayout';
+import { Reveal, Stagger, StaggerItem } from '@/components/marketing/motion';
 import type { SeoMeta } from '@/config/seo';
 import { PATHS } from '@/routes/paths';
 
@@ -39,32 +40,34 @@ export function PillarPage({ meta, eyebrow, title, subtitle, sections }: PillarP
       </section>
 
       <section className="border-t border-border/60 bg-muted/20 py-16 dark:bg-muted/10">
-        <div className="mx-auto max-w-3xl space-y-12 px-4">
+        <Stagger className="mx-auto max-w-3xl space-y-12 px-4" stagger="relaxed">
           {sections.map((section) => (
-            <article key={section.heading}>
-              <h2 className="text-xl font-bold md:text-2xl">{section.heading}</h2>
-              {section.paragraphs?.map((p) => (
-                <p key={p.slice(0, 40)} className="mt-4 leading-relaxed text-muted-foreground">
-                  {p}
-                </p>
-              ))}
-              {section.bullets && (
-                <ul className="mt-4 space-y-2">
-                  {section.bullets.map((b) => (
-                    <li key={b} className="flex gap-2 text-sm text-muted-foreground">
-                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
-                      {b}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </article>
+            <StaggerItem key={section.heading}>
+              <article>
+                <h2 className="text-xl font-bold md:text-2xl">{section.heading}</h2>
+                {section.paragraphs?.map((p) => (
+                  <p key={p.slice(0, 40)} className="mt-4 leading-relaxed text-muted-foreground">
+                    {p}
+                  </p>
+                ))}
+                {section.bullets && (
+                  <ul className="mt-4 space-y-2">
+                    {section.bullets.map((b) => (
+                      <li key={b} className="flex gap-2 text-sm text-muted-foreground">
+                        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                        {b}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </article>
+            </StaggerItem>
           ))}
-        </div>
+        </Stagger>
       </section>
 
       <section className="py-16">
-        <div className="mx-auto max-w-3xl px-4 text-center">
+        <Reveal className="mx-auto max-w-3xl px-4 text-center">
           <h2 className="text-2xl font-bold">¿Listo para digitalizar tu bodega?</h2>
           <p className="mt-3 text-muted-foreground">
             Planes desde CLP 29.900/mes con oferta fundadores. Implementación en días.
@@ -74,7 +77,7 @@ export function PillarPage({ meta, eyebrow, title, subtitle, sections }: PillarP
               Contactar a ventas
             </PrimaryButton>
           </Link>
-        </div>
+        </Reveal>
       </section>
     </MarketingLayout>
   );

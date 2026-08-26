@@ -1,7 +1,13 @@
 import { APP_NAME, APP_TAGLINE } from '@/config/appBrand';
 
 export const SITE_URL = import.meta.env.VITE_SITE_URL ?? 'https://kheprisoftware.com';
-export const CONTACT_EMAIL = 'nestor.carvacho@gmail.com';
+export const CONTACT_EMAILS = [
+  'nestor.carvacho@gmail.com',
+  'dey.henriquez@duocuc.cl',
+  'gar.villegas@duocuc.cl',
+] as const;
+export const CONTACT_EMAIL = CONTACT_EMAILS[0];
+export const CONTACT_MAILTO = CONTACT_EMAILS.join(',');
 
 export interface SeoMeta {
   path: string;

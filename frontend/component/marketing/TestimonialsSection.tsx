@@ -1,5 +1,6 @@
 import { Quote } from 'lucide-react';
 import { Card } from '@/components/ui/cards';
+import { HoverLift, Reveal, Stagger, StaggerItem } from './motion';
 
 const TESTIMONIALS = [
   {
@@ -26,22 +27,28 @@ export function TestimonialsSection() {
   return (
     <section className="py-16 md:py-20">
       <div className="mx-auto max-w-6xl px-4">
-        <h2 className="text-center text-2xl font-bold tracking-tight md:text-3xl">
-          Lo que dicen nuestros clientes fundadores
-        </h2>
-        <p className="mx-auto mt-3 max-w-xl text-center text-muted-foreground">
-          Empresas que digitalizaron su bodega con Khepri Software.
-        </p>
-        <div className="mt-12 grid gap-6 md:grid-cols-3">
+        <Reveal>
+          <h2 className="text-center text-2xl font-bold tracking-tight md:text-3xl">
+            Lo que dicen nuestros clientes fundadores
+          </h2>
+          <p className="mx-auto mt-3 max-w-xl text-center text-muted-foreground">
+            Empresas que digitalizaron su bodega con Khepri Software.
+          </p>
+        </Reveal>
+        <Stagger className="mt-12 grid gap-6 md:grid-cols-3" stagger="base">
           {TESTIMONIALS.map((t) => (
-            <Card key={t.name} elevation={1} padding="24px" className="border-border/60 bg-card/95">
-              <Quote className="h-8 w-8 text-emerald-600/40 dark:text-emerald-400/40" />
-              <p className="mt-4 text-sm leading-relaxed text-muted-foreground">&ldquo;{t.quote}&rdquo;</p>
-              <p className="mt-4 text-sm font-semibold">{t.name}</p>
-              <p className="text-xs text-muted-foreground">{t.company}</p>
-            </Card>
+            <StaggerItem key={t.name}>
+              <HoverLift>
+                <Card elevation={1} padding="24px" className="border-border/60 bg-card/95">
+                  <Quote className="h-8 w-8 text-emerald-600/40 dark:text-emerald-400/40" />
+                  <p className="mt-4 text-sm leading-relaxed text-muted-foreground">&ldquo;{t.quote}&rdquo;</p>
+                  <p className="mt-4 text-sm font-semibold">{t.name}</p>
+                  <p className="text-xs text-muted-foreground">{t.company}</p>
+                </Card>
+              </HoverLift>
+            </StaggerItem>
           ))}
-        </div>
+        </Stagger>
       </div>
     </section>
   );

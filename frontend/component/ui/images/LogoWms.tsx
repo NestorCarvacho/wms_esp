@@ -1,20 +1,20 @@
 import React from 'react';
-import logoFull from '@/brand/wms logo2.png';
-import logoSolo from '@/brand/logo_solo_m_inver.png';
-import logoSoloLarge from '@/brand/logo_solo_XXL.png';
+import { cn } from '@/lib/utils';
+import logoFull from '@/brand/khepri-isotipo.png';
+import logoSolo from '@/brand/khepri-logo.png';
 
 export type LogoWmsVariant = 'full' | 'solo' | 'solo-lg';
 
 const SOURCES: Record<LogoWmsVariant, string> = {
   full: logoFull,
   solo: logoSolo,
-  'solo-lg': logoSoloLarge,
+  'solo-lg': logoSolo,
 };
 
 const DEFAULT_CLASS: Record<LogoWmsVariant, string> = {
-  full: 'h-12 mx-auto mb-4',
+  full: 'mx-auto mb-2 h-28 w-auto',
   solo: 'h-8 w-auto',
-  'solo-lg': 'h-16 mx-auto mb-4',
+  'solo-lg': 'mx-auto mb-4 h-16 w-auto',
 };
 
 interface LogoWmsProps {
@@ -31,6 +31,6 @@ export const LogoWms: React.FC<LogoWmsProps> = ({
   <img
     src={SOURCES[variant]}
     alt={alt}
-    className={className ?? DEFAULT_CLASS[variant]}
+    className={cn('dark:mix-blend-screen', className ?? DEFAULT_CLASS[variant])}
   />
 );
