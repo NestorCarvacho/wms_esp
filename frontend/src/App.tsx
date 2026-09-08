@@ -42,6 +42,7 @@ import { RolesPage } from '@/pages/RolesPage';
 import { AsignarPermisosPage } from '@/pages/AsignarPermisosPage';
 import { PermisosPage } from '@/pages/PermisosPage';
 import { PerfilPage } from '@/pages/PerfilPage';
+import { SoportePage } from '@/pages/SoportePage';
 
 import { PreciosPage } from '@/pages/marketing/PreciosPage';
 import { ContactoPage, DemoPage } from '@/pages/marketing/ContactoPage';
@@ -146,6 +147,7 @@ export default function App() {
             <Route path="permisos" element={guarded(appPath('/permisos'), <PermisosPage />)} />
 
             <Route path="empresas" element={guarded(appPath('/empresas'), <EmpresasPage />)} />
+            <Route path="soporte" element={guarded(appPath('/soporte'), <SoportePage />)} />
 
             <Route path="unidades-medida" element={guarded(appPath('/unidades-medida'), <UnidadesMedidaPage />)} />
             <Route path="perfil" element={<PerfilPage />} />

@@ -114,6 +114,26 @@ forbidden_modules =
     app.infrastructure
     sqlalchemy
 
+[importlinter:contract:soporte-domain-isolation]
+name = Soporte domain no importa infraestructura
+type = forbidden
+source_modules =
+    app.modules.soporte.domain
+forbidden_modules =
+    app.infrastructure
+    app.api
+    sqlalchemy
+
+[importlinter:contract:soporte-application-isolation]
+name = Soporte application no importa API ni SQLAlchemy directo
+type = forbidden
+source_modules =
+    app.modules.soporte.application
+forbidden_modules =
+    app.api
+    app.infrastructure
+    sqlalchemy
+
 [importlinter:contract:geo-domain-isolation]
 name = Geo domain no importa infraestructura
 type = forbidden

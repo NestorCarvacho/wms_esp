@@ -54,6 +54,7 @@ railway run python scripts/apply_railway_migrations.py --diagnose
 | 15 | `19_locale_currency.sql` | Locale/timezone/moneda por empresa, catálogo `moneda`, `tipo_cambio_historico` |
 | 16 | `21_producto_stock_minimo.sql` | Umbral `producto.stock_minimo` |
 | 17 | `23_schema_cleanup.sql` | Elimina notificacion, password_reset, inventario legacy; índice SKU único |
+| 18 | `24_soporte_tickets.sql` | Centro de ayuda: tickets, tipos, chat y permisos `tickets.*` |
 
 **Manual Railway Query:** pasos sueltos en `mysql-init/railway_14_auth/`, `railway_19_locale/`, `railway_23_cleanup/`.
 

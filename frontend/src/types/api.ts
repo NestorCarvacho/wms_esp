@@ -696,3 +696,51 @@ export interface BodegaConfigInventario {
   bodega_id: number;
   zona_recepcion_default_id?: number | null;
 }
+
+export interface TipoSolicitud {
+  id: number;
+  codigo: string;
+  nombre: string;
+  tipo_padre_id: number | null;
+  orden: number;
+}
+
+export interface TicketMensaje {
+  id: number;
+  usuario_id: number | null;
+  es_sistema: boolean;
+  es_propio?: boolean;
+  autor_nombre: string;
+  cuerpo: string;
+  creado_at: string | null;
+  creado_at_local: string | null;
+}
+
+export interface Ticket {
+  id: number;
+  empresa_id: number;
+  usuario_id: number;
+  nombre_solicitante: string;
+  nombre_empresa: string;
+  tipo_solicitud_id: number;
+  tipo_solicitud_nombre: string;
+  estado_ticket_id: number;
+  estado_codigo: string;
+  estado_nombre: string;
+  es_abierto: boolean;
+  asunto: string;
+  asignado_usuario_id: number | null;
+  creado_at: string | null;
+  creado_at_local: string | null;
+  actualizado_at?: string | null;
+  cerrado_at?: string | null;
+  ultimo_mensaje?: string | null;
+  mensajes?: TicketMensaje[];
+}
+
+export interface PaginatedTickets {
+  total: number;
+  pagina: number;
+  por_pagina: number;
+  tickets: Ticket[];
+}

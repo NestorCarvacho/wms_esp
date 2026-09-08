@@ -47,6 +47,7 @@ const ROUTE_PERMISSIONS: Record<string, string> = {
   [appPath('/asignar-permisos')]: 'roles.leer',
   [appPath('/permisos')]: 'permisos.leer',
   [appPath('/empresas')]: 'empresas.leer',
+  [appPath('/soporte')]: 'tickets.gestionar',
 };
 
 function withPermissions(node: MenuLinkNode): MenuLinkNode {
@@ -198,6 +199,12 @@ export function buildWmsMenu(
       title: 'Empresas',
       url: appPath('/empresas'),
       routeMetadata: { iconName: 'building', breadcrumbTitle: 'Empresas' },
+    });
+    configChildren.push({
+      id: 'soporte',
+      title: 'Mesa de ayuda',
+      url: appPath('/soporte'),
+      routeMetadata: { iconName: 'info', breadcrumbTitle: 'Mesa de ayuda' },
     });
   }
 

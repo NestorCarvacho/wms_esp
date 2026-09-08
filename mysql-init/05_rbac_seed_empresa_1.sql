@@ -53,7 +53,11 @@ INSERT INTO permiso (empresa_id, codigo, descripcion, activo) VALUES
 (@empresa_id, 'inventario.recepcionar',  'Registrar recepciones de mercancía', 1),
 (@empresa_id, 'inventario.trasladar',    'Trasladar stock entre ubicaciones', 1),
 (@empresa_id, 'inventario.despachar',    'Registrar despachos de mercancía', 1),
-(@empresa_id, 'inventario.configurar',   'Configurar zona de recepción por bodega', 1)
+(@empresa_id, 'inventario.configurar',   'Configurar zona de recepción por bodega', 1),
+(@empresa_id, 'tickets.crear',          'Crear tickets de ayuda', 1),
+(@empresa_id, 'tickets.leer',           'Ver tickets de ayuda', 1),
+(@empresa_id, 'tickets.responder',      'Responder en el chat de un ticket', 1),
+(@empresa_id, 'tickets.gestionar',      'Gestionar la mesa de ayuda (empresa maestra)', 1)
 ON DUPLICATE KEY UPDATE
   descripcion = VALUES(descripcion),
   activo = 1;

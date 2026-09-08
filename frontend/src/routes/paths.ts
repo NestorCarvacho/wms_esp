@@ -13,6 +13,7 @@ export const PATHS = {
   app: APP_BASE,
   perfil: appPath('/perfil'),
   productos: appPath('/productos'),
+  soporte: appPath('/soporte'),
 
   // Marketing / SEO
   precios: '/precios',
