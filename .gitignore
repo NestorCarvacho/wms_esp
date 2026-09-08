@@ -2,6 +2,9 @@
 venv/
 .venv/
 
+# MCP local (rutas absolutas de esta máquina)
+.cursor/mcp.json
+
 # Variables de entorno
 .env
 .env.*.local
@@ -30,12 +33,15 @@ frontend/dist/
 # Artefactos shadcn CLI (ruta errónea en Windows)
 frontend/@/
 
-#.docs/
-#docs/
-#docs/documentacion ejemplo/
-#docs/proyecto/
+.docs/
+docs/
+docs/documentacion ejemplo/
+docs/proyecto/
 *.dist-info
 dist-info/
 # Dumps locales Railway (no commitear)
 .local-dumps/
+
+.log
+*.log
 

@@ -21,6 +21,7 @@ INNER JOIN permiso p ON p.empresa_id = 1 AND p.activo = 1
 LEFT JOIN permiso px ON px.empresa_id = e.id AND px.codigo = p.codigo
 WHERE e.id <> 1
   AND COALESCE(e.esta_activa, 1) = 1
+  AND p.codigo <> 'tickets.gestionar'
   AND px.id IS NULL;
 
 -- === BLOQUE 2: reactivar permisos desactivados en empresas hijas ===
@@ -47,7 +48,8 @@ INNER JOIN rol_permiso rpp ON rpp.rol_id = rp.id AND rpp.activo = 1
 INNER JOIN permiso pp ON pp.id = rpp.permiso_id AND pp.empresa_id = 1 AND pp.activo = 1
 INNER JOIN rol rd ON rd.empresa_id <> 1 AND rd.nombre = rp.nombre AND rd.activo = 1
 INNER JOIN permiso pd ON pd.empresa_id = rd.empresa_id AND pd.codigo = pp.codigo AND pd.activo = 1
-WHERE rp.empresa_id = 1 AND rp.activo = 1;
+WHERE rp.empresa_id = 1 AND rp.activo = 1
+  AND pp.codigo <> 'tickets.gestionar';
 
 -- === BLOQUE 5: verificar permisos por empresa ===
 -- SELECT e.id, e.razon_social, COUNT(p.id) AS total_permisos FROM empresa e ...

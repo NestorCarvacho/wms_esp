@@ -455,3 +455,70 @@ class TipoCambioHistorico(Base):
     creado_at = Column(DateTime, default=datetime.utcnow)
 
     empresa = relationship("Empresa")
+
+
+class EstadoTicket(Base):
+    """Catálogo global de estados del centro de ayuda."""
+    __tablename__ = "estado_ticket"
+
+    id = Column(Integer, primary_key=True, index=True)
+    codigo = Column(String(30), nullable=False, unique=True)
+    nombre = Column(String(80), nullable=False)
+    es_abierto = Column(Boolean, nullable=False, default=True)
+    orden_flujo = Column(Integer, nullable=False, default=0)
+    activo = Column(Boolean, default=True)
+
+
+class TipoSolicitud(Base):
+    """Tipos de solicitud de la empresa maestra (post-venta, error, etc.)."""
+    __tablename__ = "tipo_solicitud"
+
+    id = Column(BigInteger, primary_key=True, index=True)
+    empresa_id = Column(BigInteger, ForeignKey("empresa.id"), nullable=False, index=True)
+    tipo_padre_id = Column(BigInteger, ForeignKey("tipo_solicitud.id"), nullable=True)
+    codigo = Column(String(50), nullable=False)
+    nombre = Column(String(100), nullable=False)
+    orden = Column(Integer, nullable=False, default=0)
+    activo = Column(Boolean, default=True)
+
+    empresa = relationship("Empresa")
+
+
+class Ticket(Base):
+    """Ticket de ayuda abierto por un usuario de una empresa hija."""
+    __tablename__ = "ticket"
+
+    id = Column(BigInteger, primary_key=True, index=True)
+    empresa_id = Column(BigInteger, ForeignKey("empresa.id"), nullable=False, index=True)
+    usuario_id = Column(BigInteger, ForeignKey("usuario.id"), nullable=False, index=True)
+    tipo_solicitud_id = Column(BigInteger, ForeignKey("tipo_solicitud.id"), nullable=False)
+    estado_ticket_id = Column(Integer, ForeignKey("estado_ticket.id"), nullable=False)
+    asunto = Column(String(160), nullable=False)
+    asignado_usuario_id = Column(BigInteger, ForeignKey("usuario.id"), nullable=True)
+    nombre_solicitante = Column(String(255), nullable=False)
+    nombre_empresa = Column(String(255), nullable=False)
+    creado_at = Column(DateTime, default=datetime.utcnow)
+    actualizado_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    cerrado_at = Column(DateTime, nullable=True)
+
+    empresa = relationship("Empresa")
+    solicitante = relationship("Usuario", foreign_keys=[usuario_id])
+    asignado = relationship("Usuario", foreign_keys=[asignado_usuario_id])
+    tipo = relationship("TipoSolicitud")
+    estado = relationship("EstadoTicket")
+    mensajes = relationship("TicketMensaje", back_populates="ticket")
+
+
+class TicketMensaje(Base):
+    """Mensaje del historial tipo chat de un ticket."""
+    __tablename__ = "ticket_mensaje"
+
+    id = Column(BigInteger, primary_key=True, index=True)
+    ticket_id = Column(BigInteger, ForeignKey("ticket.id"), nullable=False, index=True)
+    usuario_id = Column(BigInteger, ForeignKey("usuario.id"), nullable=True)
+    es_sistema = Column(Boolean, nullable=False, default=False)
+    cuerpo = Column(Text, nullable=False)
+    creado_at = Column(DateTime, default=datetime.utcnow)
+
+    ticket = relationship("Ticket", back_populates="mensajes")
+    autor = relationship("Usuario")

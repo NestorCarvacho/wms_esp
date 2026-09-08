@@ -21,6 +21,8 @@ import { ZonaBodegaCreatePanel } from './ZonaBodegaCreatePanel';
 import { TipoProductoEditPanel } from './TipoProductoEditPanel';
 import { TipoProductoCreatePanel } from './TipoProductoCreatePanel';
 import { ProductoPresentacionesPanel } from './ProductoPresentacionesPanel';
+import { CentroAyudaPanel } from '@/components/soporte/CentroAyudaPanel';
+import { TicketGestionPanel } from '@/components/soporte/TicketGestionPanel';
 
 let registered = false;
 
@@ -48,5 +50,7 @@ export function registerCrudPanels() {
   registerSidePanelComponent('TipoProductoEditPanel', TipoProductoEditPanel);
   registerSidePanelComponent('TipoProductoCreatePanel', TipoProductoCreatePanel);
   registerSidePanelComponent('ProductoPresentacionesPanel', ProductoPresentacionesPanel);
+  registerSidePanelComponent('CentroAyudaPanel', CentroAyudaPanel);
+  registerSidePanelComponent('TicketGestionPanel', TicketGestionPanel);
   registered = true;
 }

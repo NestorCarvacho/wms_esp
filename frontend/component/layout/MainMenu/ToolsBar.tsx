@@ -11,6 +11,8 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from '@/components/ui/shadcn/dropdown-menu';
+import { useUI } from '@/hooks/ui';
+import { useAuthContext } from '@/context/AuthContext';
 
 interface ToolsBarProps {
   isUserMenuOpen: boolean;
@@ -34,7 +36,11 @@ const ToolsBar: React.FC<ToolsBarProps> = ({
   handleLogout,
   navigate,
   userName = 'Usuario',
-}) => (
+}) => {
+  const { openSidePanel, showNotification } = useUI();
+  const { tienePermiso } = useAuthContext();
+
+  return (
   <div className="max-w-full bg-card px-4">
     <div className="flex items-center justify-between top-nav-height gap-3">
       <div className="flex items-center gap-3 shrink-0">
@@ -90,7 +96,17 @@ const ToolsBar: React.FC<ToolsBarProps> = ({
             }}
             onHelpCenter={() => {
               handleUserMenuClose();
-              window.open('#', '_blank');
+              if (!tienePermiso('tickets.crear') && !tienePermiso('tickets.leer')) {
+                showNotification({
+                  type: 'error',
+                  message: 'No tiene permiso para abrir el centro de ayuda. Vuelva a iniciar sesión si acaba de actualizarse el sistema.',
+                });
+                return;
+              }
+              openSidePanel({
+                component: 'CentroAyudaPanel',
+                title: 'Centro de ayuda',
+              });
             }}
           />
         </DropdownMenuContent>
@@ -98,6 +114,7 @@ const ToolsBar: React.FC<ToolsBarProps> = ({
       </div>
     </div>
   </div>
-);
+  );
+};
 
 export default ToolsBar;

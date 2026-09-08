@@ -3,15 +3,17 @@ services:
     image: mysql:8.0
     container_name: wms_mysql_db
     restart: always
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     environment:
       MYSQL_DATABASE: wms_db
       MYSQL_ROOT_PASSWORD: root_password_segura
+      LANG: C.UTF-8
     ports:
       - "3307:3306"
     volumes:
-      # Solo schema_completo.sql: evita ejecutar migraciones incrementales obsoletas.
-      # Para recrear la BD desde cero: docker compose down -v && docker compose up -d
+      # 01: esquema + RBAC + geografía. 02: misma semilla Chile (INSERT IGNORE, por si 01 es una copia vieja).
       - ./mysql-init/schema_completo.sql:/docker-entrypoint-initdb.d/01_schema_completo.sql:ro
+      - ./mysql-init/geografia_chile_seed.sql:/docker-entrypoint-initdb.d/02_geografia_chile_seed.sql:ro
       - db_data:/var/lib/mysql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot_password_segura"]
@@ -21,7 +23,9 @@ services:
       start_period: 30s
 
   backend:
-    build: .
+    build:
+      context: .
+      dockerfile: dockerfile
     container_name: wms_api_backend
     restart: always
     ports:

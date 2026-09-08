@@ -47,6 +47,7 @@ MIGRATION_FILES = [
     "19_locale_currency.sql",
     "21_producto_stock_minimo.sql",
     "23_schema_cleanup.sql",
+    "24_soporte_tickets.sql",
 ]
 
 # Errores MySQL benignos al re-ejecutar scripts idempotentes.
