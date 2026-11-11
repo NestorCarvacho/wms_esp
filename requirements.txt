@@ -3,7 +3,7 @@ python-dotenv
 python-multipart
 uvicorn[standard]
 pydantic[email]
-sqlalchemy
+sqlalchemy[asyncio]
 aiomysql
 mysqlclient
 python-jose[cryptography]
