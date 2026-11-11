@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Any
 
 from app.shared.formatting import format_empresa_nombre
+from app.shared.orm_state import relacion_cargada
 
 
 def serializar_tipo_zona_lista(t: Any) -> dict:
@@ -11,7 +12,7 @@ def serializar_tipo_zona_lista(t: Any) -> dict:
         "id": t.id,
         "nombre": t.nombre,
         "empresa_id": t.empresa_id,
-        "empresa_nombre": format_empresa_nombre(t.empresa),
+        "empresa_nombre": format_empresa_nombre(relacion_cargada(t, "empresa")),
         "activo": t.activo,
     }
 

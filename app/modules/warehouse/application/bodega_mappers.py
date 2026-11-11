@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Any
 
 from app.shared.formatting import format_empresa_nombre
+from app.shared.orm_state import relacion_cargada
 
 
 def serializar_bodega_lista(b: Any) -> dict:
@@ -11,7 +12,7 @@ def serializar_bodega_lista(b: Any) -> dict:
         "id": b.id,
         "nombre": b.nombre,
         "empresa_id": b.empresa_id,
-        "empresa_nombre": format_empresa_nombre(b.empresa),
+        "empresa_nombre": format_empresa_nombre(relacion_cargada(b, "empresa")),
         "codigo": b.codigo,
         "activo": b.activo,
     }

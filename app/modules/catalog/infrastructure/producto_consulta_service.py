@@ -14,6 +14,7 @@ from app.modules.catalog.infrastructure.producto_presentacion_crud import (
     ProductoPresentacionCRUDRepository,
 )
 from app.shared.formatting import format_empresa_nombre
+from app.shared.orm_state import relacion_cargada
 
 
 class ProductoConsultaService:
@@ -95,6 +96,9 @@ class ProductoConsultaService:
         if via == "codigo_barras" and presentacion_match:
             matched_presentacion = _serializar_presentacion(presentacion_match)
 
+        empresa = relacion_cargada(producto_full, "empresa")
+        unidad = relacion_cargada(producto_full, "unidad_medida")
+        tipo = relacion_cargada(producto_full, "tipo_producto")
         return {
             "via": via,
             "codigo_consultado": term,
@@ -102,19 +106,15 @@ class ProductoConsultaService:
             "producto": {
                 "id": producto_full.id,
                 "empresa_id": producto_full.empresa_id,
-                "empresa_nombre": format_empresa_nombre(producto_full.empresa),
+                "empresa_nombre": format_empresa_nombre(empresa),
                 "sku": producto_full.sku,
                 "nombre": producto_full.nombre,
                 "activo": producto_full.activo,
                 "serializado": bool(producto_full.serializado),
                 "unidad_medida_id": producto_full.unidad_medida_id,
-                "unidad_medida_nombre": (
-                    producto_full.unidad_medida.nombre if producto_full.unidad_medida else None
-                ),
+                "unidad_medida_nombre": unidad.nombre if unidad else None,
                 "tipo_producto_id": producto_full.tipo_producto_id,
-                "tipo_producto_nombre": (
-                    producto_full.tipo_producto.nombre if producto_full.tipo_producto else None
-                ),
+                "tipo_producto_nombre": tipo.nombre if tipo else None,
                 "precio_costo": (
                     float(producto_full.precio_costo) if producto_full.precio_costo is not None else None
                 ),

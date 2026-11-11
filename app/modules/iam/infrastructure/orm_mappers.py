@@ -3,18 +3,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from sqlalchemy.orm import attributes
-
 from app.shared.formatting import format_empresa_nombre
+from app.shared.orm_state import relacion_cargada as _relacion_cargada
 from app.modules.iam.domain.entities import PerfilUsuario, Usuario, UsuarioAuth
-
-
-def _relacion_cargada(parent: Any, nombre: str) -> Any | None:
-    if parent is None:
-        return None
-    if nombre in attributes.instance_state(parent).unloaded:
-        return None
-    return getattr(parent, nombre, None)
 
 
 def _nombre_relacion(parent: Any, nombre: str) -> str | None:
